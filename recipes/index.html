@@ -885,6 +885,7 @@ function openEditor(data){
   $('e-source').value=data.sourceUrl||'';
   renderCatPicker();
   closeScreen('import-screen');
+  closeScreen('detail-screen');
   openScreen('edit-screen');
 }
 function renderCatPicker(){
