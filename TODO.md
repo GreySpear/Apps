@@ -13,6 +13,10 @@ Reality check first: Instagram actively blocks automated fetching, and it
 tends to block datacenter servers (like Google Apps Script) hardest. So the
 plan is built around what's reliable, with best-effort on the rest.
 
+Confirmed UX preference: the paste box should accept **either** a pasted
+caption **or** a reel share link and do the right thing automatically — both
+are used equally often.
+
 - [ ] **Caption paste + link-following (reliable — the main win).**
       When you paste caption text, scan it for a URL. If there's a link to a
       real recipe page, follow it through the backend fetcher and parse the
