@@ -3,6 +3,25 @@
 A running history of changes to the apps in this repo (Recipes + Groceries).
 Newest first.
 
+## 2026-07-15
+
+### Recipes app — photo import (OCR)
+- **New "Photo" tab** on the Add Recipe screen: take a picture of a written
+  or printed recipe (cookbook page, recipe card) and it's converted to text
+  and parsed into a recipe, using **Google Drive's free built-in OCR** via the
+  Apps Script backend — no API keys, no cost. Photos are downscaled on the
+  phone before upload, OCR'd via a temporary Google Doc that is deleted
+  immediately, and the text runs through the same parser + auto-categorizer
+  as caption paste.
+- Backend: new `{action:'ocr'}` endpoint in `recipes/backend.gs` (requires
+  enabling the Drive API service — one checkbox, documented in
+  `recipes/SETUP.md`). Works whether or not it's enabled; the app shows a
+  pointer to the setup step if it isn't.
+- **Parser fix** caught while testing: numbered lines like "1. Brown the
+  beef" were being classified as ingredients when the text had no
+  "Ingredients:" heading (common in OCR'd text). Steps now win; quantity
+  lines like "1.5 cups cream" are unaffected.
+
 ## 2026-07-14
 
 ### Recipes app — new

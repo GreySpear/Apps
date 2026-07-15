@@ -51,6 +51,9 @@ function doPost(e) {
     if (data.action === 'fetch') {
       return handleFetch_(data);
     }
+    if (data.action === 'ocr') {
+      return handleOcr_(data);
+    }
     return jsonOutput_({ ok: false, error: 'Unknown action' });
   } catch (err) {
     return jsonOutput_({ ok: false, error: String(err) });
@@ -198,6 +201,65 @@ function capResponseSize_(result) {
   }
 
   return result;
+}
+
+// ---- OCR (photo of a written/printed recipe -> text) ---------------------
+
+/**
+ * {action:'ocr', image:'<base64 jpeg/png>', mimeType:'image/jpeg'}
+ * Uses Google Drive's built-in OCR: uploads the image converted to a
+ * temporary Google Doc (Drive extracts the text), reads the text out,
+ * then deletes the temp doc. Requires the "Drive API" advanced service
+ * to be enabled in the Apps Script editor — see SETUP.md.
+ */
+function handleOcr_(data) {
+  if (!data.image) {
+    return jsonOutput_({ ok: false, error: 'No image data' });
+  }
+  if (typeof Drive === 'undefined') {
+    return jsonOutput_({
+      ok: false,
+      error: 'OCR not enabled: in the Apps Script editor, add the "Drive API" ' +
+             'service (Services +), then deploy a New version. See SETUP.md.'
+    });
+  }
+
+  var docId = null;
+  try {
+    var blob = Utilities.newBlob(
+      Utilities.base64Decode(data.image),
+      data.mimeType || 'image/jpeg',
+      'recipe-photo'
+    );
+
+    var file;
+    if (Drive.Files.create) {
+      // Advanced Drive service v3 (the current default)
+      file = Drive.Files.create(
+        { name: 'recipe-ocr-temp', mimeType: 'application/vnd.google-apps.document' },
+        blob,
+        { ocrLanguage: 'en' }
+      );
+    } else {
+      // Advanced Drive service v2 (older projects)
+      file = Drive.Files.insert(
+        { title: 'recipe-ocr-temp' },
+        blob,
+        { convert: true, ocr: true, ocrLanguage: 'en' }
+      );
+    }
+    docId = file.id;
+
+    var text = DocumentApp.openById(docId).getBody().getText();
+    return jsonOutput_({ ok: true, text: text });
+  } catch (err) {
+    return jsonOutput_({ ok: false, error: 'OCR failed: ' + String(err) });
+  } finally {
+    // Always clean up the temporary Google Doc.
+    if (docId) {
+      try { Drive.Files.remove(docId); } catch (ignore) {}
+    }
+  }
 }
 
 // ---- Sheet helpers --------------------------------------------------------
