@@ -267,6 +267,7 @@
   <div class="screen-body">
     <div class="import-tabs">
       <button class="it-btn active" id="imp-tab-paste" onclick="setImportTab('paste')">Paste</button>
+      <button class="it-btn" id="imp-tab-photo" onclick="setImportTab('photo')">Photo</button>
       <button class="it-btn" id="imp-tab-blank" onclick="setImportTab('blank')">Blank</button>
     </div>
     <div id="imp-paste">
@@ -274,6 +275,13 @@
       <textarea class="fin paste-box" id="paste-box" placeholder="Paste a URL like https://…&#10;&#10;— or —&#10;&#10;Paste a caption:&#10;&#10;Creamy Tuscan Chicken 🍗&#10;Ingredients:&#10;- 2 chicken breasts&#10;- ½ cup cream&#10;…"></textarea>
       <div class="form-actions">
         <button class="btn-primary" id="parse-btn" onclick="doParse()">Parse recipe</button>
+      </div>
+    </div>
+    <div id="imp-photo" style="display:none">
+      <div class="import-note">Take a photo of a <strong>written or printed recipe</strong> — a cookbook page, a recipe card, grandma's notes — and I'll read the text off it. Clear, well-lit, straight-on shots work best. You can fix anything on the next screen.</div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="photoPicked(this)">
+      <div class="form-actions">
+        <button class="btn-primary" id="photo-btn" onclick="$('photo-input').click()">📷 Choose a photo</button>
       </div>
     </div>
     <div id="imp-blank" style="display:none">
@@ -518,6 +526,7 @@ function looksLikeIngredient(line){
   const l=line.trim();
   if(!l)return false;
   if(/^[-•*·▢▪◦‣]\s*/.test(l))return true;
+  if(looksLikeStep(l))return false; // "1. Brown the beef" is a step, not an ingredient
   if(new RegExp('^\\s*['+'\\d'+FRACTION_CHARS+']').test(l))return true;
   if(/^\s*\d+\s*\/\s*\d+/.test(l))return true;
   const firstWord=l.toLowerCase().replace(/^[^a-z]+/,'').split(/\s+/)[0];
@@ -825,10 +834,10 @@ let importTab='paste';
 function openImport(){importTab='paste';setImportTab('paste');$('paste-box').value='';openScreen('import-screen');}
 function setImportTab(t){
   importTab=t;
-  $('imp-tab-paste').classList.toggle('active',t==='paste');
-  $('imp-tab-blank').classList.toggle('active',t==='blank');
-  $('imp-paste').style.display=t==='paste'?'block':'none';
-  $('imp-blank').style.display=t==='blank'?'block':'none';
+  ['paste','photo','blank'].forEach(x=>{
+    $('imp-tab-'+x).classList.toggle('active',t===x);
+    $('imp-'+x).style.display=t===x?'block':'none';
+  });
 }
 function isUrl(s){return /^https?:\/\/\S+$/i.test(s.trim())&&!/\s/.test(s.trim());}
 
@@ -867,6 +876,56 @@ async function doParse(){
   }
 }
 function startBlank(){openEditor({category:'others'});}
+
+/* ---------- photo import (Drive OCR via backend) ---------- */
+async function photoPicked(input){
+  const file=input.files&&input.files[0];
+  input.value='';
+  if(!file)return;
+  if(!recipeUrl){
+    toast('Photo import needs the backend — opening settings');
+    openSettings();
+    return;
+  }
+  const btn=$('photo-btn');btn.textContent='Reading photo…';btn.disabled=true;
+  try{
+    const dataUrl=await downscaleImage(file,1600,0.85);
+    const b64=dataUrl.slice(dataUrl.indexOf(',')+1);
+    const res=await fetch(recipeUrl,{method:'POST',body:JSON.stringify({action:'ocr',image:b64,mimeType:'image/jpeg'})});
+    const data=await res.json();
+    if(!data||data.ok===false)throw new Error((data&&data.error)||'OCR failed');
+    const text=(data.text||'').trim();
+    if(!text)throw new Error('No text found in that photo');
+    const parsed=parseCaption(text);
+    const cat=categorize(parsed.title,parsed.ingredients);
+    openEditor({title:parsed.title,category:cat,ingredients:parsed.ingredients,steps:parsed.steps});
+  }catch(e){
+    const msg=String(e&&e.message||'');
+    toast(msg.indexOf('OCR not enabled')>-1
+      ?'OCR needs the Drive service enabled — see SETUP.md'
+      :'Couldn\'t read that photo — try a clearer, straight-on shot');
+  }finally{btn.textContent='📷 Choose a photo';btn.disabled=false;}
+}
+
+/* Downscale to maxDim px (longest side) as JPEG so uploads stay small. */
+function downscaleImage(file,maxDim,quality){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const scale=Math.min(1,maxDim/Math.max(img.width,img.height));
+        const c=document.createElement('canvas');
+        c.width=Math.max(1,Math.round(img.width*scale));
+        c.height=Math.max(1,Math.round(img.height*scale));
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        URL.revokeObjectURL(img.src);
+        resolve(c.toDataURL('image/jpeg',quality));
+      }catch(err){reject(err);}
+    };
+    img.onerror=()=>{URL.revokeObjectURL(img.src);reject(new Error('Couldn\'t load that image'));};
+    img.src=URL.createObjectURL(file);
+  });
+}
 
 /* ---------- editor ---------- */
 function openEditor(data){

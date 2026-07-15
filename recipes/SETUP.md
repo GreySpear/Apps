@@ -58,6 +58,30 @@ That's it — recipes you add will now be saved to your Google Sheet, and
 you can reuse the same URL on any other device (phone, laptop, tablet) to
 see the same recipes everywhere.
 
+## Enable photo import (OCR) — one extra checkbox
+
+The **Photo** tab (snap a picture of a written/printed recipe) uses Google
+Drive's built-in text recognition. It needs one extra thing enabled in your
+script project:
+
+1. Open your script (the Google Sheet → **Extensions → Apps Script**).
+2. In the left sidebar, next to **Services**, click the **+**.
+3. Pick **Drive API** from the list and click **Add**. (The default version
+   is fine.)
+4. Make sure the code is the latest `backend.gs` from this repo, then
+   publish a new version: **Deploy → Manage deployments** → pencil icon →
+   **Version: New version** → **Deploy**.
+5. The first photo you import may trigger a re-authorization prompt (the
+   script now needs Drive/Docs permission to do the text recognition) —
+   walk through it the same way as the first time.
+
+How it works: your photo is briefly converted to a temporary Google Doc in
+your own Drive (that's what does the text extraction), the text is read out,
+and the temp doc is deleted immediately. Nothing is kept.
+
+If you skip this section, everything else still works — the Photo tab will
+just show a message pointing you here.
+
 ## What the sheet will look like
 
 The script creates a tab named `recipes` automatically (if it's not

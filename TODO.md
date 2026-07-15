@@ -55,8 +55,10 @@ Stretch (only if the free path proves too flaky):
       connection, not just cached data).
 - [ ] Serving-size scaling — adjust ingredient quantities when you change
       servings.
-- [ ] Import a recipe from a screenshot/photo (OCR) — for reels with the recipe
-      burned into the video.
+- [x] ~~Import a recipe from a photo (OCR)~~ — done: Photo tab on the import
+      screen, using Google Drive's free OCR via the backend. (A possible later
+      upgrade: AI vision via an API key, which handles messy handwriting
+      better.)
 - [ ] Simple meal-planning / weekly calendar view.
 
 ## Done
