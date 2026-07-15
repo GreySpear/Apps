@@ -71,9 +71,14 @@ script project:
 4. Make sure the code is the latest `backend.gs` from this repo, then
    publish a new version: **Deploy → Manage deployments** → pencil icon →
    **Version: New version** → **Deploy**.
-5. The first photo you import may trigger a re-authorization prompt (the
-   script now needs Drive/Docs permission to do the text recognition) —
-   walk through it the same way as the first time.
+5. **Re-authorize — this step is easy to miss.** The deployed web app keeps
+   running on the permissions you granted originally and will NOT prompt you
+   on its own; photo imports will fail with a "You do not have permission to
+   call drive.files.create" error until you do this. In the editor, select
+   **`authorizeOnce`** in the toolbar's function dropdown (next to Run) and
+   click **Run** — the authorization dialog appears, now including the Google
+   Drive permission. Walk through it the same way as the first time
+   (Advanced → Go to project → Allow). No redeploy needed afterwards.
 
 How it works: your photo is briefly converted to a temporary Google Doc in
 your own Drive (that's what does the text extraction), the text is read out,
@@ -121,6 +126,14 @@ Double-check:
   URL.
 - You copied the full URL, ending in `/exec` (not `/dev`).
 - You're not on a restrictive network/VPN that blocks Google Apps Script.
+
+**"Photo import says: You do not have permission to call drive.files.create."**
+The script gained a new permission requirement (Drive) after you originally
+authorized it, and the web app never shows a new prompt by itself. Fix: in
+the Apps Script editor, select **`authorizeOnce`** in the toolbar's function
+dropdown and click **Run**, then grant the prompt (it now lists Google
+Drive). Running any function from the editor works — the prompt covers the
+whole script's permissions. No redeploy needed.
 
 **"Importing a recipe from a URL isn't working."**
 Some recipe sites block automated requests, or don't include structured
