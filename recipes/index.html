@@ -900,10 +900,15 @@ async function photoPicked(input){
     const cat=categorize(parsed.title,parsed.ingredients);
     openEditor({title:parsed.title,category:cat,ingredients:parsed.ingredients,steps:parsed.steps});
   }catch(e){
-    const msg=String(e&&e.message||'');
-    toast(msg.indexOf('OCR not enabled')>-1
-      ?'OCR needs the Drive service enabled — see SETUP.md'
-      :'Couldn\'t read that photo — try a clearer, straight-on shot');
+    const msg=String(e&&e.message||e||'');
+    let friendly;
+    if(msg.indexOf('OCR not enabled')>-1)friendly='OCR needs the Drive service enabled in Apps Script — see SETUP.md';
+    else if(msg.indexOf('Unknown action')>-1)friendly='Your backend is running old code — paste the latest backend.gs into Apps Script and deploy a New version';
+    else if(msg.indexOf('No text found')>-1)friendly='No text found in that photo — try a clearer, straight-on shot';
+    else if(msg.indexOf('Failed to fetch')>-1||msg.indexOf('NetworkError')>-1)friendly='Couldn\'t reach the backend — check your connection and the sync URL in Settings';
+    else if(msg.indexOf('Unexpected token')>-1||msg.indexOf('JSON')>-1)friendly='Backend gave an unexpected response — make sure the latest backend.gs is deployed as a New version';
+    else friendly='Photo import failed: '+(msg.slice(0,160)||'unknown error');
+    toast(friendly,'OK');
   }finally{btn.textContent='📷 Choose a photo';btn.disabled=false;}
 }
 
