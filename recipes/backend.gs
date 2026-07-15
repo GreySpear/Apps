@@ -27,6 +27,25 @@ var MAX_RESPONSE_BYTES = 200 * 1024; // cap the /fetch response to ~200KB
 var USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
   '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
+// ---- One-time authorization helper ----------------------------------------
+
+/**
+ * Run this ONCE from the editor (select "authorizeOnce" in the toolbar
+ * dropdown, then click Run) after adding the Drive API service. The web app
+ * keeps using the permissions you granted originally and never shows a new
+ * prompt on its own — running any function from the editor is what forces
+ * Google to show the authorization dialog with the new Drive permission.
+ * This function creates and changes nothing.
+ */
+function authorizeOnce() {
+  Logger.log('Sheet OK: ' + SpreadsheetApp.getActiveSpreadsheet().getName());
+  if (typeof Drive === 'undefined') {
+    Logger.log('Drive service NOT enabled — add "Drive API" under Services (+) in the left sidebar, then run this again.');
+  } else {
+    Logger.log('Drive service OK — photo import (OCR) is ready.');
+  }
+}
+
 // ---- Entry points -------------------------------------------------------
 
 function doGet(e) {
