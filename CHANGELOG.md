@@ -1,7 +1,35 @@
 # Changelog
 
-A running history of changes to the apps in this repo (Recipes + Groceries).
-Newest first.
+A running history of changes to the apps in this repo (Recipes + Groceries +
+Home Maintenance Log). Newest first.
+
+## 2026-07-16
+
+### Home Maintenance Log — new
+- **Planned and built the Home Log** (`maintenance/index.html`) — a
+  phone-first, single-file web app in the same style as Recipes/Groceries,
+  with three tabs:
+  - **Due** — recurring tasks (HVAC filter, gutters, smoke detectors…) with
+    intervals; the dashboard groups them into *Overdue / Due soon / Not
+    started / On schedule*. Tapping **Done** logs the work and resets the
+    task's clock. Reminders are dashboard-only by design (no emails).
+  - **History** — the maintenance log: what was done, when, cost, DIY vs.
+    contractor, notes, and **photo/receipt attachments** stored in a
+    "Home Maintenance Photos" folder in your Drive. Searchable, grouped by
+    month.
+  - **Home** — an inventory of appliances/equipment (brand, model, serial,
+    location, install date, warranty expiry, photos). Tasks and log entries
+    can attach to an item; the item page shows its specs, linked tasks, and
+    full history.
+- **Starter checklist**: ~16 common home tasks with sensible default
+  intervals, offered on first run (and from Settings) as a toggle list.
+- **Sync**: offline `localStorage` cache syncing to a private Google Sheet
+  (three tabs: `items`, `tasks`, `log`), same pattern as the other apps.
+- **Backend** (`maintenance/backend.gs`) + setup guide
+  (`maintenance/SETUP.md`): read/save plus photo upload/read/delete via
+  standard DriveApp — no advanced services to enable.
+- Decisions and data model recorded in `maintenance/PLAN.md`. Deferred for
+  later: cost summaries, multiple properties, email digests.
 
 ## 2026-07-15
 

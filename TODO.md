@@ -48,6 +48,14 @@ Stretch (only if the free path proves too flaky):
       into both the Grocery app and the Recipes app's *Grocery List URL* field
       (see `groceries/SETUP.md`), so "Send to grocery list" is live.
 
+## Home Maintenance Log — later ideas
+- [ ] Cost totals per year / per category on the History tab.
+- [ ] Multiple properties (a `property` field on items/tasks/log).
+- [ ] Optional weekly email digest of due tasks (time-based Apps Script
+      trigger) if dashboard-only turns out to be too passive.
+- [ ] Surface warranty expiries on the Due dashboard.
+- [ ] Attach PDFs (manuals) to items, not just images.
+
 ## Nice-to-haves
 - [ ] Cleaner grocery URL: rename `groceries/groceries.html` → `index.html` so
       it lives at `.../Apps/groceries/`.
