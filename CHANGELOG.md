@@ -1,7 +1,31 @@
 # Changelog
 
-A running history of changes to the apps in this repo (Recipes + Groceries +
-Home Maintenance Log). Newest first.
+A running history of changes to the apps in this repo (Kitchen + Recipes +
+Groceries + Home Maintenance Log). Newest first.
+
+## 2026-07-28
+
+### Kitchen — Recipes + Groceries consolidated into one app
+- **New `kitchen/` app** merges the Recipes and Grocery List apps into a single
+  phone-first web app, with a top-level **🍳 Recipes / 🧺 Groceries** switch.
+  Same design language, one install, one home-screen icon.
+- **One backend, one Sheet, one URL.** `kitchen/backend.gs` folds both old
+  backends together: `GET ?action=read` now returns `{recipes, items, staples}`
+  in a single call, and `doPost` dispatches recipe ops by `action`
+  (`save`/`fetch`/`ocr`) and grocery ops by `sheet` (`items`/`staples`). The
+  Sheet auto-creates three tabs (`recipes`, `items`, `staples`). Replaces the
+  old two-deployment, two-URL setup.
+- **"To grocery list" is now in-app and instant.** Sending a recipe's
+  ingredients to the grocery list appends to the shared in-app list (with a
+  "View" jump) instead of making a cross-deployment HTTP round-trip — no
+  separate Grocery List URL to configure.
+- **Migration-friendly.** Reuses the same `localStorage` cache keys, and the
+  sync URL falls back to the old Recipes/Grocery URLs, so existing data and
+  connection carry over on the same device. The old `recipes/` and `groceries/`
+  apps are left intact.
+- Setup consolidated into `kitchen/SETUP.md` (one deployment; Drive/OCR opt-in
+  step preserved). Parser, categorizer, and row round-trips verified with a
+  node harness.
 
 ## 2026-07-16
 
