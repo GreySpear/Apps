@@ -19,6 +19,7 @@
       --text:#1C1C1A;--text-mid:#5C5C55;--text-light:#A0998C;
       --border:#E8E2D9;--shadow:0 1px 3px rgba(28,28,26,0.07),0 4px 12px rgba(28,28,26,0.04);
       --radius:14px;--danger:#C0392B;--danger-light:#FDEEEC;
+      --plan:#5A6BB5;--plan-light:#EAEDF7;
       /* category accents */
       --cat-poultry:#D99A2B;--cat-poultry-l:#FBF1DC;
       --cat-seafood:#2E8B9E;--cat-seafood-l:#E1F0F3;
@@ -54,6 +55,7 @@
     .mode-btn .emoji{font-size:16px}
     .mode-btn.active{color:#fff}
     #mode-recipes.active{background:var(--terra)}
+    #mode-plan.active{background:var(--plan)}
     #mode-groceries.active{background:var(--green)}
 
     main{max-width:600px;margin:0 auto;padding:18px 16px}
@@ -281,6 +283,50 @@
     .gsend-item.on .gsend-check svg{display:block}
     .gsend-item span{font-size:14.5px;line-height:1.4}
     .gsend-item:not(.on) span{color:var(--text-light)}
+
+    /* ===== MEAL PLAN ===== */
+    .plan-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+    .plan-nav-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;color:var(--text-mid);font-size:20px;flex-shrink:0}
+    .plan-nav-btn:hover{border-color:var(--text-light)}
+    .plan-week{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:15px;text-align:center;flex:1}
+    .plan-week small{display:block;font-weight:600;font-size:11.5px;color:var(--text-light);margin-top:2px}
+    .day-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;border-left:3px solid transparent}
+    .day-card.today{border-left-color:var(--plan)}
+    .day-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+    .day-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px}
+    .day-date{font-size:12px;color:var(--text-light);font-weight:500}
+    .day-today-tag{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--plan);background:var(--plan-light);padding:2px 8px;border-radius:999px}
+    .plan-recipe{display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer}
+    .plan-thumb{width:40px;height:40px;border-radius:9px;background-size:cover;background-position:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:19px}
+    .plan-r-info{flex:1;min-width:0}
+    .plan-r-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .plan-r-serv{font-size:11.5px;color:var(--text-light);margin-top:1px}
+    .plan-empty{font-size:12.5px;color:var(--text-light);padding:2px 0 6px}
+    .plan-add{width:100%;font-size:13px;font-weight:600;color:var(--plan);background:none;border:1.5px dashed var(--border);border-radius:9px;padding:9px;cursor:pointer;margin-top:4px;transition:all .15s}
+    .plan-add:hover{border-color:var(--plan);background:var(--plan-light)}
+    .build-btn{width:100%;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;color:#fff;background:var(--plan);border:none;border-radius:12px;padding:15px;cursor:pointer;margin-top:8px;box-shadow:0 4px 14px rgba(90,107,181,0.32);transition:opacity .15s}
+    .build-btn:hover{opacity:0.9}
+    .build-btn:disabled{opacity:0.4;box-shadow:none}
+    .da-btn.plan{color:#fff;background:var(--plan);border-color:transparent}
+
+    /* picker list (reused for add-to-day) */
+    .pick-row{display:flex;align-items:center;gap:12px;padding:11px 8px;border-radius:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .pick-row:active{background:var(--bg)}
+    .pick-thumb{width:44px;height:44px;border-radius:9px;background-size:cover;background-position:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+    .pick-title{flex:1;font-size:15px;font-weight:600;min-width:0}
+
+    /* review modal (aisle-grouped) */
+    .rev-aisle{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-light);margin:14px 4px 4px}
+    .rev-aisle:first-child{margin-top:2px}
+    .rev-qty{color:var(--text-light);font-weight:500}
+    .rev-badge{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:auto;flex-shrink:0}
+    .rev-badge.staple{color:var(--terra);background:var(--terra-light)}
+    .rev-badge.count{color:var(--green);background:var(--green-light)}
+    .rev-badge.inlist{color:var(--text-light);background:var(--bg)}
+    .datepick{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+    .datepick button{font-size:13px;font-weight:600;padding:9px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;color:var(--text-mid);transition:all .12s}
+    .datepick button:hover{border-color:var(--plan);color:var(--plan)}
+    .datepick button b{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text)}
   </style>
 </head>
 <body>
@@ -302,6 +348,7 @@
 <div class="mode-bar">
   <div class="mode-tabs">
     <button class="mode-btn active" id="mode-recipes" onclick="setMode('recipes')"><span class="emoji">🍳</span>Recipes</button>
+    <button class="mode-btn" id="mode-plan" onclick="setMode('plan')"><span class="emoji">📅</span>Plan</button>
     <button class="mode-btn" id="mode-groceries" onclick="setMode('groceries')"><span class="emoji">🧺</span>Groceries</button>
   </div>
 </div>
@@ -328,6 +375,21 @@
   </main>
 
   <button class="fab" onclick="openImport()" aria-label="Add recipe">+</button>
+</div>
+
+<!-- ============================================================
+     MEAL PLAN APP
+     ============================================================ -->
+<div id="plan-app" style="display:none">
+  <main>
+    <div class="plan-nav">
+      <button class="plan-nav-btn" onclick="planShiftWeek(-1)" aria-label="Previous week">‹</button>
+      <div class="plan-week" id="plan-week-label">This week</div>
+      <button class="plan-nav-btn" onclick="planShiftWeek(1)" aria-label="Next week">›</button>
+    </div>
+    <div id="plan-days"></div>
+    <button class="build-btn" id="build-btn" onclick="buildGroceryFromWeek()">🧺 Build grocery list</button>
+  </main>
 </div>
 
 <!-- ============================================================
@@ -515,6 +577,23 @@
   <div id="detail-content"></div>
 </div>
 
+<!-- ============ RECIPE PICKER (add to a plan day) ============ -->
+<div class="screen" id="pick-screen">
+  <div class="screen-head">
+    <button class="back-btn" onclick="closeScreen('pick-screen')" aria-label="Back">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="screen-title" id="pick-heading">Add to day</div>
+  </div>
+  <div class="screen-body">
+    <div class="search-wrap">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" id="pick-search" type="search" placeholder="Search recipes…" oninput="renderPicker()">
+    </div>
+    <div class="gsend-list" id="pick-list" style="max-height:none"></div>
+  </div>
+</div>
+
 <!-- ============ COOK MODE ============ -->
 <div class="cook" id="cook">
   <div class="cook-top">
@@ -566,15 +645,27 @@
   </div>
 </div>
 
-<!-- ============ SEND-TO-GROCERY MODAL ============ -->
-<div class="modal-overlay" id="gsend-modal">
+<!-- ============ REVIEW MODAL (aisle-grouped add to grocery list) ============ -->
+<div class="modal-overlay" id="review-modal">
   <div class="modal">
-    <h3>Add to grocery list</h3>
-    <p>Uncheck anything you already have (pantry staples), then add the rest to your grocery list.</p>
-    <div class="gsend-list" id="gsend-list"></div>
+    <h3 id="review-title">Add to grocery list</h3>
+    <p id="review-sub">Merged and grouped by aisle. Staples you keep on hand are pre-unchecked.</p>
+    <div class="gsend-list" id="review-list"></div>
     <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeGsend()">Cancel</button>
-      <button class="btn-primary" id="gsend-confirm" onclick="confirmGsend()">Add</button>
+      <button class="btn-cancel" onclick="closeReview()">Cancel</button>
+      <button class="btn-primary" id="review-confirm" onclick="confirmReview()">Add to list</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADD-TO-PLAN DATE PICKER ============ -->
+<div class="modal-overlay" id="planpick-modal">
+  <div class="modal">
+    <h3>Add to plan</h3>
+    <p id="planpick-sub">Pick a day for this recipe.</p>
+    <div class="datepick" id="planpick-dates"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closePlanPick()">Cancel</button>
     </div>
   </div>
 </div>
@@ -776,6 +867,189 @@ function categorize(title,ingredients){
   return 'others';
 }
 
+/* KITCHEN-ENGINE-START (pure smart-aggregation engine — tested in kitchen/test/) */
+const UNICODE_FRAC={'½':0.5,'⅓':1/3,'⅔':2/3,'¼':0.25,'¾':0.75,'⅕':0.2,'⅖':0.4,'⅗':0.6,'⅘':0.8,'⅙':1/6,'⅚':5/6,'⅛':0.125,'⅜':0.375,'⅝':0.625,'⅞':0.875};
+const FRAC_KEYS=Object.keys(UNICODE_FRAC).join('');
+
+/* Parse a leading quantity of any common form. Returns {value, rest}.
+   value is null when the line has no leading number. Ranges take the
+   upper bound (buy enough). */
+function parseQty(str){
+  let s=String(str||'').trim();
+  let m=s.match(new RegExp('^([0-9]+(?:\\.[0-9]+)?)\\s*(?:-|–|—|to)\\s*([0-9]+(?:\\.[0-9]+)?)\\b'));
+  if(m)return {value:parseFloat(m[2]),rest:s.slice(m[0].length).trim()};
+  m=s.match(/^(\d+)\s+(\d+)\/(\d+)/);
+  if(m)return {value:(+m[1])+(+m[2])/(+m[3]),rest:s.slice(m[0].length).trim()};
+  m=s.match(new RegExp('^(\\d+)\\s*(['+FRAC_KEYS+'])'));
+  if(m)return {value:(+m[1])+UNICODE_FRAC[m[2]],rest:s.slice(m[0].length).trim()};
+  m=s.match(/^(\d+)\/(\d+)/);
+  if(m)return {value:(+m[1])/(+m[2]),rest:s.slice(m[0].length).trim()};
+  m=s.match(new RegExp('^(['+FRAC_KEYS+'])'));
+  if(m)return {value:UNICODE_FRAC[m[1]],rest:s.slice(m[0].length).trim()};
+  m=s.match(/^(\d+(?:\.\d+)?)/);
+  if(m)return {value:parseFloat(m[1]),rest:s.slice(m[0].length).trim()};
+  return {value:null,rest:s};
+}
+
+/* Unit synonyms -> canonical unit label. Words not here are NOT units
+   (they belong to the name, e.g. "2 chicken breasts"). */
+const UNIT_SYNONYMS={
+  tsp:'tsp',teaspoon:'tsp',teaspoons:'tsp',
+  tbsp:'tbsp',tbsps:'tbsp',tbs:'tbsp',tablespoon:'tbsp',tablespoons:'tbsp',
+  cup:'cup',cups:'cup',c:'cup',
+  ml:'ml',milliliter:'ml',milliliters:'ml',millilitre:'ml',
+  l:'l',liter:'l',liters:'l',litre:'l',litres:'l',
+  floz:'fl oz',
+  pt:'pint',pint:'pint',pints:'pint',
+  qt:'quart',quart:'quart',quarts:'quart',
+  gal:'gallon',gallon:'gallon',gallons:'gallon',
+  g:'g',gram:'g',grams:'g',gs:'g',
+  kg:'kg',kilogram:'kg',kilograms:'kg',
+  oz:'oz',ounce:'oz',ounces:'oz',
+  lb:'lb',lbs:'lb',pound:'lb',pounds:'lb',
+  clove:'clove',cloves:'clove',
+  can:'can',cans:'can',
+  package:'pkg',packages:'pkg',pkg:'pkg',pkgs:'pkg',pack:'pkg',packs:'pkg',
+  bunch:'bunch',bunches:'bunch',
+  slice:'slice',slices:'slice',
+  stick:'stick',sticks:'stick',
+  pinch:'pinch',pinches:'pinch',
+  dash:'dash',dashes:'dash',
+  head:'head',heads:'head',
+  sprig:'sprig',sprigs:'sprig',
+  handful:'handful',handfuls:'handful',
+  loaf:'loaf',loaves:'loaf',
+  bottle:'bottle',bottles:'bottle',
+  bag:'bag',bags:'bag',
+  box:'box',boxes:'box',
+  jar:'jar',jars:'jar',
+  dozen:'dozen',
+  ear:'ear',ears:'ear',
+  fillet:'fillet',fillets:'fillet',filet:'fillet',filets:'fillet'
+};
+function normalizeUnit(word){
+  const w=String(word||'').toLowerCase().replace(/\.$/,'');
+  return UNIT_SYNONYMS[w]||null;
+}
+
+/* Descriptor words stripped for matching (they don't change what you buy).
+   Identity words like "ground", "smoked", "boneless" are deliberately kept. */
+const DESCRIPTORS=new Set(['fresh','freshly','minced','chopped','diced','sliced','shredded','grated','crushed','melted','softened','beaten','cooked','uncooked','peeled','drained','rinsed','packed','thinly','roughly','finely','large','small','medium','ripe','warm','cold','hot','cubed','halved','quartered','trimmed','pitted','seeded','stemmed','washed','dried','optional','divided','plus','more','room','temperature','of','a','an','the']);
+
+function depluralize(w){
+  if(w.length>4&&/es$/.test(w)&&!/(ss|us|is)es?$/.test(w))return w.replace(/es$/,'');
+  if(w.length>3&&/s$/.test(w)&&!/ss$/.test(w))return w.replace(/s$/,'');
+  return w;
+}
+
+/* Parse a full ingredient line into {qty, unit, name, note, raw}. */
+function parseIngredient(line){
+  const raw=String(line||'').trim();
+  let s=raw.replace(/^[-•*·▢▪◦‣]\s*/,'').trim();
+  let note='';
+  const paren=s.match(/\(([^)]*)\)/);
+  if(paren){note=paren[1].trim();s=s.replace(paren[0],' ').replace(/\s+/g,' ').trim();}
+  const comma=s.indexOf(',');
+  if(comma>-1){note=(note?note+'; ':'')+s.slice(comma+1).trim();s=s.slice(0,comma).trim();}
+  const q=parseQty(s);
+  let rest=q.rest;
+  const parts=rest.split(/\s+/).filter(Boolean);
+  let unit='';
+  if(parts.length){
+    const u=normalizeUnit(parts[0]);
+    if(u){unit=u;parts.shift();}
+  }
+  if(!unit&&q.value!=null&&parts.length>=2){
+    const u=normalizeUnit(parts[parts.length-1]);
+    if(u){unit=u;parts.pop();}
+  }
+  const name=parts.join(' ').trim();
+  return {qty:q.value,unit,name,note,raw};
+}
+
+/* Canonical key name for matching/merging. */
+function canonicalName(name){
+  let words=String(name||'').toLowerCase()
+    .replace(/[^a-z0-9\s-]/g,' ')
+    .split(/\s+/).filter(Boolean)
+    .filter(w=>!DESCRIPTORS.has(w))
+    .map(depluralize);
+  return words.join(' ').trim();
+}
+
+/* Aisle keyword table (scored, like the recipe categorizer). */
+const AISLES=[
+  ['Produce',['onion','garlic','tomato','potato','carrot','celery','pepper','bell pepper','lettuce','spinach','kale','broccoli','cauliflower','zucchini','cucumber','mushroom','avocado','lemon','lime','lemongrass','ginger','scallion','green onion','shallot','cilantro','parsley','basil','mint','thyme','rosemary','apple','banana','berry','strawberry','orange','cabbage','corn','pea','bean sprout','eggplant','squash','asparagus','herb','chili','jalapeno','leek','radish','beet','fennel']],
+  ['Meat & Seafood',['chicken','beef','steak','pork','bacon','sausage','ham','turkey','lamb','veal','shrimp','prawn','salmon','tuna','cod','tilapia','fish','crab','lobster','scallop','clam','mussel','squid','anchovy','ground beef','ground turkey','ground pork','chorizo','pancetta','prosciutto','brisket','ribs']],
+  ['Dairy & Eggs',['milk','butter','cheese','cream','yogurt','egg','sour cream','parmesan','mozzarella','cheddar','feta','ricotta','cream cheese','half and half','buttermilk','ghee','mascarpone']],
+  ['Bakery',['bread','tortilla','bun','baguette','roll','pita','naan','bagel','croissant','brioche']],
+  ['Frozen',['frozen','ice cream']],
+  ['Spices',['salt','pepper','cumin','paprika','oregano','cinnamon','chili powder','cayenne','turmeric','coriander','nutmeg','clove','bay leaf','garlic powder','onion powder','red pepper flakes','curry powder','saffron','allspice','cardamom','vanilla']],
+  ['Pantry & Dry',['flour','sugar','brown sugar','rice','pasta','noodle','spaghetti','oil','olive oil','vegetable oil','vinegar','soy sauce','fish sauce','honey','maple syrup','broth','stock','tomato paste','tomato sauce','canned','coconut milk','bean','lentil','chickpea','oat','cornstarch','baking soda','baking powder','yeast','breadcrumb','peanut butter','ketchup','mustard','mayonnaise','worcestershire','sesame oil','wine','panko','molasses','cocoa','chocolate','nut','almond','walnut','cashew','raisin','sesame','tahini','miso','sriracha','hoisin','dijon']]
+];
+function aisleFor(canonical){
+  const s=' '+String(canonical||'').toLowerCase()+' ';
+  let best='Other',bestScore=0;
+  AISLES.forEach(([aisle,kws])=>{
+    let score=0;
+    kws.forEach(kw=>{ if(new RegExp('\\b'+kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(s))score+=kw.split(' ').length; });
+    if(score>bestScore){bestScore=score;best=aisle;}
+  });
+  return best;
+}
+const AISLE_ORDER=['Produce','Meat & Seafood','Dairy & Eggs','Bakery','Frozen','Pantry & Dry','Spices','Other'];
+
+/* Friendly quantity string (numbers back to fractions where close). */
+function fmtQty(n){
+  if(n==null)return '';
+  const whole=Math.floor(n+1e-9),frac=n-whole;
+  const table=[[0,''],[0.125,'⅛'],[0.25,'¼'],[1/3,'⅓'],[0.375,'⅜'],[0.5,'½'],[0.625,'⅝'],[2/3,'⅔'],[0.75,'¾'],[0.875,'⅞'],[1,'']];
+  let bestGlyph=null,bestD=0.06;
+  for(const [v,g] of table){ const d=Math.abs(frac-v); if(d<bestD){bestD=d;bestGlyph=(v===1)?{carry:1}:g;} }
+  if(bestGlyph&&bestGlyph.carry)return String(whole+1);
+  if(bestGlyph!==null&&bestGlyph!=='')return (whole>0?whole+' ':'')+bestGlyph;
+  if(bestGlyph===''&&Math.abs(frac)<0.06)return String(whole);
+  return String(Math.round(n*100)/100);
+}
+function roundQty(n){return n==null?null:Math.round(n*100)/100;}
+
+/* entries: [{ingredient, scale}]; opts: {staples, existingItems}.
+   Returns merged, aisle-tagged, staple-aware grocery candidates. */
+function aggregate(entries,opts){
+  opts=opts||{};
+  const stapleSet=new Set((opts.staples||[]).map(s=>canonicalName(s.name)).filter(Boolean));
+  const existing={};
+  (opts.existingItems||[]).forEach(it=>{existing[canonicalName(it.name)+'|'+(it.unit||'')]=true;});
+  const groups={};
+  (entries||[]).forEach(e=>{
+    const scale=e.scale||1;
+    const p=parseIngredient(e.ingredient);
+    const canon=canonicalName(p.name);
+    if(!canon)return;
+    const key=canon+'|'+p.unit;
+    if(!groups[key])groups[key]={canonical:canon,unit:p.unit,qty:0,hasQty:false,sourceCount:0,display:p.name.trim()||canon};
+    const g=groups[key];
+    if(p.qty!=null){g.qty+=p.qty*scale;g.hasQty=true;}
+    g.sourceCount++;
+  });
+  const out=Object.keys(groups).map(key=>{
+    const g=groups[key];
+    return {
+      name:g.canonical,canonical:g.canonical,
+      qty:g.hasQty?roundQty(g.qty):null,unit:g.unit,display:g.display,
+      aisle:aisleFor(g.canonical),isStaple:stapleSet.has(g.canonical),
+      sourceCount:g.sourceCount,inList:!!existing[key]
+    };
+  });
+  out.sort((a,b)=>{
+    const ai=AISLE_ORDER.indexOf(a.aisle),bi=AISLE_ORDER.indexOf(b.aisle);
+    if(ai!==bi)return ai-bi;
+    return a.name.localeCompare(b.name);
+  });
+  return out;
+}
+/* KITCHEN-ENGINE-END */
+
 /* ============================================================
    APP STATE
    ============================================================ */
@@ -797,6 +1071,7 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 let recipes=[];
 let items=[];
 let staples=[];
+let plan=[];
 // One backend URL for everything. Migrate from the old split apps' keys.
 let sheetUrl=localStorage.getItem('kitchen_url')||localStorage.getItem('recipes_url')||localStorage.getItem('grocery_sheet_url')||'';
 let currentMode=localStorage.getItem('kitchen_mode')||'recipes';
@@ -805,19 +1080,26 @@ let sortMode='newest'; // 'newest' | 'lrc'
 let favOnly=false;
 let recipeSyncTimer=null;
 let grocerySyncTimer=null;
+let planSyncTimer=null;
 let editingId=null;      // recipe being edited (null = new)
 let editCat='others';
 let detailId=null;       // recipe open in detail
 let checkedIngredients={};// detail view ephemeral
 let currentGTab='list';  // grocery tab
+let planWeekStart=mondayOf(new Date()); // Date, Monday of the shown week
+let pickTargetDate=null; // which day the recipe picker is adding to
+let planPickRecipeId=null; // recipe being placed via the date modal
+let reviewItems=[];      // current aisle-review candidates
 
 /* ---------- storage ---------- */
 function saveRecipesLocal(){localStorage.setItem('recipes_data',JSON.stringify(recipes));}
 function saveGroceriesLocal(){localStorage.setItem('grocery_items',JSON.stringify(items));localStorage.setItem('grocery_staples',JSON.stringify(staples));}
+function savePlanLocal(){localStorage.setItem('kitchen_plan',JSON.stringify(plan));}
 function loadLocalAll(){
   try{recipes=JSON.parse(localStorage.getItem('recipes_data')||'[]');}catch(e){recipes=[];}
   try{items=JSON.parse(localStorage.getItem('grocery_items')||'[]');}catch(e){items=[];}
   try{staples=JSON.parse(localStorage.getItem('grocery_staples')||'[]');}catch(e){staples=[];}
+  try{plan=JSON.parse(localStorage.getItem('kitchen_plan')||'[]');}catch(e){plan=[];}
 }
 
 /* ---------- row mappers ---------- */
@@ -843,6 +1125,8 @@ function itemToRow(i){return [i.id,i.name,i.qty,i.unit,i.checked?'1':'0'];}
 function stapleToRow(s){return [s.id,s.name,s.qty,s.unit];}
 function itemFromRow(r){return {id:String(r[0]),name:String(r[1]),qty:Number(r[2])||1,unit:String(r[3]||''),checked:r[4]==='1'||r[4]===true};}
 function stapleFromRow(r){return {id:String(r[0]),name:String(r[1]),qty:Number(r[2])||1,unit:String(r[3]||'')};}
+function planToRow(p){return [p.id,p.date,p.recipeId,p.servings||'',p.createdAt||''];}
+function planFromRow(r){return {id:String(r[0]),date:String(r[1]||''),recipeId:String(r[2]||''),servings:String(r[3]||''),createdAt:String(r[4]||'')};}
 const realRows=rows=>(rows||[]).filter(r=>r&&r[0]&&String(r[0]).toLowerCase()!=='id');
 
 /* ---------- sync ---------- */
@@ -869,8 +1153,16 @@ async function pushGroceries(){
     setSyncStatus('ok');
   }catch(e){setSyncStatus('error');}
 }
+async function pushPlan(){
+  if(!sheetUrl)return;
+  setSyncStatus('syncing');
+  try{
+    await fetch(sheetUrl,{method:'POST',body:JSON.stringify({sheet:'plan',rows:plan.map(planToRow)})});
+    setSyncStatus('ok');
+  }catch(e){setSyncStatus('error');}
+}
 async function pull(){
-  if(!sheetUrl){render();renderGroceries();return;}
+  if(!sheetUrl){render();renderGroceries();renderPlan();return;}
   setSyncStatus('syncing');
   try{
     const res=await fetch(sheetUrl+'?action=read');
@@ -878,15 +1170,17 @@ async function pull(){
     recipes=realRows(data.recipes).map(rowToRecipe);
     items=realRows(data.items).map(itemFromRow);
     staples=realRows(data.staples).map(stapleFromRow);
-    saveRecipesLocal();saveGroceriesLocal();
-    render();renderGroceries();setSyncStatus('ok');
-  }catch(e){setSyncStatus('error');loadLocalAll();render();renderGroceries();}
+    plan=realRows(data.plan).map(planFromRow);
+    saveRecipesLocal();saveGroceriesLocal();savePlanLocal();
+    render();renderGroceries();renderPlan();setSyncStatus('ok');
+  }catch(e){setSyncStatus('error');loadLocalAll();render();renderGroceries();renderPlan();}
 }
 function schedulePushRecipes(){saveRecipesLocal();clearTimeout(recipeSyncTimer);recipeSyncTimer=setTimeout(pushRecipes,900);}
 function scheduleGroceryPush(){saveGroceriesLocal();clearTimeout(grocerySyncTimer);grocerySyncTimer=setTimeout(pushGroceries,700);}
+function schedulePlanPush(){savePlanLocal();clearTimeout(planSyncTimer);planSyncTimer=setTimeout(pushPlan,700);}
 function manualSync(){
   if(!sheetUrl){openSettings();return;}
-  toast('Syncing…');pull().then(()=>{if(sheetUrl){pushRecipes();pushGroceries();}});
+  toast('Syncing…');pull().then(()=>{if(sheetUrl){pushRecipes();pushGroceries();pushPlan();}});
 }
 
 /* ---------- toast ---------- */
@@ -924,9 +1218,12 @@ function setMode(m){
   currentMode=m;
   localStorage.setItem('kitchen_mode',m);
   $('recipes-app').style.display=m==='recipes'?'block':'none';
+  $('plan-app').style.display=m==='plan'?'block':'none';
   $('groceries-app').style.display=m==='groceries'?'block':'none';
   $('mode-recipes').classList.toggle('active',m==='recipes');
+  $('mode-plan').classList.toggle('active',m==='plan');
   $('mode-groceries').classList.toggle('active',m==='groceries');
+  if(m==='plan')renderPlan();
 }
 
 /* ============================================================
@@ -1026,7 +1323,7 @@ function toggleFav(id){
    ============================================================ */
 function openScreen(id){$(id).classList.add('open');$(id).scrollTop=0;}
 function closeScreen(id){$(id).classList.remove('open');}
-function goHome(){['import-screen','edit-screen','detail-screen'].forEach(closeScreen);detailId=null;render();}
+function goHome(){['import-screen','edit-screen','detail-screen','pick-screen'].forEach(closeScreen);detailId=null;render();}
 
 /* ---------- import ---------- */
 let importTab='paste';
@@ -1239,7 +1536,8 @@ function openDetail(id){
       <div class="detail-actions">
         ${(r.steps||[]).length?`<button class="da-btn cook full" onclick="startCook('${r.id}')">▶ Cook mode</button>`:''}
         <button class="da-btn accent" onclick="cookedThis('${r.id}')">🍽️ I cooked this</button>
-        <button class="da-btn" onclick="openGsend('${r.id}')">🧺 To grocery list</button>
+        <button class="da-btn plan" onclick="openPlanPick('${r.id}')">📅 Add to plan</button>
+        <button class="da-btn" onclick="sendRecipeToGrocery('${r.id}')">🧺 To grocery list</button>
         <button class="da-btn" onclick="editRecipe('${r.id}')">✎ Edit</button>
         <button class="da-btn danger" onclick="deleteRecipe('${r.id}')">🗑 Delete</button>
       </div>
@@ -1327,30 +1625,184 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 /* ============================================================
-   SEND TO GROCERY LIST (now in-app — appends to the grocery list)
+   DATE HELPERS (meal plan)
    ============================================================ */
-let gsendRecipeId=null;
-function openGsend(id){
+const WEEKDAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function mondayOf(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setHours(0,0,0,0);x.setDate(x.getDate()-day);return x;}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function ymd(d){const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}
+function todayYmd(){return ymd(new Date());}
+function parseYmd(s){const [y,m,d]=String(s).split('-').map(Number);return new Date(y,(m||1)-1,d||1);}
+function prettyDate(dstr){const dt=parseYmd(dstr);return WEEKDAYS[(dt.getDay()+6)%7]+' '+MONTHS[dt.getMonth()]+' '+dt.getDate();}
+
+/* ============================================================
+   MEAL PLAN
+   ============================================================ */
+function entriesForDate(dstr){return plan.filter(p=>p.date===dstr);}
+function planWeekLabel(){
+  const end=addDays(planWeekStart,6);
+  const range=MONTHS[planWeekStart.getMonth()]+' '+planWeekStart.getDate()+' – '+MONTHS[end.getMonth()]+' '+end.getDate();
+  const isCurrent=mondayOf(new Date()).getTime()===new Date(planWeekStart).setHours(0,0,0,0);
+  return {range,sub:isCurrent?'This week':''};
+}
+function renderPlan(){
+  if(!$('plan-days'))return;
+  const lbl=planWeekLabel();
+  $('plan-week-label').innerHTML=esc(lbl.range)+(lbl.sub?`<small>${esc(lbl.sub)}</small>`:'');
+  const today=todayYmd();
+  let html='',anyPlanned=false;
+  for(let i=0;i<7;i++){
+    const d=addDays(planWeekStart,i),dstr=ymd(d),isToday=dstr===today;
+    const es=entriesForDate(dstr);
+    if(es.length)anyPlanned=true;
+    const rows=es.map(e=>{
+      const r=getRecipe(e.recipeId);
+      const title=r?(r.title||'Untitled'):'(recipe removed)';
+      const cm=r?(CAT_META[r.category]||CAT_META.others):CAT_META.others;
+      const thumb=r&&r.imageUrl
+        ?`<div class="plan-thumb" style="background-image:url('${esc(r.imageUrl)}')"></div>`
+        :`<div class="plan-thumb" style="background:${r?catColorL(r.category):'var(--border)'};color:${r?catColor(r.category):'var(--text-light)'}">${cm.emoji}</div>`;
+      const serv=e.servings?`<div class="plan-r-serv">${esc(e.servings)} servings</div>`:'';
+      return `<div class="plan-recipe" onclick="${r?`openDetail('${r.id}')`:''}">${thumb}<div class="plan-r-info"><div class="plan-r-title">${esc(title)}</div>${serv}</div><button class="delete-btn" onclick="event.stopPropagation();removeFromPlan('${e.id}')">&#x2715;</button></div>`;
+    }).join('');
+    html+=`<div class="day-card ${isToday?'today':''}">
+      <div class="day-head"><span class="day-name">${WEEKDAYS[i]}</span><span class="day-date">${MONTHS[d.getMonth()]} ${d.getDate()}</span>${isToday?'<span class="day-today-tag">Today</span>':''}</div>
+      ${rows||'<div class="plan-empty">No meals planned</div>'}
+      <button class="plan-add" onclick="openPickerForDate('${dstr}')">+ Add recipe</button>
+    </div>`;
+  }
+  $('plan-days').innerHTML=html;
+  $('build-btn').disabled=!anyPlanned;
+}
+function planShiftWeek(n){planWeekStart=addDays(planWeekStart,n*7);renderPlan();}
+function addToPlan(dstr,recipeId){
+  const r=getRecipe(recipeId);
+  plan.push({id:uid(),date:dstr,recipeId,servings:r&&r.servings?r.servings:'',createdAt:new Date().toISOString()});
+  schedulePlanPush();renderPlan();
+}
+function removeFromPlan(entryId){plan=plan.filter(p=>p.id!==entryId);schedulePlanPush();renderPlan();}
+
+/* recipe picker (add to a specific day) */
+function openPickerForDate(dstr){
+  pickTargetDate=dstr;
+  $('pick-search').value='';
+  $('pick-heading').textContent='Add to '+prettyDate(dstr);
+  renderPicker();
+  openScreen('pick-screen');
+}
+function renderPicker(){
+  if(!recipes.length){$('pick-list').innerHTML=`<div class="empty-state"><span class="e">🍳</span>No recipes yet.<br>Add some on the Recipes tab first.</div>`;return;}
+  const q=$('pick-search').value.trim().toLowerCase();
+  let list=recipes.slice().sort((a,b)=>String(a.title).localeCompare(String(b.title)));
+  if(q)list=list.filter(r=>r.title.toLowerCase().includes(q)||(r.ingredients||[]).some(i=>String(i).toLowerCase().includes(q)));
+  if(!list.length){$('pick-list').innerHTML=`<div class="empty-state"><span class="e">🔍</span>Nothing matches.</div>`;return;}
+  $('pick-list').innerHTML=list.map(r=>{
+    const cm=CAT_META[r.category]||CAT_META.others;
+    const thumb=r.imageUrl
+      ?`<div class="pick-thumb" style="background-image:url('${esc(r.imageUrl)}')"></div>`
+      :`<div class="pick-thumb" style="background:${catColorL(r.category)};color:${catColor(r.category)}">${cm.emoji}</div>`;
+    return `<div class="pick-row" onclick="pickRecipe('${r.id}')">${thumb}<div class="pick-title">${esc(r.title)||'Untitled'}</div></div>`;
+  }).join('');
+}
+function pickRecipe(id){
+  if(!pickTargetDate)return;
+  addToPlan(pickTargetDate,id);
+  closeScreen('pick-screen');
+  const r=getRecipe(id);
+  toast((r&&r.title?'“'+r.title+'”':'Recipe')+' → '+prettyDate(pickTargetDate));
+}
+
+/* add-to-plan from a recipe detail (date modal) */
+function openPlanPick(recipeId){
+  planPickRecipeId=recipeId;
+  const start=new Date();start.setHours(0,0,0,0);
+  let html='';
+  for(let i=0;i<14;i++){
+    const d=addDays(start,i),dstr=ymd(d);
+    const label=i===0?'Today':i===1?'Tomorrow':WEEKDAYS[(d.getDay()+6)%7];
+    html+=`<button onclick="placePlan('${dstr}')"><b>${label}</b>${MONTHS[d.getMonth()]} ${d.getDate()}</button>`;
+  }
+  $('planpick-dates').innerHTML=html;
+  $('planpick-modal').classList.add('open');
+}
+function closePlanPick(){$('planpick-modal').classList.remove('open');}
+function placePlan(dstr){
+  if(!planPickRecipeId)return;
+  addToPlan(dstr,planPickRecipeId);
+  closePlanPick();
+  toast('Added to '+prettyDate(dstr),'View plan',()=>{goHome();planWeekStart=mondayOf(parseYmd(dstr));setMode('plan');});
+}
+
+/* build the week's grocery list */
+function buildGroceryFromWeek(){
+  const weekDates=[];for(let i=0;i<7;i++)weekDates.push(ymd(addDays(planWeekStart,i)));
+  const weekEntries=plan.filter(p=>weekDates.includes(p.date));
+  if(!weekEntries.length){toast('Nothing planned this week');return;}
+  const ingEntries=[];
+  weekEntries.forEach(pe=>{
+    const r=getRecipe(pe.recipeId);
+    if(!r||!(r.ingredients||[]).length)return;
+    const baseServ=parseFloat(r.servings)||0,wantServ=parseFloat(pe.servings)||0;
+    const scale=(baseServ>0&&wantServ>0)?(wantServ/baseServ):1;
+    r.ingredients.forEach(ing=>ingEntries.push({ingredient:ing,scale}));
+  });
+  if(!ingEntries.length){toast('Planned recipes have no ingredients');return;}
+  openReview(aggregate(ingEntries,{staples,existingItems:items}),
+    {title:'Build grocery list',sub:'From this week’s plan — merged and grouped by aisle. Staples are pre-unchecked.'});
+}
+
+/* ============================================================
+   SMART REVIEW MODAL (shared: single recipe or a whole week)
+   ============================================================ */
+function sendRecipeToGrocery(id){
   const r=getRecipe(id);if(!r)return;
   if(!(r.ingredients||[]).length){toast('No ingredients to send');return;}
-  gsendRecipeId=id;
-  $('gsend-list').innerHTML=r.ingredients.map((ing,i)=>
-    `<div class="gsend-item on" id="gs-${i}" onclick="toggleGsend(${i})"><div class="gsend-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span>${esc(ing)}</span></div>`
-  ).join('');
-  $('gsend-modal').classList.add('open');
+  openReview(aggregate(r.ingredients.map(ing=>({ingredient:ing,scale:1})),{staples,existingItems:items}),
+    {title:'Add to grocery list',sub:'Grouped by aisle. Staples you keep on hand are pre-unchecked.'});
 }
-function toggleGsend(i){$('gs-'+i).classList.toggle('on');}
-function closeGsend(){$('gsend-modal').classList.remove('open');}
-function confirmGsend(){
-  const r=getRecipe(gsendRecipeId);if(!r)return;
-  const selected=r.ingredients.filter((_,i)=>$('gs-'+i)&&$('gs-'+i).classList.contains('on'));
-  if(!selected.length){toast('Nothing selected');return;}
-  const base=Date.now();
-  selected.forEach((ing,i)=>items.push({id:String(base+i),name:ing,qty:1,unit:'',checked:false}));
+function openReview(candidates,opts){
+  opts=opts||{};
+  reviewItems=candidates.map((c,i)=>({...c,idx:i,on:!c.isStaple}));
+  $('review-title').textContent=opts.title||'Add to grocery list';
+  $('review-sub').textContent=opts.sub||'';
+  renderReview();
+  $('review-modal').classList.add('open');
+}
+function renderReview(){
+  if(!reviewItems.length){$('review-list').innerHTML=`<div class="empty-state" style="padding:26px"><span class="e">✅</span>Nothing to add.</div>`;return;}
+  let html='',lastAisle=null;
+  reviewItems.forEach(it=>{
+    if(it.aisle!==lastAisle){html+=`<div class="rev-aisle">${esc(it.aisle)}</div>`;lastAisle=it.aisle;}
+    const qtxt=[fmtQty(it.qty),it.unit].filter(Boolean).join(' ');
+    const label=(qtxt?`<span class="rev-qty">${esc(qtxt)} </span>`:'')+esc(it.display||it.name);
+    let badge='';
+    if(it.isStaple)badge='<span class="rev-badge staple">staple</span>';
+    else if(it.inList)badge='<span class="rev-badge inlist">on list</span>';
+    else if(it.sourceCount>1)badge=`<span class="rev-badge count">×${it.sourceCount}</span>`;
+    html+=`<div class="gsend-item ${it.on?'on':''}" id="rev-${it.idx}" onclick="toggleReview(${it.idx})"><div class="gsend-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span>${label}</span>${badge}</div>`;
+  });
+  $('review-list').innerHTML=html;
+}
+function toggleReview(idx){const it=reviewItems.find(x=>x.idx===idx);if(!it)return;it.on=!it.on;$('rev-'+idx).classList.toggle('on',it.on);}
+function closeReview(){$('review-modal').classList.remove('open');}
+function confirmReview(){
+  const chosen=reviewItems.filter(x=>x.on);
+  if(!chosen.length){toast('Nothing selected');return;}
+  chosen.forEach(it=>{
+    const canon=canonicalName(it.name),unit=it.unit||'';
+    const match=items.find(g=>canonicalName(g.name)===canon&&(g.unit||'')===unit);
+    if(match){
+      if(it.qty!=null)match.qty=roundQty((Number(match.qty)||0)+it.qty);
+      match.checked=false;
+    }else{
+      items.push({id:uid(),name:it.display||it.name,qty:it.qty!=null?it.qty:1,unit,checked:false});
+    }
+  });
   scheduleGroceryPush();
   renderGroceries();
-  closeGsend();
-  toast(selected.length+' added to groceries ✓','View',()=>{goHome();setMode('groceries');switchGTab('list');});
+  closeReview();
+  toast(chosen.length+' added to groceries ✓','View',()=>{goHome();setMode('groceries');switchGTab('list');});
 }
 
 /* ============================================================
@@ -1430,7 +1882,7 @@ function startPolling(){
   setInterval(()=>{if(!document.hidden&&sheetUrl&&!isBusy())pull();},20000);
 }
 function isBusy(){
-  return ['import-screen','edit-screen'].some(id=>$(id).classList.contains('open'))
+  return ['import-screen','edit-screen','pick-screen'].some(id=>$(id).classList.contains('open'))
     || $('cook').classList.contains('open')
     || document.querySelector('.modal-overlay.open');
 }
@@ -1469,9 +1921,10 @@ function isBusy(){
    BOOT
    ============================================================ */
 loadLocalAll();
-setMode(currentMode);
 render();
 renderGroceries();
+renderPlan();
+setMode(currentMode);
 if(sheetUrl){setSyncStatus('syncing');pull().then(startPolling);}
 else{setSyncStatus('none');}
 </script>

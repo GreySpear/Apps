@@ -5,10 +5,11 @@
  * deployment. One Sheet, three tabs (`recipes`, `items`, `staples`), one URL.
  *
  * Sync contract the merged kitchen/index.html speaks:
- *   - GET  ?action=read                     -> { recipes:[...], items:[...], staples:[...] }
+ *   - GET  ?action=read                     -> { recipes, items, staples, plan }
  *   - POST {action:'save',  rows:[...]}      -> full-replace the "recipes" sheet
  *   - POST {sheet:'items',  rows:[...]}      -> full-replace the "items" sheet
  *   - POST {sheet:'staples',rows:[...]}      -> full-replace the "staples" sheet
+ *   - POST {sheet:'plan',   rows:[...]}      -> full-replace the "plan" sheet
  *   - POST {action:'fetch', url:'https://…'} -> server-side fetch of a recipe
  *         page (avoids CORS), returns JSON-LD blocks + og/twitter meta tags
  *   - POST {action:'ocr',   image:'<base64>', mimeType:'image/jpeg'}
@@ -20,6 +21,7 @@
  *            cookedDates | createdAt | updatedAt
  *   items:   id | name | qty | unit | checked('1'/'0')
  *   staples: id | name | qty | unit
+ *   plan:    id | date(YYYY-MM-DD) | recipeId | servings | createdAt
  *
  * Setup: paste this whole file into Extensions -> Apps Script on a Google
  * Sheet, then Deploy -> New deployment -> Web app (Execute as: Me,
@@ -37,10 +39,11 @@ var RECIPE_HEADERS = [
   'favorite', 'cookedDates', 'createdAt', 'updatedAt'
 ];
 
-// Grocery sheets and their headers.
-var GROCERY_SHEETS = {
+// Sheets addressed by name in POST {sheet:'…'} (everything except recipes).
+var SAVE_SHEETS = {
   items:   ['id', 'name', 'qty', 'unit', 'checked'],
-  staples: ['id', 'name', 'qty', 'unit']
+  staples: ['id', 'name', 'qty', 'unit'],
+  plan:    ['id', 'date', 'recipeId', 'servings', 'createdAt']
 };
 
 var MAX_RESPONSE_BYTES = 200 * 1024; // cap the /fetch response to ~200KB
@@ -74,8 +77,9 @@ function doGet(e) {
     if (action === 'read') {
       return jsonOutput_({
         recipes: getDataRows_(getSheet_(RECIPES_SHEET, RECIPE_HEADERS), RECIPE_HEADERS),
-        items:   getDataRows_(getSheet_('items',   GROCERY_SHEETS.items),   GROCERY_SHEETS.items),
-        staples: getDataRows_(getSheet_('staples', GROCERY_SHEETS.staples), GROCERY_SHEETS.staples)
+        items:   getDataRows_(getSheet_('items',   SAVE_SHEETS.items),   SAVE_SHEETS.items),
+        staples: getDataRows_(getSheet_('staples', SAVE_SHEETS.staples), SAVE_SHEETS.staples),
+        plan:    getDataRows_(getSheet_('plan',    SAVE_SHEETS.plan),    SAVE_SHEETS.plan)
       });
     }
     return jsonOutput_({ ok: false, error: 'Unknown or missing action' });
@@ -88,9 +92,9 @@ function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
 
-    // Grocery saves are addressed by sheet name.
-    if (data.sheet && GROCERY_SHEETS[data.sheet]) {
-      return handleGrocerySave_(data.sheet, data.rows || []);
+    // items / staples / plan are addressed by sheet name.
+    if (data.sheet && SAVE_SHEETS[data.sheet]) {
+      return fullReplace_(getSheet_(data.sheet, SAVE_SHEETS[data.sheet]), SAVE_SHEETS[data.sheet].length, data.rows || []);
     }
     // Recipe operations are addressed by action.
     if (data.action === 'save')  return handleRecipeSave_(data);
@@ -107,10 +111,6 @@ function doPost(e) {
 
 function handleRecipeSave_(data) {
   return fullReplace_(getSheet_(RECIPES_SHEET, RECIPE_HEADERS), RECIPE_HEADERS.length, data.rows || []);
-}
-
-function handleGrocerySave_(name, rows) {
-  return fullReplace_(getSheet_(name, GROCERY_SHEETS[name]), GROCERY_SHEETS[name].length, rows);
 }
 
 /**

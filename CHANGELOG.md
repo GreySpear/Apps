@@ -5,6 +5,29 @@ Groceries + Home Maintenance Log). Newest first.
 
 ## 2026-07-28
 
+### Kitchen — Meal planner + smart grocery aggregation
+- **New Plan tab** (third top-level mode: 🍳 Recipes · 📅 Plan · 🧺 Groceries).
+  A Monday-start weekly view with prev/next nav; assign recipes to any day
+  (from the Plan tab's per-day **+ Add** picker, or from a recipe's new
+  **📅 Add to plan**). No meal slots — a day just holds recipes, matching the
+  cook-dinner/leftovers-for-lunch workflow.
+- **One-tap "Build grocery list"** turns the planned week into a shopping list,
+  scaling each recipe's ingredients by its plan-entry servings.
+- **Smart aggregation engine** (`kitchen/index.html`, pure + node-tested):
+  parses free-text ingredient lines (quantities as integers/decimals/fractions/
+  unicode/ranges, leading *or* trailing units), canonicalizes names (strips prep
+  descriptors, keeps identity words, light de-pluralize), **merges duplicates**
+  across recipes, **skips staples** (pre-unchecked, not hidden), and **groups by
+  aisle** (Produce · Meat & Seafood · Dairy & Eggs · Bakery · Frozen · Pantry &
+  Dry · Spices). Merges into existing grocery items instead of duplicating.
+- **Shared review modal:** the single-recipe "To grocery list" now runs through
+  the same engine (dedupe, staples-aware, aisle-grouped) as the week builder.
+- **Backend:** one new `plan` tab (`id | date | recipeId | servings |
+  createdAt`); `GET ?action=read` now returns `plan` too; saved via the existing
+  `POST {sheet:'plan'}` full-replace path. Same one-deployment setup.
+- Tests: `kitchen/test/engine.test.js` (40 assertions) runs against the shipped
+  engine by extracting it from `index.html`. Spec in `kitchen/PLAN-mealplanner.md`.
+
 ### Kitchen — Recipes + Groceries consolidated into one app
 - **New `kitchen/` app** merges the Recipes and Grocery List apps into a single
   phone-first web app, with a top-level **🍳 Recipes / 🧺 Groceries** switch.
