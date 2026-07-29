@@ -5,6 +5,16 @@ Groceries + Home Maintenance Log). Newest first.
 
 ## 2026-07-29
 
+### Home Maintenance — Offline support (service worker)
+- **New `maintenance/sw.js`**, the same drop-in pattern as Kitchen: the app
+  shell + Google Fonts are cached (stale-while-revalidate for the shell,
+  cache-first for fonts) so Home Log opens with **no connection** — handy for
+  logging a repair in a basement with no signal. Backend calls (Apps Script,
+  incl. photo uploads) are never intercepted; offline, the app falls back to
+  its localStorage cache as before. Registered from `index.html` on load.
+- Verified in a headless browser: registers, precaches the shell, and the app
+  loads fully after going offline and reloading.
+
 ### Kitchen — Offline support (service worker)
 - **New `kitchen/sw.js`** makes the app shell load with **no connection**, not
   just the data. Registered from `index.html` on load (relative `sw.js`, so its
