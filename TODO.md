@@ -57,8 +57,8 @@ Stretch (only if the free path proves too flaky):
 - [ ] Attach PDFs (manuals) to items, not just images.
 
 ## Nice-to-haves
-- [ ] Cleaner grocery URL: rename `groceries/groceries.html` → `index.html` so
-      it lives at `.../Apps/groceries/`.
+- [x] ~~Cleaner grocery URL: rename `groceries/groceries.html` → `index.html` so
+      it lives at `.../Apps/groceries/`.~~ — done.
 - [x] ~~True offline support via a service worker (so the app shell loads with
       no connection, not just cached data).~~ — done for **Kitchen**
       (`kitchen/sw.js`) and **Home Maintenance** (`maintenance/sw.js`): the app

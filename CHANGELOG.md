@@ -5,6 +5,14 @@ Groceries + Home Maintenance Log). Newest first.
 
 ## 2026-07-29
 
+### Groceries — cleaner URL
+- **Renamed `groceries/groceries.html` → `groceries/index.html`** (via
+  `git mv`, history preserved) so the standalone Grocery List app lives at
+  `.../Apps/groceries/` instead of `.../Apps/groceries/groceries.html`. No
+  code changes — the file has no internal self-references. Note: the old
+  `groceries.html` URL will 404; this legacy app is superseded by Kitchen
+  anyway, which is where day-to-day groceries now live.
+
 ### Home Maintenance — Offline support (service worker)
 - **New `maintenance/sw.js`**, the same drop-in pattern as Kitchen: the app
   shell + Google Fonts are cached (stale-while-revalidate for the shell,
@@ -214,4 +222,5 @@ Groceries + Home Maintenance Log). Newest first.
   to `groceries/groceries.html`.
 - Live URLs (GitHub Pages):
   - Recipes: `https://greyspear.github.io/Apps/recipes/`
-  - Groceries: `https://greyspear.github.io/Apps/groceries/groceries.html`
+  - Groceries: `https://greyspear.github.io/Apps/groceries/`
+    (renamed from `groceries.html` to `index.html` on 2026-07-29)
