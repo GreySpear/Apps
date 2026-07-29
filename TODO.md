@@ -4,7 +4,7 @@ Ideas and planned work, roughly in priority order.
 
 ## Next up
 
-### Instagram Reels import
+### Instagram Reels import — shipped (2026-07-29)
 Goal: paste a reel and get the recipe, covering both cases you described —
 some reels have the recipe **in the caption**, some **link out** to a full
 recipe elsewhere.
@@ -13,30 +13,30 @@ Reality check first: Instagram actively blocks automated fetching, and it
 tends to block datacenter servers (like Google Apps Script) hardest. So the
 plan is built around what's reliable, with best-effort on the rest.
 
-Confirmed UX preference: the paste box should accept **either** a pasted
-caption **or** a reel share link and do the right thing automatically — both
-are used equally often.
+Confirmed UX preference: the paste box accepts **either** a pasted caption
+**or** a reel share link and does the right thing automatically — both are
+used equally often.
 
-- [ ] **Caption paste + link-following (reliable — the main win).**
-      When you paste caption text, scan it for a URL. If there's a link to a
-      real recipe page, follow it through the backend fetcher and parse the
-      full recipe (JSON-LD) from there. If there's no link, heuristic-parse
-      the caption as we do today.
-      - Handles "recipe in caption" (already works) *and* "recipe linked."
-      - Caveat: link *aggregators* (linktr.ee, beacons, a bio "link in bio")
-        aren't recipe pages, so those can't be auto-parsed — we'd surface the
-        link for you to tap.
-- [ ] **Paste a reel URL directly (best-effort).**
-      Backend fetches the reel URL with a browser user-agent and tries to pull
+- [x] **Caption paste + link-following (reliable — the main win).**
+      When you paste caption text, it scans for a URL. If there's a link to a
+      real recipe page, it follows it through the backend fetcher and parses
+      the full recipe (JSON-LD) from there. If there's no link, it
+      heuristic-parses the caption as before.
+      - Handles "recipe in caption" *and* "recipe linked."
+      - Link *aggregators* (linktr.ee, beacons, a bio "link in bio") aren't
+        recipe pages, so they're surfaced as a saved link for you to tap
+        rather than auto-parsed.
+- [x] **Paste a reel URL directly (best-effort).**
+      Backend fetches the reel URL with a browser user-agent; the app lifts
       the caption out of the `og:`/meta tags, then runs it through the same
       caption + link-following path.
-      - Works when Instagram serves the preview tags; when it shows a login
-        wall instead, fall back to a clear "paste the caption text instead"
-        message.
-- [ ] Detect `instagram.com/reel|p|share/...` URLs specifically and label the
-      import so the flow is obvious.
-- [ ] Test against several real reels (caption-recipe, linked-recipe,
-      login-walled) and document results in `recipes/test/`.
+      - When Instagram shows a login wall instead, it falls back to a clear
+        "open the reel, copy the caption, and paste it here" message.
+- [x] Detect `instagram.com/reel|reels|p|tv|share/...` URLs specifically and
+      label the import ("Reading reel…") so the flow is obvious.
+- [x] Unit tests for URL extraction, link classification, reel detection, and
+      og-caption extraction (`kitchen/test/import.test.js`, 35 assertions);
+      scenarios documented in `kitchen/test/IMPORT-notes.md`.
 
 Stretch (only if the free path proves too flaky):
 - [ ] Optional AI-assisted caption parsing via an Anthropic API key in

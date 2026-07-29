@@ -3,6 +3,31 @@
 A running history of changes to the apps in this repo (Kitchen + Recipes +
 Groceries + Home Maintenance Log). Newest first.
 
+## 2026-07-29
+
+### Kitchen — Instagram reels import (caption + link-following)
+- **Paste an Instagram reel link.** A pasted `instagram.com/reel|reels|p|tv|
+  share/…` URL is detected and routed to a reel-specific path: the backend
+  fetches it with a browser user-agent and the app lifts the caption out of the
+  `og:` preview tags, then runs it through the caption path. Button labels the
+  flow ("Reading reel…"). Best-effort by nature — when Instagram serves a login
+  wall, it falls back to a clear "open the reel, copy the caption, paste it
+  here" message instead of failing silently.
+- **Caption paste now follows links (the reliable win).** When a pasted caption
+  is thin on ingredients but carries a link to a **real recipe page**, the app
+  follows that link through the backend fetcher and parses the full recipe
+  (JSON-LD) from there. Covers both "recipe in caption" and "recipe linked
+  out." A **link-in-bio aggregator** (linktr.ee, beacons, bio.link, …) is never
+  auto-followed — it's saved on the recipe as a link for you to tap.
+- **Refactor:** the single-URL import split into `handleRecipeUrl` /
+  `handleInstagramUrl` / `handleCaptionText`, sharing one `fetchAndParseRecipe`
+  helper. New pure, node-tested helper block (`KITCHEN-IMPORT-START/-END`):
+  `extractUrls`, `classifyLink`, `isInstagramUrl`, `instagramKind`,
+  `extractInstagramCaption`, `usableCaptionFromOg`.
+- Tests: `kitchen/test/import.test.js` (35 assertions) runs against the shipped
+  helpers; scenarios and manual-test guidance in `kitchen/test/IMPORT-notes.md`.
+  No backend change — reuses the existing `{action:'fetch'}` endpoint.
+
 ## 2026-07-28
 
 ### Kitchen — Meal planner + smart grocery aggregation
