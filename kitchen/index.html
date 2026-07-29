@@ -158,6 +158,14 @@
     .ing-item.checked .ing-check svg{display:block}
     .ing-item.checked .ing-text{text-decoration:line-through;color:var(--text-light)}
     .ing-text{font-size:15px;line-height:1.4;padding-top:1px}
+    .ing-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .ing-head h3{margin-bottom:0}
+    .serv-stepper{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px 6px}
+    .ss-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:#fff;font-size:17px;font-weight:700;line-height:1;color:var(--text-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+    .ss-btn:active{background:var(--terra-light);border-color:var(--terra)}
+    .ss-val{font-size:13px;color:var(--text-mid);font-weight:600;min-width:54px;text-align:center}
+    .ss-val b{color:var(--text);font-weight:800}
+    .ss-reset{border:none;background:none;color:var(--terra);font-size:12.5px;font-weight:700;cursor:pointer;padding:0 2px 0 4px}
     .step-list{display:flex;flex-direction:column;gap:14px;counter-reset:step}
     .step-item{display:flex;gap:13px;align-items:flex-start}
     .step-num{width:26px;height:26px;border-radius:50%;background:var(--terra-light);color:var(--terra-dark);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Plus Jakarta Sans',sans-serif}
@@ -1096,6 +1104,23 @@ function fmtQty(n){
 }
 function roundQty(n){return n==null?null:Math.round(n*100)/100;}
 
+/* Scale one ingredient line for display: multiply only a LEADING quantity by
+   `factor` and re-format it, leaving the rest of the line untouched. Lines
+   with no leading quantity ("salt to taste", "a pinch of nutmeg") are returned
+   unchanged, and any leading bullet is preserved. Package sizes in parens
+   ("1 (14 oz) can") aren't touched — scaling the can count is what you want. */
+function scaleIngredientLine(line,factor){
+  const raw=String(line||'');
+  const bulletM=raw.match(/^\s*[-•*·▢▪◦‣]\s*/);
+  const bullet=bulletM?bulletM[0]:'';
+  const body=raw.slice(bullet.length);
+  const q=parseQty(body);
+  if(q.value==null||!isFinite(factor)||factor<=0)return raw;
+  const scaled=fmtQty(q.value*factor);
+  if(scaled==='')return raw;
+  return bullet+scaled+(q.rest?' '+q.rest:'');
+}
+
 /* entries: [{ingredient, scale}]; opts: {staples, existingItems}.
    Returns merged, aisle-tagged, staple-aware grocery candidates. */
 function aggregate(entries,opts){
@@ -1168,6 +1193,8 @@ let editingId=null;      // recipe being edited (null = new)
 let editCat='others';
 let detailId=null;       // recipe open in detail
 let checkedIngredients={};// detail view ephemeral
+let detailBaseServ=null; // recipe's own servings (number) when scalable
+let detailServ=null;     // servings currently displayed (scaled target)
 let currentGTab='list';  // grocery tab
 let planWeekStart=mondayOf(new Date()); // Date, Monday of the shown week
 let pickTargetDate=null; // which day the recipe picker is adding to
@@ -1655,6 +1682,9 @@ function getRecipe(id){return recipes.find(r=>r.id===id);}
 function openDetail(id){
   const r=getRecipe(id);if(!r)return;
   detailId=id;checkedIngredients={};
+  const bs=parseFloat(r.servings);
+  detailBaseServ=(isFinite(bs)&&bs>0)?bs:null;
+  detailServ=detailBaseServ;
   const cm=CAT_META[r.category]||CAT_META.others;
   const color=catColor(r.category),colorL=catColorL(r.category);
   $('detail-heading').textContent=r.title||'Recipe';
@@ -1663,16 +1693,25 @@ function openDetail(id){
     ? `<div class="detail-hero" style="background-image:url('${esc(r.imageUrl)}')"></div>`
     : `<div class="detail-hero placeholder" style="background:${colorL};color:${color}">${cm.emoji}</div>`;
   const meta=[];
-  if(r.servings)meta.push(`<span class="meta-pill">👤 ${esc(r.servings)} serv</span>`);
+  // When servings are scalable, the interactive stepper is the servings display,
+  // so skip the static pill here to avoid showing two servings counts.
+  if(r.servings&&!detailBaseServ)meta.push(`<span class="meta-pill">👤 ${esc(r.servings)} serv</span>`);
   if(r.prepTime)meta.push(`<span class="meta-pill">🔪 ${esc(r.prepTime)}</span>`);
   if(r.cookTime)meta.push(`<span class="meta-pill">🔥 ${esc(r.cookTime)}</span>`);
   const lc=lastCooked(r);
   if(lc)meta.push(`<span class="meta-pill">🍽️ Cooked ${esc(timeAgo(lc))}</span>`);
   const src=r.sourceUrl?`<a class="source-link" href="${esc(r.sourceUrl)}" target="_blank" rel="noopener">↗ Source</a>`:'';
 
-  const ings=(r.ingredients||[]).length?`<div class="detail-section"><h3>🧺 Ingredients</h3><div class="ing-list">${
-    r.ingredients.map((ing,i)=>`<div class="ing-item" id="ing-${i}" onclick="toggleIng(${i})"><div class="ing-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ing-text">${esc(ing)}</div></div>`).join('')
-  }</div></div>`:'';
+  const stepper=detailBaseServ?`<div class="serv-stepper">
+      <button class="ss-btn" onclick="changeServings(-1)" aria-label="Fewer servings">−</button>
+      <span class="ss-val"><b id="serv-count">${fmtServ(detailServ)}</b> serv</span>
+      <button class="ss-btn" onclick="changeServings(1)" aria-label="More servings">+</button>
+      <button class="ss-reset" id="serv-reset" onclick="resetServings()" style="display:none">Reset</button>
+    </div>`:'';
+  const ings=(r.ingredients||[]).length?`<div class="detail-section">
+      <div class="ing-head"><h3>🧺 Ingredients</h3>${stepper}</div>
+      <div class="ing-list" id="ing-list-wrap">${ingRowsHtml(r.ingredients,1)}</div>
+    </div>`:'';
 
   const steps=(r.steps||[]).length?`<div class="detail-section"><h3>👩‍🍳 Steps</h3><div class="step-list">${
     r.steps.map((s,i)=>`<div class="step-item"><div class="step-num">${i+1}</div><div class="step-text">${esc(s)}</div></div>`).join('')
@@ -1714,6 +1753,45 @@ function toggleFavFromDetail(){if(detailId)toggleFav(detailId);}
 function toggleIng(i){
   checkedIngredients[i]=!checkedIngredients[i];
   $('ing-'+i).classList.toggle('checked',checkedIngredients[i]);
+}
+
+/* ---------- serving-size scaling (detail view) ---------- */
+/* Render ingredient rows scaled by `factor`, re-applying any checked state so
+   scaling never loses which items you've ticked off. */
+function ingRowsHtml(ings,factor){
+  return (ings||[]).map((ing,i)=>{
+    const line=factor===1?ing:scaleIngredientLine(ing,factor);
+    const on=checkedIngredients[i]?' checked':'';
+    return `<div class="ing-item${on}" id="ing-${i}" onclick="toggleIng(${i})"><div class="ing-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ing-text">${esc(line)}</div></div>`;
+  }).join('');
+}
+/* Servings shown as a tidy number (½, 1 ½, 4) — reuses the ingredient fraction
+   formatter, falling back to a rounded value for odd scales. */
+function fmtServ(n){
+  if(n==null)return '';
+  const f=fmtQty(n);
+  return f||String(Math.round(n*100)/100);
+}
+function renderIngList(){
+  const r=getRecipe(detailId);if(!r||!detailBaseServ)return;
+  const factor=detailServ/detailBaseServ;
+  const wrap=$('ing-list-wrap');if(wrap)wrap.innerHTML=ingRowsHtml(r.ingredients,factor);
+  const count=$('serv-count');if(count)count.textContent=fmtServ(detailServ);
+  const reset=$('serv-reset');if(reset)reset.style.display=(detailServ===detailBaseServ)?'none':'';
+}
+function changeServings(delta){
+  if(!detailBaseServ)return;
+  // Step by 1 for whole-serving recipes; by half when the base is fractional.
+  const step=Number.isInteger(detailBaseServ)?1:0.5;
+  const next=Math.round((detailServ+delta*step)*100)/100;
+  if(next<step)return;              // never below one step
+  detailServ=next;
+  renderIngList();
+}
+function resetServings(){
+  if(!detailBaseServ)return;
+  detailServ=detailBaseServ;
+  renderIngList();
 }
 function editRecipe(id){
   const r=getRecipe(id);if(!r)return;
@@ -1917,8 +1995,13 @@ function buildGroceryFromWeek(){
 function sendRecipeToGrocery(id){
   const r=getRecipe(id);if(!r)return;
   if(!(r.ingredients||[]).length){toast('No ingredients to send');return;}
-  openReview(aggregate(r.ingredients.map(ing=>({ingredient:ing,scale:1})),{staples,existingItems:items}),
-    {title:'Add to grocery list',sub:'Grouped by aisle. Staples you keep on hand are pre-unchecked.'});
+  // If this recipe is open and scaled in the detail view, send the scaled qty.
+  const scale=(id===detailId&&detailBaseServ&&detailServ)?(detailServ/detailBaseServ):1;
+  const sub=scale!==1
+    ? `Scaled to ${fmtServ(detailServ)} servings, grouped by aisle. Staples you keep on hand are pre-unchecked.`
+    : 'Grouped by aisle. Staples you keep on hand are pre-unchecked.';
+  openReview(aggregate(r.ingredients.map(ing=>({ingredient:ing,scale})),{staples,existingItems:items}),
+    {title:'Add to grocery list',sub});
 }
 function openReview(candidates,opts){
   opts=opts||{};

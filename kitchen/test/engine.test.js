@@ -16,7 +16,7 @@ if (!m) { console.error('Could not find engine markers in index.html'); process.
 
 // Evaluate the engine block and capture its top-level functions.
 const src = m[1] +
-  '\n;return {parseQty,normalizeUnit,parseIngredient,canonicalName,aggregate,aisleFor,fmtQty,depluralize,roundQty};';
+  '\n;return {parseQty,normalizeUnit,parseIngredient,canonicalName,aggregate,aisleFor,fmtQty,depluralize,roundQty,scaleIngredientLine};';
 const E = new Function(src)();
 
 let pass = 0, fail = 0;
@@ -96,6 +96,18 @@ near('serving scale', scaled[0].qty, 2);
 
 const noqty = E.aggregate([{ ingredient: 'salt and pepper to taste', scale: 1 }], {});
 eq('qtyless present', noqty.length >= 1, true);
+
+// --- scaleIngredientLine: leading qty scales, rest of line untouched ---
+eq('scale int',       E.scaleIngredientLine('2 cups flour', 2), '4 cups flour');
+eq('scale to frac',   E.scaleIngredientLine('1 cup sugar', 0.5), '½ cup sugar');
+eq('scale unicode',   E.scaleIngredientLine('½ cup cream', 2), '1 cup cream');
+eq('scale mixed',     E.scaleIngredientLine('1 ½ cups milk', 2), '3 cups milk');
+eq('scale bullet',    E.scaleIngredientLine('- 3 cloves garlic', 2), '- 6 cloves garlic');
+eq('scale count',     E.scaleIngredientLine('2 chicken breasts', 1.5), '3 chicken breasts');
+eq('scale pkg paren', E.scaleIngredientLine('1 (14 oz) can tomatoes', 2), '2 (14 oz) can tomatoes');
+eq('scale no-qty',    E.scaleIngredientLine('salt to taste', 3), 'salt to taste');
+eq('scale factor 1',  E.scaleIngredientLine('2 cups flour', 1), '2 cups flour');
+eq('scale bad factor',E.scaleIngredientLine('2 cups flour', 0), '2 cups flour');
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

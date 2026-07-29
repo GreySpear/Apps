@@ -5,6 +5,21 @@ Groceries + Home Maintenance Log). Newest first.
 
 ## 2026-07-29
 
+### Kitchen — Serving-size scaling on the recipe detail view
+- **Servings stepper** in the Ingredients header (shown when a recipe has a
+  numeric servings count). Tapping **−/+** rescales every ingredient line live —
+  `2 cups` → `4 cups`, `1 cup` → `½ cup`, `½ cup` → `1 cup` — with a **Reset**
+  that appears once you've changed it. Whole-serving recipes step by 1;
+  fractional bases step by ½.
+- Only a **leading quantity** is scaled and re-formatted (via the existing
+  `parseQty` + `fmtQty`); the rest of the line is untouched, so package sizes in
+  parens (`1 (14 oz) can`) and qty-less lines (`salt to taste`) stay correct.
+  Checked-off ingredients keep their state across a rescale.
+- **"To grocery list"** from a scaled recipe sends the **scaled** quantities and
+  notes the target servings in the review modal.
+- Pure `scaleIngredientLine` added to the tested engine block; 10 new assertions
+  in `kitchen/test/engine.test.js` (now 50).
+
 ### Kitchen — Instagram reels import (caption + link-following)
 - **Paste an Instagram reel link.** A pasted `instagram.com/reel|reels|p|tv|
   share/…` URL is detected and routed to a reel-specific path: the backend

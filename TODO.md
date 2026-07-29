@@ -61,8 +61,10 @@ Stretch (only if the free path proves too flaky):
       it lives at `.../Apps/groceries/`.
 - [ ] True offline support via a service worker (so the app shell loads with no
       connection, not just cached data).
-- [ ] Serving-size scaling — adjust ingredient quantities when you change
-      servings.
+- [x] ~~Serving-size scaling — adjust ingredient quantities when you change
+      servings.~~ — done: a servings stepper on the recipe detail view rescales
+      every ingredient line live (reuses the parser + fraction formatter);
+      "To grocery list" respects the scaled amount.
 - [x] ~~Import a recipe from a photo (OCR)~~ — done: Photo tab on the import
       screen, using Google Drive's free OCR via the backend. (A possible later
       upgrade: AI vision via an API key, which handles messy handwriting
