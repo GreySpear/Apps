@@ -5,6 +5,24 @@ Groceries + Home Maintenance Log). Newest first.
 
 ## 2026-07-29
 
+### Kitchen — Offline support (service worker)
+- **New `kitchen/sw.js`** makes the app shell load with **no connection**, not
+  just the data. Registered from `index.html` on load (relative `sw.js`, so its
+  scope is the app's own directory on GitHub Pages).
+- **Caching strategy:** the same-origin app shell uses stale-while-revalidate —
+  served instantly from cache, refreshed in the background, with an offline
+  navigation falling back to the cached shell. Google Fonts (CSS + files) are
+  cache-first so they render offline after first load (and the CSS already has
+  system-font fallbacks if they're missing). Backend calls (Apps Script) are
+  never intercepted: GETs go straight to the network to stay live, POSTs
+  (writes) are left alone, and when offline the app falls back to its
+  localStorage cache as before.
+- **Updates:** bump `VERSION` in `sw.js` to roll all caches (old ones are
+  deleted on activate); even without a bump, stale-while-revalidate pulls a
+  fresh build in the background for the next open.
+- Verified in a headless browser: SW registers, precaches the shell, and the
+  app loads fully after going offline and reloading.
+
 ### Kitchen — Serving-size scaling on the recipe detail view
 - **Servings stepper** in the Ingredients header (shown when a recipe has a
   numeric servings count). Tapping **−/+** rescales every ingredient line live —

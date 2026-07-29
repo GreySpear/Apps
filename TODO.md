@@ -59,8 +59,12 @@ Stretch (only if the free path proves too flaky):
 ## Nice-to-haves
 - [ ] Cleaner grocery URL: rename `groceries/groceries.html` → `index.html` so
       it lives at `.../Apps/groceries/`.
-- [ ] True offline support via a service worker (so the app shell loads with no
-      connection, not just cached data).
+- [x] ~~True offline support via a service worker (so the app shell loads with
+      no connection, not just cached data).~~ — done for **Kitchen**
+      (`kitchen/sw.js`): the app shell + fonts are cached so it opens fully
+      offline; backend sync stays network-only and falls back to the local
+      cache when there's no connection. (The Home Maintenance app could get the
+      same treatment — same drop-in pattern.)
 - [x] ~~Serving-size scaling — adjust ingredient quantities when you change
       servings.~~ — done: a servings stepper on the recipe detail view rescales
       every ingredient line live (reuses the parser + fraction formatter);
