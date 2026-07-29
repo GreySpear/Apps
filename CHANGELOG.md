@@ -3,6 +3,82 @@
 A running history of changes to the apps in this repo (Kitchen + Recipes +
 Groceries + Home Maintenance Log). Newest first.
 
+## 2026-07-29
+
+### Groceries — cleaner URL
+- **Renamed `groceries/groceries.html` → `groceries/index.html`** (via
+  `git mv`, history preserved) so the standalone Grocery List app lives at
+  `.../Apps/groceries/` instead of `.../Apps/groceries/groceries.html`. No
+  code changes — the file has no internal self-references. Note: the old
+  `groceries.html` URL will 404; this legacy app is superseded by Kitchen
+  anyway, which is where day-to-day groceries now live.
+
+### Home Maintenance — Offline support (service worker)
+- **New `maintenance/sw.js`**, the same drop-in pattern as Kitchen: the app
+  shell + Google Fonts are cached (stale-while-revalidate for the shell,
+  cache-first for fonts) so Home Log opens with **no connection** — handy for
+  logging a repair in a basement with no signal. Backend calls (Apps Script,
+  incl. photo uploads) are never intercepted; offline, the app falls back to
+  its localStorage cache as before. Registered from `index.html` on load.
+- Verified in a headless browser: registers, precaches the shell, and the app
+  loads fully after going offline and reloading.
+
+### Kitchen — Offline support (service worker)
+- **New `kitchen/sw.js`** makes the app shell load with **no connection**, not
+  just the data. Registered from `index.html` on load (relative `sw.js`, so its
+  scope is the app's own directory on GitHub Pages).
+- **Caching strategy:** the same-origin app shell uses stale-while-revalidate —
+  served instantly from cache, refreshed in the background, with an offline
+  navigation falling back to the cached shell. Google Fonts (CSS + files) are
+  cache-first so they render offline after first load (and the CSS already has
+  system-font fallbacks if they're missing). Backend calls (Apps Script) are
+  never intercepted: GETs go straight to the network to stay live, POSTs
+  (writes) are left alone, and when offline the app falls back to its
+  localStorage cache as before.
+- **Updates:** bump `VERSION` in `sw.js` to roll all caches (old ones are
+  deleted on activate); even without a bump, stale-while-revalidate pulls a
+  fresh build in the background for the next open.
+- Verified in a headless browser: SW registers, precaches the shell, and the
+  app loads fully after going offline and reloading.
+
+### Kitchen — Serving-size scaling on the recipe detail view
+- **Servings stepper** in the Ingredients header (shown when a recipe has a
+  numeric servings count). Tapping **−/+** rescales every ingredient line live —
+  `2 cups` → `4 cups`, `1 cup` → `½ cup`, `½ cup` → `1 cup` — with a **Reset**
+  that appears once you've changed it. Whole-serving recipes step by 1;
+  fractional bases step by ½.
+- Only a **leading quantity** is scaled and re-formatted (via the existing
+  `parseQty` + `fmtQty`); the rest of the line is untouched, so package sizes in
+  parens (`1 (14 oz) can`) and qty-less lines (`salt to taste`) stay correct.
+  Checked-off ingredients keep their state across a rescale.
+- **"To grocery list"** from a scaled recipe sends the **scaled** quantities and
+  notes the target servings in the review modal.
+- Pure `scaleIngredientLine` added to the tested engine block; 10 new assertions
+  in `kitchen/test/engine.test.js` (now 50).
+
+### Kitchen — Instagram reels import (caption + link-following)
+- **Paste an Instagram reel link.** A pasted `instagram.com/reel|reels|p|tv|
+  share/…` URL is detected and routed to a reel-specific path: the backend
+  fetches it with a browser user-agent and the app lifts the caption out of the
+  `og:` preview tags, then runs it through the caption path. Button labels the
+  flow ("Reading reel…"). Best-effort by nature — when Instagram serves a login
+  wall, it falls back to a clear "open the reel, copy the caption, paste it
+  here" message instead of failing silently.
+- **Caption paste now follows links (the reliable win).** When a pasted caption
+  is thin on ingredients but carries a link to a **real recipe page**, the app
+  follows that link through the backend fetcher and parses the full recipe
+  (JSON-LD) from there. Covers both "recipe in caption" and "recipe linked
+  out." A **link-in-bio aggregator** (linktr.ee, beacons, bio.link, …) is never
+  auto-followed — it's saved on the recipe as a link for you to tap.
+- **Refactor:** the single-URL import split into `handleRecipeUrl` /
+  `handleInstagramUrl` / `handleCaptionText`, sharing one `fetchAndParseRecipe`
+  helper. New pure, node-tested helper block (`KITCHEN-IMPORT-START/-END`):
+  `extractUrls`, `classifyLink`, `isInstagramUrl`, `instagramKind`,
+  `extractInstagramCaption`, `usableCaptionFromOg`.
+- Tests: `kitchen/test/import.test.js` (35 assertions) runs against the shipped
+  helpers; scenarios and manual-test guidance in `kitchen/test/IMPORT-notes.md`.
+  No backend change — reuses the existing `{action:'fetch'}` endpoint.
+
 ## 2026-07-28
 
 ### Kitchen — Meal planner + smart grocery aggregation
@@ -146,4 +222,5 @@ Groceries + Home Maintenance Log). Newest first.
   to `groceries/groceries.html`.
 - Live URLs (GitHub Pages):
   - Recipes: `https://greyspear.github.io/Apps/recipes/`
-  - Groceries: `https://greyspear.github.io/Apps/groceries/groceries.html`
+  - Groceries: `https://greyspear.github.io/Apps/groceries/`
+    (renamed from `groceries.html` to `index.html` on 2026-07-29)

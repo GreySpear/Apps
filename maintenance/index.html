@@ -1187,6 +1187,15 @@ function saveSettings(){
 $('settings-modal').addEventListener('click',e=>{if(e.target===$('settings-modal'))closeSettings();});
 
 /* ============================================================
+   SERVICE WORKER (offline app shell) — see maintenance/sw.js
+   ============================================================ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+/* ============================================================
    INIT
    ============================================================ */
 loadLocal();

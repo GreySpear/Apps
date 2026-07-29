@@ -158,6 +158,14 @@
     .ing-item.checked .ing-check svg{display:block}
     .ing-item.checked .ing-text{text-decoration:line-through;color:var(--text-light)}
     .ing-text{font-size:15px;line-height:1.4;padding-top:1px}
+    .ing-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .ing-head h3{margin-bottom:0}
+    .serv-stepper{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px 6px}
+    .ss-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:#fff;font-size:17px;font-weight:700;line-height:1;color:var(--text-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+    .ss-btn:active{background:var(--terra-light);border-color:var(--terra)}
+    .ss-val{font-size:13px;color:var(--text-mid);font-weight:600;min-width:54px;text-align:center}
+    .ss-val b{color:var(--text);font-weight:800}
+    .ss-reset{border:none;background:none;color:var(--terra);font-size:12.5px;font-weight:700;cursor:pointer;padding:0 2px 0 4px}
     .step-list{display:flex;flex-direction:column;gap:14px;counter-reset:step}
     .step-item{display:flex;gap:13px;align-items:flex-start}
     .step-num{width:26px;height:26px;border-radius:50%;background:var(--terra-light);color:var(--terra-dark);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Plus Jakarta Sans',sans-serif}
@@ -493,8 +501,8 @@
       <button class="it-btn" id="imp-tab-blank" onclick="setImportTab('blank')">Blank</button>
     </div>
     <div id="imp-paste">
-      <div class="import-note" id="imp-hint">Paste a <strong>recipe link</strong> or the <strong>caption text</strong> from Instagram/anywhere. I'll detect which and pull it apart for you — you can fix anything on the next screen.</div>
-      <textarea class="fin paste-box" id="paste-box" placeholder="Paste a URL like https://…&#10;&#10;— or —&#10;&#10;Paste a caption:&#10;&#10;Creamy Tuscan Chicken 🍗&#10;Ingredients:&#10;- 2 chicken breasts&#10;- ½ cup cream&#10;…"></textarea>
+      <div class="import-note" id="imp-hint">Paste an <strong>Instagram reel link</strong>, a <strong>recipe link</strong>, or the <strong>caption text</strong> from a reel. I'll detect which and pull it apart — if a caption links out to a full recipe, I'll follow it. You can fix anything on the next screen.</div>
+      <textarea class="fin paste-box" id="paste-box" placeholder="Paste an Instagram reel link&#10;https://www.instagram.com/reel/…&#10;&#10;— or a recipe link —&#10;https://…&#10;&#10;— or the caption text —&#10;&#10;Creamy Tuscan Chicken 🍗&#10;Ingredients:&#10;- 2 chicken breasts&#10;- ½ cup cream&#10;…"></textarea>
       <div class="form-actions">
         <button class="btn-primary" id="parse-btn" onclick="doParse()">Parse recipe</button>
       </div>
@@ -867,6 +875,89 @@ function categorize(title,ingredients){
   return 'others';
 }
 
+/* KITCHEN-IMPORT-START (pure URL/link helpers for Instagram reels + link-following
+   import — tested in kitchen/test/import.test.js) */
+
+/* Find http(s) URLs inside free text (e.g. a pasted caption). Trailing
+   punctuation and closing brackets are trimmed. Returns them in order,
+   de-duplicated. */
+function extractUrls(text){
+  const out=[],seen={};
+  const re=/https?:\/\/[^\s<>"'\)\]]+/gi;
+  let m;
+  while((m=re.exec(String(text||'')))!==null){
+    const u=m[0].replace(/[.,;:!?)\]}'"]+$/,'');
+    if(u&&!seen[u]){seen[u]=1;out.push(u);}
+  }
+  return out;
+}
+
+/* Bare host (no scheme, no leading www.) for a URL, lowercased. */
+function urlHost(url){
+  const m=/^https?:\/\/([^/?#]+)/i.exec(String(url||''));
+  return m?m[1].toLowerCase().replace(/^www\./,'').replace(/^m\./,''):'';
+}
+
+/* "Link in bio" aggregators — not recipe pages, so we surface them for a
+   tap instead of trying to auto-parse. */
+const AGGREGATOR_HOSTS=['linktr.ee','beacons.ai','beacons.page','linkin.bio','lnk.bio',
+  'link.tree','campsite.bio','taplink.cc','komi.io','koji.to','withkoji.com','msha.ke',
+  'solo.to','flow.page','snipfeed.co','shorby.com','tap.bio','pillar.io','carrd.co',
+  'bio.link','bio.site','stan.store','allmylinks.com','hoo.be','later.com','milkshake.app'];
+
+/* Social/video hosts that are the source, not a recipe page to follow. */
+const SOCIAL_HOSTS=['instagram.com','instagr.am','tiktok.com','vm.tiktok.com','youtube.com',
+  'youtu.be','facebook.com','fb.watch','fb.me','twitter.com','x.com','pinterest.com',
+  'pin.it','threads.net','snapchat.com'];
+
+function hostMatches_(host,list){
+  return list.some(function(s){return host===s||host.endsWith('.'+s);});
+}
+
+/* 'social' (skip), 'aggregator' (surface, don't follow), or 'recipe' (follow). */
+function classifyLink(url){
+  const h=urlHost(url);
+  if(!h)return 'social';
+  if(hostMatches_(h,SOCIAL_HOSTS))return 'social';
+  if(hostMatches_(h,AGGREGATOR_HOSTS))return 'aggregator';
+  return 'recipe';
+}
+
+function isInstagramUrl(url){
+  const h=urlHost(url);
+  return h==='instagram.com'||h==='instagr.am';
+}
+
+/* reel | reels | p | tv | share for post-style links; 'profile' for a bare
+   profile; null when not Instagram. */
+function instagramKind(url){
+  if(!isInstagramUrl(url))return null;
+  const m=/instagram\.com\/(?:[^/?#]+\/)?(reel|reels|p|tv|share)(?:\/|$)/i.exec(String(url||''));
+  return m?m[1].toLowerCase():'profile';
+}
+
+/* Pull the caption out of an Instagram preview's og:description, which looks
+   like: '1,234 likes, 56 comments - user on July 1, 2024: "caption…"'. Strips
+   the stats/handle/date prefix and surrounding quotes. '' if none. */
+function extractInstagramCaption(og){
+  og=og||{};
+  let d=String(og.description||'').trim();
+  if(!d)return '';
+  const stats=/^[\d,\.]+\s+likes?[\s\S]*?:\s*/i;
+  if(stats.test(d))d=d.replace(stats,'');
+  d=d.replace(/^[\s"“”'']+/,'').replace(/[\s"“”'']+$/,'').trim();
+  return d;
+}
+
+/* A caption only counts as usable if it's more than a stray word — otherwise
+   we treat the reel as login-walled and ask for a manual paste. */
+function usableCaptionFromOg(og){
+  const c=extractInstagramCaption(og);
+  return c.length>=12?c:'';
+}
+
+/* KITCHEN-IMPORT-END */
+
 /* KITCHEN-ENGINE-START (pure smart-aggregation engine — tested in kitchen/test/) */
 const UNICODE_FRAC={'½':0.5,'⅓':1/3,'⅔':2/3,'¼':0.25,'¾':0.75,'⅕':0.2,'⅖':0.4,'⅗':0.6,'⅘':0.8,'⅙':1/6,'⅚':5/6,'⅛':0.125,'⅜':0.375,'⅝':0.625,'⅞':0.875};
 const FRAC_KEYS=Object.keys(UNICODE_FRAC).join('');
@@ -1013,6 +1104,23 @@ function fmtQty(n){
 }
 function roundQty(n){return n==null?null:Math.round(n*100)/100;}
 
+/* Scale one ingredient line for display: multiply only a LEADING quantity by
+   `factor` and re-format it, leaving the rest of the line untouched. Lines
+   with no leading quantity ("salt to taste", "a pinch of nutmeg") are returned
+   unchanged, and any leading bullet is preserved. Package sizes in parens
+   ("1 (14 oz) can") aren't touched — scaling the can count is what you want. */
+function scaleIngredientLine(line,factor){
+  const raw=String(line||'');
+  const bulletM=raw.match(/^\s*[-•*·▢▪◦‣]\s*/);
+  const bullet=bulletM?bulletM[0]:'';
+  const body=raw.slice(bullet.length);
+  const q=parseQty(body);
+  if(q.value==null||!isFinite(factor)||factor<=0)return raw;
+  const scaled=fmtQty(q.value*factor);
+  if(scaled==='')return raw;
+  return bullet+scaled+(q.rest?' '+q.rest:'');
+}
+
 /* entries: [{ingredient, scale}]; opts: {staples, existingItems}.
    Returns merged, aisle-tagged, staple-aware grocery candidates. */
 function aggregate(entries,opts){
@@ -1085,6 +1193,8 @@ let editingId=null;      // recipe being edited (null = new)
 let editCat='others';
 let detailId=null;       // recipe open in detail
 let checkedIngredients={};// detail view ephemeral
+let detailBaseServ=null; // recipe's own servings (number) when scalable
+let detailServ=null;     // servings currently displayed (scaled target)
 let currentGTab='list';  // grocery tab
 let planWeekStart=mondayOf(new Date()); // Date, Monday of the shown week
 let pickTargetDate=null; // which day the recipe picker is adding to
@@ -1341,35 +1451,111 @@ async function doParse(){
   const raw=$('paste-box').value.trim();
   if(!raw){toast('Paste something first');return;}
   if(isUrl(raw)){
-    if(!sheetUrl){
-      toast('URL import needs the backend — opening settings');
-      openSettings();
-      return;
-    }
-    const btn=$('parse-btn');btn.textContent='Fetching…';btn.disabled=true;
-    try{
-      const res=await fetch(sheetUrl,{method:'POST',body:JSON.stringify({action:'fetch',url:raw})});
-      const data=await res.json();
-      if(!data||data.ok===false)throw new Error('fetch failed');
-      const parsed=parseRecipeFromLdjson(data.ldjson||[],data.og||{});
-      const cat=categorize(parsed.title,parsed.ingredients);
-      openEditor({
-        title:parsed.title,category:cat,sourceUrl:raw,imageUrl:parsed.imageUrl,
-        ingredients:parsed.ingredients,steps:parsed.steps,servings:parsed.servings,
-        prepTime:parsed.prepTime,cookTime:parsed.cookTime,notes:parsed.notes
-      });
-      if(!parsed.sourceFound)toast('No recipe data found — filled what I could');
-    }catch(e){
-      toast('Couldn\'t fetch that page — add it manually');
-      openEditor({sourceUrl:raw,category:'others'});
-    }finally{btn.textContent='Parse recipe';btn.disabled=false;}
-  }else{
-    const parsed=parseCaption(raw);
+    if(isInstagramUrl(raw))return handleInstagramUrl(raw);
+    return handleRecipeUrl(raw);
+  }
+  return handleCaptionText(raw);
+}
+
+/* Fetch a page through the backend and parse it into a recipe. Throws on a
+   failed fetch; caller decides what to do with an empty (no-recipe) result. */
+async function fetchAndParseRecipe(url){
+  const res=await fetch(sheetUrl,{method:'POST',body:JSON.stringify({action:'fetch',url})});
+  const data=await res.json();
+  if(!data||data.ok===false)throw new Error((data&&data.error)||'fetch failed');
+  return {parsed:parseRecipeFromLdjson(data.ldjson||[],data.og||{}),og:data.og||{}};
+}
+
+/* A plain recipe URL (blog, allrecipes, etc.) — server-side fetch + JSON-LD. */
+async function handleRecipeUrl(url){
+  if(!sheetUrl){toast('URL import needs the backend — opening settings');openSettings();return;}
+  const btn=$('parse-btn');btn.textContent='Fetching…';btn.disabled=true;
+  try{
+    const {parsed}=await fetchAndParseRecipe(url);
     const cat=categorize(parsed.title,parsed.ingredients);
     openEditor({
-      title:parsed.title,category:cat,ingredients:parsed.ingredients,steps:parsed.steps
+      title:parsed.title,category:cat,sourceUrl:url,imageUrl:parsed.imageUrl,
+      ingredients:parsed.ingredients,steps:parsed.steps,servings:parsed.servings,
+      prepTime:parsed.prepTime,cookTime:parsed.cookTime,notes:parsed.notes
     });
+    if(!parsed.sourceFound)toast('No recipe data found — filled what I could');
+  }catch(e){
+    toast('Couldn\'t fetch that page — add it manually');
+    openEditor({sourceUrl:url,category:'others'});
+  }finally{btn.textContent='Parse recipe';btn.disabled=false;}
+}
+
+/* Caption text (pasted directly, or pulled from a reel). Parses the caption
+   heuristically, and — when the caption is thin but carries a real recipe
+   link — follows that link through the backend for the full recipe. A "link
+   in bio" aggregator can't be auto-parsed, so it's surfaced for a tap.
+   `srcUrl` (optional) is the reel/source the caption came from. */
+async function handleCaptionText(raw,srcUrl){
+  const parsed=parseCaption(raw);
+  const urls=extractUrls(raw);
+  const recipeLink=urls.find(u=>classifyLink(u)==='recipe');
+  const aggregatorLink=urls.find(u=>classifyLink(u)==='aggregator');
+  const captionThin=parsed.ingredients.length<2;
+
+  // Follow a real recipe link when the caption alone is thin and we can fetch.
+  if(recipeLink&&captionThin&&sheetUrl){
+    const btn=$('parse-btn');btn.textContent='Following link…';btn.disabled=true;
+    try{
+      const {parsed:fetched}=await fetchAndParseRecipe(recipeLink);
+      if(fetched.sourceFound&&fetched.ingredients.length){
+        const cat=categorize(fetched.title||parsed.title,fetched.ingredients);
+        openEditor({
+          title:fetched.title||parsed.title,category:cat,sourceUrl:recipeLink,
+          imageUrl:fetched.imageUrl,ingredients:fetched.ingredients,steps:fetched.steps,
+          servings:fetched.servings,prepTime:fetched.prepTime,cookTime:fetched.cookTime,
+          notes:fetched.notes
+        });
+        return;
+      }
+    }catch(e){/* fall through to the caption below */}
+    finally{btn.textContent='Parse recipe';btn.disabled=false;}
   }
+
+  // Otherwise use the caption itself.
+  const cat=categorize(parsed.title,parsed.ingredients);
+  const data={title:parsed.title,category:cat,ingredients:parsed.ingredients,steps:parsed.steps};
+  if(srcUrl)data.sourceUrl=srcUrl;
+
+  // Thin caption + a link we couldn't parse: save the link for you to open.
+  const surface=[recipeLink,aggregatorLink].find(Boolean);
+  if(captionThin&&surface){
+    if(!data.sourceUrl)data.sourceUrl=surface;
+    data.notes='Recipe may be behind this link — open it to grab the full details:\n'+surface;
+    toast(classifyLink(surface)==='aggregator'
+      ? 'That\'s a "link in bio" page, not a recipe — I saved it for you to open'
+      : 'Couldn\'t auto-read a recipe — I saved the link for you to open','OK');
+  }
+  openEditor(data);
+}
+
+/* A pasted Instagram reel/post link. Best-effort: the backend fetches it with
+   a browser user-agent and we try to lift the caption from the og: preview
+   tags, then run it through the same caption + link-following path. When
+   Instagram serves a login wall instead, fall back to a clear ask. */
+async function handleInstagramUrl(url){
+  if(!sheetUrl){toast('Reel import needs the backend — opening settings');openSettings();return;}
+  const btn=$('parse-btn');btn.textContent='Reading reel…';btn.disabled=true;
+  try{
+    const res=await fetch(sheetUrl,{method:'POST',body:JSON.stringify({action:'fetch',url})});
+    const data=await res.json();
+    if(!data||data.ok===false)throw new Error('fetch failed');
+    const caption=usableCaptionFromOg(data.og||{});
+    if(caption){
+      btn.textContent='Parse recipe';btn.disabled=false;
+      return handleCaptionText(caption,url);
+    }
+    toast('Instagram didn\'t share the caption (it often blocks this). Open the reel, '+
+      'copy its caption text, and paste that here instead.','OK');
+    openEditor({sourceUrl:url,category:'others'});
+  }catch(e){
+    toast('Couldn\'t reach that reel — paste the caption text here instead','OK');
+    openEditor({sourceUrl:url,category:'others'});
+  }finally{btn.textContent='Parse recipe';btn.disabled=false;}
 }
 function startBlank(){openEditor({category:'others'});}
 
@@ -1496,6 +1682,9 @@ function getRecipe(id){return recipes.find(r=>r.id===id);}
 function openDetail(id){
   const r=getRecipe(id);if(!r)return;
   detailId=id;checkedIngredients={};
+  const bs=parseFloat(r.servings);
+  detailBaseServ=(isFinite(bs)&&bs>0)?bs:null;
+  detailServ=detailBaseServ;
   const cm=CAT_META[r.category]||CAT_META.others;
   const color=catColor(r.category),colorL=catColorL(r.category);
   $('detail-heading').textContent=r.title||'Recipe';
@@ -1504,16 +1693,25 @@ function openDetail(id){
     ? `<div class="detail-hero" style="background-image:url('${esc(r.imageUrl)}')"></div>`
     : `<div class="detail-hero placeholder" style="background:${colorL};color:${color}">${cm.emoji}</div>`;
   const meta=[];
-  if(r.servings)meta.push(`<span class="meta-pill">👤 ${esc(r.servings)} serv</span>`);
+  // When servings are scalable, the interactive stepper is the servings display,
+  // so skip the static pill here to avoid showing two servings counts.
+  if(r.servings&&!detailBaseServ)meta.push(`<span class="meta-pill">👤 ${esc(r.servings)} serv</span>`);
   if(r.prepTime)meta.push(`<span class="meta-pill">🔪 ${esc(r.prepTime)}</span>`);
   if(r.cookTime)meta.push(`<span class="meta-pill">🔥 ${esc(r.cookTime)}</span>`);
   const lc=lastCooked(r);
   if(lc)meta.push(`<span class="meta-pill">🍽️ Cooked ${esc(timeAgo(lc))}</span>`);
   const src=r.sourceUrl?`<a class="source-link" href="${esc(r.sourceUrl)}" target="_blank" rel="noopener">↗ Source</a>`:'';
 
-  const ings=(r.ingredients||[]).length?`<div class="detail-section"><h3>🧺 Ingredients</h3><div class="ing-list">${
-    r.ingredients.map((ing,i)=>`<div class="ing-item" id="ing-${i}" onclick="toggleIng(${i})"><div class="ing-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ing-text">${esc(ing)}</div></div>`).join('')
-  }</div></div>`:'';
+  const stepper=detailBaseServ?`<div class="serv-stepper">
+      <button class="ss-btn" onclick="changeServings(-1)" aria-label="Fewer servings">−</button>
+      <span class="ss-val"><b id="serv-count">${fmtServ(detailServ)}</b> serv</span>
+      <button class="ss-btn" onclick="changeServings(1)" aria-label="More servings">+</button>
+      <button class="ss-reset" id="serv-reset" onclick="resetServings()" style="display:none">Reset</button>
+    </div>`:'';
+  const ings=(r.ingredients||[]).length?`<div class="detail-section">
+      <div class="ing-head"><h3>🧺 Ingredients</h3>${stepper}</div>
+      <div class="ing-list" id="ing-list-wrap">${ingRowsHtml(r.ingredients,1)}</div>
+    </div>`:'';
 
   const steps=(r.steps||[]).length?`<div class="detail-section"><h3>👩‍🍳 Steps</h3><div class="step-list">${
     r.steps.map((s,i)=>`<div class="step-item"><div class="step-num">${i+1}</div><div class="step-text">${esc(s)}</div></div>`).join('')
@@ -1555,6 +1753,45 @@ function toggleFavFromDetail(){if(detailId)toggleFav(detailId);}
 function toggleIng(i){
   checkedIngredients[i]=!checkedIngredients[i];
   $('ing-'+i).classList.toggle('checked',checkedIngredients[i]);
+}
+
+/* ---------- serving-size scaling (detail view) ---------- */
+/* Render ingredient rows scaled by `factor`, re-applying any checked state so
+   scaling never loses which items you've ticked off. */
+function ingRowsHtml(ings,factor){
+  return (ings||[]).map((ing,i)=>{
+    const line=factor===1?ing:scaleIngredientLine(ing,factor);
+    const on=checkedIngredients[i]?' checked':'';
+    return `<div class="ing-item${on}" id="ing-${i}" onclick="toggleIng(${i})"><div class="ing-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ing-text">${esc(line)}</div></div>`;
+  }).join('');
+}
+/* Servings shown as a tidy number (½, 1 ½, 4) — reuses the ingredient fraction
+   formatter, falling back to a rounded value for odd scales. */
+function fmtServ(n){
+  if(n==null)return '';
+  const f=fmtQty(n);
+  return f||String(Math.round(n*100)/100);
+}
+function renderIngList(){
+  const r=getRecipe(detailId);if(!r||!detailBaseServ)return;
+  const factor=detailServ/detailBaseServ;
+  const wrap=$('ing-list-wrap');if(wrap)wrap.innerHTML=ingRowsHtml(r.ingredients,factor);
+  const count=$('serv-count');if(count)count.textContent=fmtServ(detailServ);
+  const reset=$('serv-reset');if(reset)reset.style.display=(detailServ===detailBaseServ)?'none':'';
+}
+function changeServings(delta){
+  if(!detailBaseServ)return;
+  // Step by 1 for whole-serving recipes; by half when the base is fractional.
+  const step=Number.isInteger(detailBaseServ)?1:0.5;
+  const next=Math.round((detailServ+delta*step)*100)/100;
+  if(next<step)return;              // never below one step
+  detailServ=next;
+  renderIngList();
+}
+function resetServings(){
+  if(!detailBaseServ)return;
+  detailServ=detailBaseServ;
+  renderIngList();
 }
 function editRecipe(id){
   const r=getRecipe(id);if(!r)return;
@@ -1758,8 +1995,13 @@ function buildGroceryFromWeek(){
 function sendRecipeToGrocery(id){
   const r=getRecipe(id);if(!r)return;
   if(!(r.ingredients||[]).length){toast('No ingredients to send');return;}
-  openReview(aggregate(r.ingredients.map(ing=>({ingredient:ing,scale:1})),{staples,existingItems:items}),
-    {title:'Add to grocery list',sub:'Grouped by aisle. Staples you keep on hand are pre-unchecked.'});
+  // If this recipe is open and scaled in the detail view, send the scaled qty.
+  const scale=(id===detailId&&detailBaseServ&&detailServ)?(detailServ/detailBaseServ):1;
+  const sub=scale!==1
+    ? `Scaled to ${fmtServ(detailServ)} servings, grouped by aisle. Staples you keep on hand are pre-unchecked.`
+    : 'Grouped by aisle. Staples you keep on hand are pre-unchecked.';
+  openReview(aggregate(r.ingredients.map(ing=>({ingredient:ing,scale})),{staples,existingItems:items}),
+    {title:'Add to grocery list',sub});
 }
 function openReview(candidates,opts){
   opts=opts||{};
@@ -1916,6 +2158,15 @@ function isBusy(){
     document.head.appendChild(al);
   }catch(e){}
 })();
+
+/* ============================================================
+   SERVICE WORKER (offline app shell) — see kitchen/sw.js
+   ============================================================ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 
 /* ============================================================
    BOOT
