@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{margin:0;background:#EAE6DF;font-family:'Inter',system-ui,sans-serif}
+  a{color:#C4622D;text-decoration:none}a:hover{color:#A9501F}
+  :root{
+    --bg:#F7F4EF;--card:#FFFFFF;
+    --green:#3D7A5F;--green-light:#EAF3EE;
+    --terra:#C4622D;--terra-dark:#A9501F;--terra-light:#FAEDE6;
+    --text:#1C1C1A;--text-mid:#5C5C55;--text-light:#A0998C;
+    --border:#E8E2D9;--shadow:0 1px 3px rgba(28,28,26,0.07),0 4px 12px rgba(28,28,26,0.04);
+    --radius:14px;--danger:#C0392B;--danger-light:#FDEEEC;
+    --plan:#5A6BB5;--plan-light:#EAEDF7;
+    --cat-poultry:#D99A2B;--cat-poultry-l:#FBF1DC;
+    --cat-seafood:#2E8B9E;--cat-seafood-l:#E1F0F3;
+    --cat-beef:#B23B3B;--cat-beef-l:#F8E4E4;
+    --cat-vegetables:#4E9A5A;--cat-vegetables-l:#E6F2E8;
+    --cat-soup:#D2762E;--cat-soup-l:#FBEBDD;
+    --cat-dessert:#9B6BB5;--cat-dessert-l:#F1E9F6;
+    --cat-others:#7A8590;--cat-others-l:#EDF0F2;
+  }
+  /* ===== design-doc scaffold ===== */
+  .dv-turn{padding:44px 48px 36px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+  .dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
+  .dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+  .dv-tname{font:700 14px/1.2 'Plus Jakarta Sans',system-ui,sans-serif;color:#1a1a1a}
+  .dv-tsub{font:400 12.5px/1.5 'Inter',system-ui,sans-serif;color:rgba(0,0,0,.5);margin:0 0 22px;max-width:560px}
+  .dv-opts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+  .dv-opt{flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:16px}
+  .dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+  .dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11.5px/1.3 'Inter',system-ui,sans-serif;color:rgba(0,0,0,.55)}
+  .dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+  .dv-next{margin:26px 0 0;font:12.5px/1.6 'Inter',system-ui,sans-serif;color:rgba(0,0,0,.5)}
+  .dv-next a{color:rgba(0,0,0,.5)}
+  /* ===== phone shell ===== */
+  .phone{width:390px;height:844px;background:var(--bg);border-radius:26px;overflow:hidden;position:relative;box-shadow:0 12px 44px rgba(28,28,26,.16);border:1px solid rgba(0,0,0,.07);display:flex;flex-direction:column}
+  .phone *{-webkit-tap-highlight-color:transparent}
+  /* header */
+  .k-head{background:var(--card);border-bottom:1px solid var(--border);padding:0 18px;display:flex;align-items:center;justify-content:space-between;height:58px;flex-shrink:0}
+  .logo{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:18px;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:7px}
+  .logo .emoji{font-size:19px}
+  .head-right{display:flex;align-items:center;gap:8px}
+  .sync-btn{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text-light);padding:7px 10px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg)}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text-light);flex-shrink:0}
+  .sync-dot.ok{background:var(--green)}
+  .icon-btn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text-mid);flex-shrink:0}
+  /* mode bar */
+  .mode-bar{background:var(--bg);padding:12px 16px 0;flex-shrink:0}
+  .mode-tabs{display:flex;gap:4px;background:var(--card);border-radius:12px;padding:4px;box-shadow:var(--shadow)}
+  .mode-btn{flex:1;min-width:0;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;color:var(--text-mid);background:none;border:none;padding:10px 8px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+  .mode-btn .emoji{font-size:15px;flex-shrink:0}
+  .mode-btn.active{color:#fff}
+  .mode-btn.a-recipes.active{background:var(--terra)}
+  .mode-btn.a-plan.active{background:var(--plan)}
+  .mode-btn.a-groceries.active{background:var(--green)}
+  /* main scroll */
+  .k-main{flex:1;overflow-y:auto;padding:18px 16px}
+  .k-main::-webkit-scrollbar{display:none}
+  /* search */
+  .search-wrap{position:relative;margin-bottom:14px}
+  .search-input{width:100%;font-family:'Inter',sans-serif;font-size:15px;color:var(--text-light);background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:13px 14px 13px 42px}
+  .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-light)}
+  /* chips */
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex-shrink:0;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--text-mid);background:var(--card);border:1.5px solid var(--border);border-radius:999px;padding:8px 14px;white-space:nowrap;display:flex;align-items:center;gap:6px}
+  .chip .cnt{font-size:11px;font-weight:700;opacity:.7}
+  .chip.active{color:#fff;border-color:transparent}
+  .chip .dot{width:8px;height:8px;border-radius:50%}
+  /* controls */
+  .controls{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+  .ctrl-btn{font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--text-mid);background:var(--card);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;display:flex;align-items:center;gap:6px}
+  .ctrl-spacer{flex:1}
+  .count-label{font-size:12px;color:var(--text-light);font-weight:500}
+  /* recipe cards */
+  .recipe-grid{display:flex;flex-direction:column;gap:12px}
+  .rcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;position:relative}
+  .rcard-photo{width:104px;flex-shrink:0;min-height:104px;display:flex;align-items:center;justify-content:center;font-size:38px}
+  .rcard-body{flex:1;padding:14px 14px 14px 15px;min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .rcard-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;line-height:1.28;color:var(--text);margin-bottom:8px}
+  .rcard-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .cat-tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:4px}
+  .rcard-cooked{font-size:11.5px;color:var(--text-light);font-weight:500}
+  .fav-star{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .fav-star.off{color:var(--text-light)}.fav-star.on{color:#E8A020}
+  /* fab */
+  .fab{position:absolute;right:18px;bottom:18px;width:58px;height:58px;border-radius:50%;background:var(--terra);color:#fff;border:none;font-size:30px;box-shadow:0 6px 20px rgba(196,98,45,.42);display:flex;align-items:center;justify-content:center}
+  /* screen head (overlay screens) */
+  .screen-head{background:var(--card);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px;height:56px;flex-shrink:0}
+  .back-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:none;border:none;color:var(--text);flex-shrink:0}
+  .screen-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .screen-body{padding:18px 16px;overflow-y:auto;flex:1}
+  .screen-body::-webkit-scrollbar{display:none}
+  /* detail */
+  .detail-scroll{flex:1;overflow-y:auto}
+  .detail-scroll::-webkit-scrollbar{display:none}
+  .detail-hero{width:100%;height:210px;display:flex;align-items:center;justify-content:center;font-size:66px}
+  .detail-body{padding:20px 18px}
+  .detail-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:800;line-height:1.2;letter-spacing:-.4px;margin-bottom:12px}
+  .detail-metarow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .meta-pill{font-size:12.5px;color:var(--text-mid);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-weight:600;display:flex;align-items:center;gap:5px}
+  .source-link{font-size:12.5px;color:var(--terra);font-weight:600}
+  .detail-section{margin-top:24px}
+  .detail-section h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .ing-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .ing-head h3{margin-bottom:0}
+  .serv-stepper{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px 6px}
+  .ss-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:#fff;font-size:17px;font-weight:700;line-height:1;color:var(--text-mid);display:flex;align-items:center;justify-content:center}
+  .ss-val{font-size:13px;color:var(--text-mid);font-weight:600;min-width:54px;text-align:center}
+  .ss-val b{color:var(--text);font-weight:800}
+  .ss-reset{border:none;background:none;color:var(--terra);font-size:12.5px;font-weight:700;padding:0 2px 0 4px}
+  .ing-list{display:flex;flex-direction:column;gap:2px}
+  .ing-item{display:flex;align-items:flex-start;gap:12px;padding:11px 12px;border-radius:10px;user-select:none}
+  .ing-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;margin-top:1px}
+  .ing-item.checked .ing-check{background:var(--terra);border-color:var(--terra)}
+  .ing-item .ing-check svg{display:none}.ing-item.checked .ing-check svg{display:block}
+  .ing-item.checked .ing-text{text-decoration:line-through;color:var(--text-light)}
+  .ing-text{font-size:15px;line-height:1.4;padding-top:1px}
+  .step-list{display:flex;flex-direction:column;gap:14px}
+  .step-item{display:flex;gap:13px;align-items:flex-start}
+  .step-num{width:26px;height:26px;border-radius:50%;background:var(--terra-light);color:var(--terra-dark);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Plus Jakarta Sans',sans-serif}
+  .step-text{font-size:15px;line-height:1.55;padding-top:2px}
+  .notes-box{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;font-size:14px;line-height:1.6;color:var(--text-mid)}
+  .detail-actions{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .detail-actions .full{grid-column:1/-1}
+  .da-btn{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;padding:13px 10px;border-radius:11px;border:1.5px solid var(--border);background:var(--card);color:var(--text-mid);display:flex;align-items:center;justify-content:center;gap:7px}
+  .da-btn.danger{color:var(--danger);border-color:transparent;background:var(--danger-light)}
+  .da-btn.accent{color:#fff;background:var(--terra);border-color:transparent}
+  .da-btn.cook{color:#fff;background:var(--green);border-color:transparent}
+  .da-btn.plan{color:#fff;background:var(--plan);border-color:transparent}
+  /* import */
+  .import-tabs{display:flex;gap:6px;background:var(--card);border-radius:12px;padding:4px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .it-btn{flex:1;font-size:13.5px;font-weight:600;color:var(--text-mid);background:none;border:none;padding:10px;border-radius:9px}
+  .it-btn.active{background:var(--terra);color:#fff;font-weight:700}
+  .import-note{background:var(--terra-light);border-left:3px solid var(--terra);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--terra-dark);line-height:1.55;margin-bottom:16px}
+  .fin{width:100%;font-family:'Inter',sans-serif;font-size:15px;color:var(--text-light);background:var(--card);border:1.5px solid var(--border);border-radius:11px;padding:12px 14px}
+  textarea.fin{resize:none;line-height:1.55}
+  .paste-box{min-height:210px}
+  .form-actions{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+  .btn-primary{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;color:#fff;background:var(--terra);border:none;border-radius:11px;padding:14px;width:100%;text-align:center}
+  /* cook mode */
+  .cook{background:#1C1C1A;color:#fff;height:100%;display:flex;flex-direction:column}
+  .cook-top{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 8px}
+  .cook-progress{font-size:14px;font-weight:600;color:#C4B8A8;letter-spacing:.03em}
+  .cook-x{background:rgba(255,255,255,.1);border:none;color:#fff;width:40px;height:40px;border-radius:10px;font-size:18px}
+  .cook-bar{height:4px;background:rgba(255,255,255,.12);margin:0 18px;border-radius:2px;overflow:hidden}
+  .cook-bar-fill{height:100%;background:var(--terra);border-radius:2px}
+  .cook-stage{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 28px;position:relative}
+  .cook-stepnum{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--terra);margin-bottom:20px}
+  .cook-text{font-family:'Plus Jakarta Sans',sans-serif;font-size:27px;font-weight:600;line-height:1.4;letter-spacing:-.3px}
+  .cook-peek-btn{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.1);border:none;color:#C4B8A8;font-size:12.5px;font-weight:600;padding:8px 16px;border-radius:999px;white-space:nowrap}
+  .cook-nav{display:flex;gap:12px;padding:16px 18px}
+  .cook-nav button{flex:1;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;padding:16px;border-radius:13px;border:none}
+  .cook-prev{background:rgba(255,255,255,.12);color:#fff}
+  .cook-prev.dis{opacity:.35}
+  .cook-next{background:var(--terra);color:#fff}
+  /* groceries */
+  .tabs{display:flex;gap:3px;background:var(--card);border-radius:12px;padding:4px;margin-bottom:20px;box-shadow:var(--shadow)}
+  .tab-btn{flex:1;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;color:var(--text-mid);background:none;border:none;padding:9px 12px;border-radius:9px}
+  .tab-btn.active{background:var(--green);color:#fff;font-weight:700}
+  .add-row{display:flex;gap:8px;margin-bottom:20px;align-items:flex-start}
+  .add-inputs{flex:1;display:flex;gap:8px;min-width:0}
+  .name-input{flex:2;min-width:0;font-family:'Inter',sans-serif;font-size:15px;color:var(--text-light);background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:13px 14px}
+  .qty-wrap{display:flex;background:var(--card);border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+  .qty-input{width:40px;font-family:'Inter',sans-serif;font-size:15px;color:var(--text);background:none;border:none;padding:13px 2px 13px 11px}
+  .unit-select{font-family:'Inter',sans-serif;font-size:13px;color:var(--text-mid);background:none;border:none;border-left:1.5px solid var(--border);padding:13px 8px;display:flex;align-items:center}
+  .btn-add{width:50px;height:50px;flex-shrink:0;font-size:24px;color:#fff;background:var(--green);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center}
+  .reset-banner{background:var(--card);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;border-left:3px solid var(--terra)}
+  .reset-text strong{font-size:14px;font-weight:700;display:block;margin-bottom:2px}
+  .reset-text span{font-size:12.5px;color:var(--text-light)}
+  .btn-reset{font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;padding:9px 16px;border-radius:9px;border:none;background:var(--terra);color:#fff;white-space:nowrap;flex-shrink:0}
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .section-label{font-family:'Plus Jakarta Sans',sans-serif;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-light)}
+  .section-action{font-size:12px;font-weight:600;color:var(--text-light);background:none;border:none;padding:4px 8px;border-radius:6px}
+  .section-action.danger{color:var(--danger)}
+  .item-list{display:flex;flex-direction:column;gap:7px;margin-bottom:24px}
+  .grocery-item{background:var(--card);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+  .grocery-item.checked{opacity:.38}
+  .check-circle{width:27px;height:27px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff}
+  .grocery-item.checked .check-circle{background:var(--green);border-color:var(--green)}
+  .check-circle svg{display:none}.grocery-item.checked .check-circle svg{display:block}
+  .item-info{flex:1;min-width:0}
+  .item-name{font-size:15px;font-weight:600;color:var(--text)}
+  .grocery-item.checked .item-name{text-decoration:line-through;color:var(--text-light)}
+  .item-qty{font-size:12.5px;color:var(--text-light);margin-top:2px;font-weight:500}
+  .delete-btn{background:none;border:none;color:var(--border);font-size:14px;padding:6px;flex-shrink:0}
+  /* variation: editorial */
+  .ed-feat{position:relative;border-radius:20px;overflow:hidden;height:280px;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;color:#fff;margin-bottom:18px;background:linear-gradient(180deg,rgba(28,28,26,0) 30%,rgba(28,28,26,.82) 100%),var(--terra)}
+  .ed-kicker{font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.9;margin-bottom:7px}
+  .ed-feat-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:800;line-height:1.15;letter-spacing:-.4px}
+  .ed-feat-meta{font-size:12.5px;font-weight:500;margin-top:8px;opacity:.92}
+  .ed-sech{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;margin:6px 0 12px;display:flex;align-items:center;justify-content:space-between}
+  .ed-sech a{font-size:12.5px;font-weight:600;color:var(--terra)}
+  .ed-rail{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 6px}
+  .ed-rail::-webkit-scrollbar{display:none}
+  .ed-tile{flex-shrink:0;width:150px}
+  .ed-tile-photo{height:150px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:9px;position:relative}
+  .ed-tile-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;line-height:1.25}
+  .ed-tile-meta{font-size:11.5px;color:var(--text-light);margin-top:4px;font-weight:500}
+  .ed-mini-star{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;font-size:14px;color:#E8A020}
+  /* variation: compact index */
+  .ci-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+  .ci-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.4px}
+  .ci-sub{font-size:12px;color:var(--text-light);font-weight:500}
+  .ci-row{display:flex;align-items:center;gap:13px;padding:11px 0;border-bottom:1px solid var(--border)}
+  .ci-thumb{width:52px;height:52px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px}
+  .ci-info{flex:1;min-width:0}
+  .ci-name{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;line-height:1.25}
+  .ci-meta{display:flex;align-items:center;gap:7px;margin-top:5px}
+  .ci-dot{width:6px;height:6px;border-radius:50%}
+  .ci-catname{font-size:11.5px;font-weight:600;color:var(--text-mid)}
+  .ci-time{font-size:11.5px;color:var(--text-light);font-weight:500}
+  .ci-add{width:34px;height:34px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--green);font-size:19px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  /* smart-list features */
+  .prog-wrap{display:flex;align-items:center;gap:10px;margin:2px 0 18px}
+  .prog-track{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+  .prog-fill{height:100%;background:var(--green);border-radius:4px}
+  .prog-label{font-size:12px;font-weight:700;color:var(--green);font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap}
+  .sw{position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+  .sw-behind{position:absolute;inset:0;display:flex;align-items:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:700;color:#fff;gap:6px}
+  .sw-behind.del{background:var(--danger);justify-content:flex-end;padding-right:20px}
+  .sw-behind.chk{background:var(--green);justify-content:flex-start;padding-left:20px}
+  .sw-front{position:relative;background:var(--bg)}
+  .from-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--terra);background:var(--terra-light);padding:2px 8px;border-radius:999px;margin-top:5px}
+  .count-badge{font-size:11px;font-weight:800;color:var(--green);background:var(--green-light);border-radius:999px;padding:2px 7px;margin-left:7px}
+  .total-bar{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);margin-top:6px}
+  .total-bar .tl{font-size:12.5px;color:var(--text-light);font-weight:600}
+  .total-bar .tv{font-family:'Plus Jakarta Sans',sans-serif;font-size:19px;font-weight:800;color:var(--text)}
+  .have-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
+  .have-badge.list{color:var(--green);background:var(--green-light)}
+  .have-badge.staple{color:var(--terra);background:var(--terra-light)}
+  .smart-note{background:var(--green-light);border-left:3px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--green);font-weight:500;line-height:1.55;margin-bottom:16px}
+  .empty-nudge{text-align:center;padding:48px 24px;color:var(--text-light)}
+  .empty-nudge .e{font-size:52px;display:block;margin-bottom:16px}
+  .empty-nudge .t{font-family:'Plus Jakarta Sans',sans-serif;font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px}
+  .empty-nudge .d{font-size:13.5px;line-height:1.6;margin-bottom:20px;max-width:260px;margin-left:auto;margin-right:auto}
+</style>
+</helmet>
+
+<!-- ============ TURN 6 — LIVE SWIPE ============ -->
+<section class="dv-turn" id="t6">
+  <div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">Live swipe — real gesture</span></div>
+  <p class="dv-tsub">Interactive: drag a row <strong>right</strong> to check it into the cart (drag again to un-check), or <strong>left</strong> to delete. Progress and the section counts update as you go. Try it right here on the phone.</p>
+  <div class="dv-opts">
+    <div class="dv-opt" id="6a">
+      <div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a>Swipeable shopping list (drag the rows)</div>
+      <div class="phone">
+        <div class="k-head">
+          <div class="logo"><span class="emoji">🍳</span>Kitchen</div>
+          <div class="head-right">
+            <div class="sync-btn"><div class="sync-dot ok"></div><span>Synced</span></div>
+            <div class="icon-btn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+          </div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-tabs">
+            <button class="mode-btn a-recipes"><span class="emoji">🍳</span>Recipes</button>
+            <button class="mode-btn a-plan"><span class="emoji">📅</span>Plan</button>
+            <button class="mode-btn a-groceries active"><span class="emoji">🧺</span>Groceries</button>
+          </div>
+        </div>
+        <div class="k-main">
+          <div class="tabs">
+            <button class="tab-btn active">Shopping List</button>
+            <button class="tab-btn">Staples</button>
+          </div>
+          <div class="prog-wrap">
+            <div class="prog-track"><div class="prog-fill" style="width: {{ progWidth }}"></div></div>
+            <span class="prog-label">{{ progLabel }}</span>
+          </div>
+          <div class="add-row">
+            <div class="add-inputs">
+              <input class="name-input" value="Add an item…">
+              <div class="qty-wrap"><input class="qty-input" value="1"><div class="unit-select">— ▾</div></div>
+            </div>
+            <button class="btn-add">+</button>
+          </div>
+          {{ list }}
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="dv-next">Try next: "group these by aisle" · "add a subtle haptic-style bounce when a row commits" · "let me tap a row to check it too"</p>
+</section>
+
+<!-- ============ TURN 5 — SMART LIST FEATURES ============ -->
+<section class="dv-turn" id="t5">
+  <div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">Smart list — progress, swipe, merge, "already have it"</span></div>
+  <p class="dv-tsub">Building on <a class="dv-oid" href="#4a">4a</a>: a progress bar under the tabs, swipe-to-check / swipe-to-delete, duplicate + unit-aware merging with a count badge, a "from recipe" trace, a running estimated total, and the recipe→list link so "To grocery list" only adds what you're missing. Plus a friendly empty state.</p>
+  <div class="dv-opts">
+
+    <!-- 5a smart shopping list -->
+    <div class="dv-opt" id="5a">
+      <div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a>Shopping list — progress · swipe · merge · total</div>
+      <div class="phone">
+        <div class="k-head">
+          <div class="logo"><span class="emoji">🍳</span>Kitchen</div>
+          <div class="head-right">
+            <div class="sync-btn"><div class="sync-dot ok"></div><span>Synced</span></div>
+            <div class="icon-btn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+          </div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-tabs">
+            <button class="mode-btn a-recipes"><span class="emoji">🍳</span>Recipes</button>
+            <button class="mode-btn a-plan"><span class="emoji">📅</span>Plan</button>
+            <button class="mode-btn a-groceries active"><span class="emoji">🧺</span>Groceries</button>
+          </div>
+        </div>
+        <div class="k-main">
+          <div class="tabs">
+            <button class="tab-btn active">Shopping List</button>
+            <button class="tab-btn">Staples</button>
+          </div>
+          <div class="prog-wrap">
+            <div class="prog-track"><div class="prog-fill" style="width:33%"></div></div>
+            <span class="prog-label">2 of 6 in cart</span>
+          </div>
+          <div class="add-row">
+            <div class="add-inputs">
+              <input class="name-input" value="Add an item…">
+              <div class="qty-wrap"><input class="qty-input" value="1"><div class="unit-select">— ▾</div></div>
+            </div>
+            <button class="btn-add">+</button>
+          </div>
+          <div class="section-header"><span class="section-label">To get · 4</span><button class="section-action">Reset list</button></div>
+          <div style="margin-bottom:20px">
+            <!-- unit-aware merge -->
+            <div class="sw">
+              <div class="sw-front">
+                <div class="ci-row" style="border:none">
+                  <div class="check-circle"></div>
+                  <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600">Chicken breasts<span class="count-badge">×2</span></div><span class="from-tag">🍳 Tuscan Chicken · Bulgogi Bowls</span></div>
+                  <span class="ci-time" style="font-size:12.5px">3 lbs</span>
+                </div>
+              </div>
+            </div>
+            <!-- mid swipe-right (checking) -->
+            <div class="sw">
+              <div class="sw-behind chk"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg> Got it</div>
+              <div class="sw-front" style="transform:translateX(74px)">
+                <div class="ci-row" style="border:none">
+                  <div class="check-circle"></div>
+                  <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600">Baby spinach</div></div>
+                  <span class="ci-time" style="font-size:12.5px">1 bag</span>
+                </div>
+              </div>
+            </div>
+            <!-- merge (duplicate combined) -->
+            <div class="sw">
+              <div class="sw-front">
+                <div class="ci-row" style="border:none">
+                  <div class="check-circle"></div>
+                  <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600">Parmesan<span class="count-badge">×2</span></div><span class="ci-time" style="font-size:11.5px;color:var(--text-light)">merged · added twice</span></div>
+                  <span class="ci-time" style="font-size:12.5px">16 oz</span>
+                </div>
+              </div>
+            </div>
+            <!-- mid swipe-left (deleting) -->
+            <div class="sw">
+              <div class="sw-behind del">Delete <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg></div>
+              <div class="sw-front" style="transform:translateX(-84px)">
+                <div class="ci-row" style="border:none">
+                  <div class="check-circle"></div>
+                  <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600">Sun-dried tomatoes</div><span class="from-tag">🍳 Tuscan Chicken</span></div>
+                  <span class="ci-time" style="font-size:12.5px">1 jar</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="section-header"><span class="section-label">In cart · 2</span><button class="section-action danger">Clear checked</button></div>
+          <div style="margin-bottom:18px">
+            <div class="ci-row" style="opacity:.42"><div class="check-circle" style="background:var(--green);border-color:var(--green)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div><div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600;text-decoration:line-through">Olive oil</div></div><span class="ci-time" style="font-size:12.5px">1 bottle</span></div>
+            <div class="ci-row" style="opacity:.42"><div class="check-circle" style="background:var(--green);border-color:var(--green)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div><div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600;text-decoration:line-through">Yellow onion</div></div><span class="ci-time" style="font-size:12.5px">2</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5b recipe detail already-have -->
+    <div class="dv-opt" id="5b">
+      <div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a>Recipe detail — "you already have it"</div>
+      <div class="phone">
+        <div class="screen-head">
+          <button class="back-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></button>
+          <div class="screen-title">Recipe</div>
+          <button class="icon-btn" style="color:#E8A020">★</button>
+        </div>
+        <div class="detail-scroll">
+          <div class="detail-hero" style="background:var(--cat-poultry-l)">🍗</div>
+          <div class="detail-body">
+            <div class="detail-title">Creamy Tuscan Chicken</div>
+            <div class="detail-metarow">
+              <span class="meta-pill">🍽 4 servings</span>
+              <span class="meta-pill">⏱ 15 min prep</span>
+              <span class="meta-pill">🔥 25 min cook</span>
+            </div>
+            <div class="detail-section">
+              <div class="ing-head">
+                <h3>🧺 Ingredients</h3>
+                <div class="serv-stepper"><button class="ss-btn">−</button><span class="ss-val"><b>4</b> servings</span><button class="ss-btn">+</button></div>
+              </div>
+              <div class="smart-note">✓ 4 of 7 already covered — on your list or in staples. Adding the list will only grab the <strong>3 you're missing</strong>.</div>
+              <div class="ing-list">
+                <div class="ing-item" style="align-items:center"><div class="ing-check"></div><div class="ing-text" style="flex:1">2 chicken breasts</div><span class="have-badge list">✓ In list</span></div>
+                <div class="ing-item" style="align-items:center"><div class="ing-check"></div><div class="ing-text" style="flex:1">1 tbsp olive oil</div><span class="have-badge staple">★ Staple</span></div>
+                <div class="ing-item" style="align-items:center"><div class="ing-check"></div><div class="ing-text" style="flex:1">3 cloves garlic, minced</div><span class="have-badge staple">★ Staple</span></div>
+                <div class="ing-item" style="align-items:center"><div class="ing-check"></div><div class="ing-text" style="flex:1">1 cup heavy cream</div><span class="have-badge list">✓ In list</span></div>
+                <div class="ing-item" style="align-items:center"><div class="ing-check"></div><div class="ing-text" style="flex:1;font-weight:600">½ cup sun-dried tomatoes</div></div>
+                <div class="ing-item" style="align-items:center"><div class="ing-check"></div><div class="ing-text" style="flex:1;font-weight:600">2 cups baby spinach</div></div>
+                <div class="ing-item" style="align-items:center"><div class="ing-check"></div><div class="ing-text" style="flex:1;font-weight:600">½ cup parmesan, grated</div></div>
+              </div>
+            </div>
+            <div class="detail-actions">
+              <button class="da-btn cook">🔥 Cook mode</button>
+              <button class="da-btn accent">🧺 Add 3 missing</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5c empty state -->
+    <div class="dv-opt" id="5c">
+      <div class="dv-olabel"><a class="dv-oid" href="#5c">5c</a>Empty list — friendly nudge</div>
+      <div class="phone">
+        <div class="k-head">
+          <div class="logo"><span class="emoji">🍳</span>Kitchen</div>
+          <div class="head-right">
+            <div class="sync-btn"><div class="sync-dot ok"></div><span>Synced</span></div>
+            <div class="icon-btn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+          </div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-tabs">
+            <button class="mode-btn a-recipes"><span class="emoji">🍳</span>Recipes</button>
+            <button class="mode-btn a-plan"><span class="emoji">📅</span>Plan</button>
+            <button class="mode-btn a-groceries active"><span class="emoji">🧺</span>Groceries</button>
+          </div>
+        </div>
+        <div class="k-main">
+          <div class="tabs">
+            <button class="tab-btn active">Shopping List</button>
+            <button class="tab-btn">Staples</button>
+          </div>
+          <div class="add-row">
+            <div class="add-inputs">
+              <input class="name-input" value="Add an item…">
+              <div class="qty-wrap"><input class="qty-input" value="1"><div class="unit-select">— ▾</div></div>
+            </div>
+            <button class="btn-add">+</button>
+          </div>
+          <div class="empty-nudge">
+            <span class="e">🧺</span>
+            <div class="t">List's all clear</div>
+            <div class="d">Nice work — everything's checked off. Start a new trip and reload your staples in one tap.</div>
+            <button class="btn-reset" style="padding:13px 22px;font-size:14px">↻ Reset &amp; reload staples</button>
+            <div style="margin-top:18px;font-size:12.5px;color:var(--text-light)">or pull ingredients from <a href="#5b" style="color:var(--green);font-weight:700">a recipe</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "group 5a by aisle" · "show the swipe as a real interaction" · "add a per-item price so the total is exact" · "put the 'already have it' badges on the review modal too"</p>
+</section>
+
+<!-- ============ TURN 4 — COMPACT GROCERY LIST ============ -->
+<section class="dv-turn" id="t4">
+  <div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Grocery list, compact-row style</span></div>
+  <p class="dv-tsub"><a class="dv-oid" href="#3a">3a</a>'s row rhythm applied to groceries: hairline-divided rows instead of cards, a green check-circle on the left, qty on the right. Checked items stay grouped below. Reads like a tight checklist.</p>
+  <div class="dv-opts">
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Compact grocery checklist</div>
+      <div class="phone">
+        <div class="k-head">
+          <div class="logo"><span class="emoji">🍳</span>Kitchen</div>
+          <div class="head-right">
+            <div class="sync-btn"><div class="sync-dot ok"></div><span>Synced</span></div>
+            <div class="icon-btn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+          </div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-tabs">
+            <button class="mode-btn a-recipes"><span class="emoji">🍳</span>Recipes</button>
+            <button class="mode-btn a-plan"><span class="emoji">📅</span>Plan</button>
+            <button class="mode-btn a-groceries active"><span class="emoji">🧺</span>Groceries</button>
+          </div>
+        </div>
+        <div class="k-main">
+          <div class="tabs">
+            <button class="tab-btn active">Shopping List</button>
+            <button class="tab-btn">Staples</button>
+          </div>
+          <div class="add-row">
+            <div class="add-inputs">
+              <input class="name-input" value="Add an item…">
+              <div class="qty-wrap"><input class="qty-input" value="1"><div class="unit-select">— ▾</div></div>
+            </div>
+            <button class="btn-add">+</button>
+          </div>
+          <div class="section-header"><span class="section-label">To get · 5</span><button class="section-action">Reset list</button></div>
+          <div style="margin-bottom:24px">
+            <div class="ci-row">
+              <div class="check-circle"></div>
+              <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600">Chicken breasts</div></div>
+              <span class="ci-time" style="font-size:12.5px">2 lbs</span>
+              <button class="ci-add" style="border:none;background:none;color:var(--border);font-size:15px;width:auto">✕</button>
+            </div>
+            <div class="ci-row">
+              <div class="check-circle"></div>
+              <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600">Baby spinach</div></div>
+              <span class="ci-time" style="font-size:12.5px">1 bag</span>
+              <button class="ci-add" style="border:none;background:none;color:var(--border);font-size:15px;width:auto">✕</button>
+            </div>
+            <div class="ci-row">
+              <div class="check-circle"></div>
+              <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600">Heavy cream</div></div>
+              <span class="ci-time" style="font-size:12.5px">1 pint</span>
+              <button class="ci-add" style="border:none;background:none;color:var(--border);font-size:15px;width:auto">✕</button>
+            </div>
+            <div class="ci-row">
+              <div class="check-circle"></div>
+              <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600">Sun-dried tomatoes</div></div>
+              <span class="ci-time" style="font-size:12.5px">1 jar</span>
+              <button class="ci-add" style="border:none;background:none;color:var(--border);font-size:15px;width:auto">✕</button>
+            </div>
+            <div class="ci-row">
+              <div class="check-circle"></div>
+              <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600">Parmesan</div></div>
+              <span class="ci-time" style="font-size:12.5px">8 oz</span>
+              <button class="ci-add" style="border:none;background:none;color:var(--border);font-size:15px;width:auto">✕</button>
+            </div>
+          </div>
+          <div class="section-header"><span class="section-label">In cart · 2</span><button class="section-action danger">Clear checked</button></div>
+          <div>
+            <div class="ci-row" style="opacity:.42">
+              <div class="check-circle" style="background:var(--green);border-color:var(--green)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div>
+              <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600;text-decoration:line-through">Olive oil</div></div>
+              <span class="ci-time" style="font-size:12.5px">1 bottle</span>
+              <button class="ci-add" style="border:none;background:none;color:var(--border);font-size:15px;width:auto">✕</button>
+            </div>
+            <div class="ci-row" style="opacity:.42">
+              <div class="check-circle" style="background:var(--green);border-color:var(--green)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div>
+              <div class="ci-info" style="margin-left:1px"><div class="ci-name" style="font-weight:600;text-decoration:line-through">Yellow onion</div></div>
+              <span class="ci-time" style="font-size:12.5px">2</span>
+              <button class="ci-add" style="border:none;background:none;color:var(--border);font-size:15px;width:auto">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="dv-next">Try next: "group the list by aisle" · "add a progress bar for items checked off" · "compare this next to the original cards in <a class="dv-oid" href="#1e">1e</a>"</p>
+</section>
+
+<!-- ============ TURN 3 — 2b + 1a ============ -->
+<section class="dv-turn" id="t3">
+  <div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Compact index + favorites</span></div>
+  <p class="dv-tsub"><a class="dv-oid" href="#2b">2b</a>'s dense scannable rows, wearing <a class="dv-oid" href="#1a">1a</a>'s controls: category chips, the Favorites / sort row, and a tappable favorite star on each row (with the + quick-add kept for reach).</p>
+  <div class="dv-opts">
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Compact rows with chips + favorites</div>
+      <div class="phone">
+        <div class="k-head">
+          <div class="logo"><span class="emoji">🍳</span>Kitchen</div>
+          <div class="head-right">
+            <div class="sync-btn"><div class="sync-dot ok"></div><span>Synced</span></div>
+            <div class="icon-btn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+          </div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-tabs">
+            <button class="mode-btn a-recipes active"><span class="emoji">🍳</span>Recipes</button>
+            <button class="mode-btn a-plan"><span class="emoji">📅</span>Plan</button>
+            <button class="mode-btn a-groceries"><span class="emoji">🧺</span>Groceries</button>
+          </div>
+        </div>
+        <div class="k-main">
+          <div class="search-wrap"><svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg><input class="search-input" value="Search recipes & ingredients…"></div>
+          <div class="chips">
+            <div class="chip active" style="background:var(--terra)">All <span class="cnt">42</span></div>
+            <div class="chip"><span class="dot" style="background:var(--cat-poultry)"></span>Poultry <span class="cnt">9</span></div>
+            <div class="chip"><span class="dot" style="background:var(--cat-seafood)"></span>Seafood <span class="cnt">6</span></div>
+            <div class="chip"><span class="dot" style="background:var(--cat-beef)"></span>Beef <span class="cnt">7</span></div>
+            <div class="chip"><span class="dot" style="background:var(--cat-vegetables)"></span>Veg <span class="cnt">8</span></div>
+          </div>
+          <div class="controls">
+            <button class="ctrl-btn" style="background:var(--terra-light);border-color:var(--terra);color:var(--terra-dark)"><span>★</span> Favorites</button>
+            <button class="ctrl-btn">↕ Newest</button>
+            <div class="ctrl-spacer"></div>
+            <span class="count-label">42 recipes</span>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-poultry-l)">🍗</div>
+            <div class="ci-info"><div class="ci-name">Creamy Tuscan Chicken</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-poultry)"></span><span class="ci-catname">Poultry</span><span class="ci-time">· 25 min</span></div></div>
+            <button class="ci-add" style="border:none;background:none;color:#E8A020;font-size:20px;width:auto">★</button>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-seafood-l)">🐟</div>
+            <div class="ci-info"><div class="ci-name">Miso Glazed Salmon</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-seafood)"></span><span class="ci-catname">Seafood</span><span class="ci-time">· 20 min</span></div></div>
+            <button class="ci-add" style="border:none;background:none;color:var(--text-light);font-size:20px;width:auto">☆</button>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-beef-l)">🥩</div>
+            <div class="ci-info"><div class="ci-name">Beef Bulgogi Rice Bowls</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-beef)"></span><span class="ci-catname">Beef</span><span class="ci-time">· 35 min</span></div></div>
+            <button class="ci-add" style="border:none;background:none;color:var(--text-light);font-size:20px;width:auto">☆</button>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-vegetables-l)">🥗</div>
+            <div class="ci-info"><div class="ci-name">Roasted Veggie Grain Bowl</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-vegetables)"></span><span class="ci-catname">Vegetables</span><span class="ci-time">· 25 min</span></div></div>
+            <button class="ci-add" style="border:none;background:none;color:var(--text-light);font-size:20px;width:auto">☆</button>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-soup-l)">🥣</div>
+            <div class="ci-info"><div class="ci-name">Chorizo & White Bean Soup</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-soup)"></span><span class="ci-catname">Soup</span><span class="ci-time">· 40 min</span></div></div>
+            <button class="ci-add" style="border:none;background:none;color:var(--text-light);font-size:20px;width:auto">☆</button>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-dessert-l)">🍪</div>
+            <div class="ci-info"><div class="ci-name">Brown Butter Choc-Chip Cookies</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-dessert)"></span><span class="ci-catname">Dessert</span><span class="ci-time">· 30 min</span></div></div>
+            <button class="ci-add" style="border:none;background:none;color:#E8A020;font-size:20px;width:auto">★</button>
+            <button class="ci-add">+</button>
+          </div>
+        </div>
+        <button class="fab">+</button>
+      </div>
+    </div>
+  </div>
+  <p class="dv-next">Try next: "swap the + for a bigger tap target" · "make the Favorites filter show only starred" · "apply this row style to the grocery list too"</p>
+</section>
+
+<!-- ============ TURN 2 — VARIATIONS ON THE HOME SCREEN ============ -->
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">New directions for the recipe home</span></div>
+  <p class="dv-tsub">Two fresh takes on the browse screen built from the same palette and type as the recreation in <a class="dv-oid" href="#1a">1a</a>. Same components, rethought layout & hierarchy — mix and match.</p>
+  <div class="dv-opts">
+
+    <!-- 2a editorial -->
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Editorial — a featured hero + horizontal rails, more discovery-forward</div>
+      <div class="phone">
+        <div class="k-head">
+          <div class="logo"><span class="emoji">🍳</span>Kitchen</div>
+          <div class="head-right">
+            <div class="sync-btn"><div class="sync-dot ok"></div><span>Synced</span></div>
+            <div class="icon-btn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+          </div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-tabs">
+            <button class="mode-btn a-recipes active"><span class="emoji">🍳</span>Recipes</button>
+            <button class="mode-btn a-plan"><span class="emoji">📅</span>Plan</button>
+            <button class="mode-btn a-groceries"><span class="emoji">🧺</span>Groceries</button>
+          </div>
+        </div>
+        <div class="k-main">
+          <div class="ed-feat" style="background:linear-gradient(180deg,rgba(28,28,26,0) 28%,rgba(28,28,26,.85) 100%),repeating-linear-gradient(135deg,var(--cat-beef-l),var(--cat-beef-l) 14px,#F2D9D9 14px,#F2D9D9 28px)">
+            <div class="ed-kicker" style="color:#fff">⭐ Cook next</div>
+            <div class="ed-feat-title">Beef Bulgogi Rice Bowls</div>
+            <div class="ed-feat-meta">Beef · 4 servings · 35 min · cooked 3× this month</div>
+          </div>
+          <div class="ed-sech">Recently added <a href="#2a">See all</a></div>
+          <div class="ed-rail">
+            <div class="ed-tile">
+              <div class="ed-tile-photo" style="background:var(--cat-poultry-l)">🍗<div class="ed-mini-star">★</div></div>
+              <div class="ed-tile-title">Creamy Tuscan Chicken</div>
+              <div class="ed-tile-meta">Poultry · 25 min</div>
+            </div>
+            <div class="ed-tile">
+              <div class="ed-tile-photo" style="background:var(--cat-seafood-l)">🐟</div>
+              <div class="ed-tile-title">Miso Glazed Salmon</div>
+              <div class="ed-tile-meta">Seafood · 20 min</div>
+            </div>
+            <div class="ed-tile">
+              <div class="ed-tile-photo" style="background:var(--cat-dessert-l)">🍪</div>
+              <div class="ed-tile-title">Brown Butter Cookies</div>
+              <div class="ed-tile-meta">Dessert · 30 min</div>
+            </div>
+          </div>
+          <div class="ed-sech" style="margin-top:22px">Quick weeknights <a href="#2a">See all</a></div>
+          <div class="ed-rail">
+            <div class="ed-tile">
+              <div class="ed-tile-photo" style="background:var(--cat-vegetables-l)">🥗</div>
+              <div class="ed-tile-title">Roasted Veggie Grain Bowl</div>
+              <div class="ed-tile-meta">Vegetables · 25 min</div>
+            </div>
+            <div class="ed-tile">
+              <div class="ed-tile-photo" style="background:var(--cat-soup-l)">🥣</div>
+              <div class="ed-tile-title">Chorizo White Bean Soup</div>
+              <div class="ed-tile-meta">Soup · 40 min</div>
+            </div>
+          </div>
+        </div>
+        <button class="fab">+</button>
+      </div>
+    </div>
+
+    <!-- 2b compact index -->
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Compact index — dense, scannable, tap + to send straight to groceries</div>
+      <div class="phone">
+        <div class="k-head">
+          <div class="logo"><span class="emoji">🍳</span>Kitchen</div>
+          <div class="head-right">
+            <div class="sync-btn"><div class="sync-dot ok"></div><span>Synced</span></div>
+            <div class="icon-btn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+          </div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-tabs">
+            <button class="mode-btn a-recipes active"><span class="emoji">🍳</span>Recipes</button>
+            <button class="mode-btn a-plan"><span class="emoji">📅</span>Plan</button>
+            <button class="mode-btn a-groceries"><span class="emoji">🧺</span>Groceries</button>
+          </div>
+        </div>
+        <div class="k-main">
+          <div class="ci-head">
+            <div class="ci-title">42 recipes</div>
+            <div class="ci-sub">↕ Newest first</div>
+          </div>
+          <div class="search-wrap"><svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg><input class="search-input" value="Search recipes & ingredients…"></div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-poultry-l)">🍗</div>
+            <div class="ci-info"><div class="ci-name">Creamy Tuscan Chicken</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-poultry)"></span><span class="ci-catname">Poultry</span><span class="ci-time">· 25 min</span></div></div>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-seafood-l)">🐟</div>
+            <div class="ci-info"><div class="ci-name">Miso Glazed Salmon</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-seafood)"></span><span class="ci-catname">Seafood</span><span class="ci-time">· 20 min</span></div></div>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-beef-l)">🥩</div>
+            <div class="ci-info"><div class="ci-name">Beef Bulgogi Rice Bowls</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-beef)"></span><span class="ci-catname">Beef</span><span class="ci-time">· 35 min</span></div></div>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-vegetables-l)">🥗</div>
+            <div class="ci-info"><div class="ci-name">Roasted Veggie Grain Bowl</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-vegetables)"></span><span class="ci-catname">Vegetables</span><span class="ci-time">· 25 min</span></div></div>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-soup-l)">🥣</div>
+            <div class="ci-info"><div class="ci-name">Chorizo & White Bean Soup</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-soup)"></span><span class="ci-catname">Soup</span><span class="ci-time">· 40 min</span></div></div>
+            <button class="ci-add">+</button>
+          </div>
+          <div class="ci-row">
+            <div class="ci-thumb" style="background:var(--cat-dessert-l)">🍪</div>
+            <div class="ci-info"><div class="ci-name">Brown Butter Choc-Chip Cookies</div><div class="ci-meta"><span class="ci-dot" style="background:var(--cat-dessert)"></span><span class="ci-catname">Dessert</span><span class="ci-time">· 30 min</span></div></div>
+            <button class="ci-add">+</button>
+          </div>
+        </div>
+        <button class="fab">+</button>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "give <a class="dv-oid" href="#2a">2a</a> a grocery-list variation too" · "make <a class="dv-oid" href="#2b">2b</a> the cook-mode style" · "variations for the recipe detail" · "turn the recreations into a clickable prototype"</p>
+</section>
+
+<!-- ============ TURN 1 — FAITHFUL RECREATIONS ============ -->
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Faithful recreations — current Kitchen app</span></div>
+  <p class="dv-tsub">Pixel-matched to your <code>kitchen/index.html</code>: Plus Jakarta Sans + Inter, cream canvas, terracotta for recipes, green for groceries. Photos shown in the app's emoji-placeholder state.</p>
+  <div class="dv-opts">
+
+    <!-- 1a home -->
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Recipe list / home</div>
+      <div class="phone">
+        <div class="k-head">
+          <div class="logo"><span class="emoji">🍳</span>Kitchen</div>
+          <div class="head-right">
+            <div class="sync-btn"><div class="sync-dot ok"></div><span>Synced</span></div>
+            <div class="icon-btn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+          </div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-tabs">
+            <button class="mode-btn a-recipes active"><span class="emoji">🍳</span>Recipes</button>
+            <button class="mode-btn a-plan"><span class="emoji">📅</span>Plan</button>
+            <button class="mode-btn a-groceries"><span class="emoji">🧺</span>Groceries</button>
+          </div>
+        </div>
+        <div class="k-main">
+          <div class="search-wrap"><svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg><input class="search-input" value="Search recipes & ingredients…"></div>
+          <div class="chips">
+            <div class="chip active" style="background:var(--terra)">All <span class="cnt">42</span></div>
+            <div class="chip"><span class="dot" style="background:var(--cat-poultry)"></span>Poultry <span class="cnt">9</span></div>
+            <div class="chip"><span class="dot" style="background:var(--cat-seafood)"></span>Seafood <span class="cnt">6</span></div>
+            <div class="chip"><span class="dot" style="background:var(--cat-beef)"></span>Beef <span class="cnt">7</span></div>
+            <div class="chip"><span class="dot" style="background:var(--cat-vegetables)"></span>Veg <span class="cnt">8</span></div>
+          </div>
+          <div class="controls">
+            <button class="ctrl-btn"><span>☆</span> Favorites</button>
+            <button class="ctrl-btn">↕ Newest</button>
+            <div class="ctrl-spacer"></div>
+            <span class="count-label">42 recipes</span>
+          </div>
+          <div class="recipe-grid">
+            <div class="rcard">
+              <div class="rcard-photo" style="background:var(--cat-poultry-l)">🍗</div>
+              <div class="fav-star on">★</div>
+              <div class="rcard-body">
+                <div class="rcard-title">Creamy Tuscan Chicken</div>
+                <div class="rcard-meta"><span class="cat-tag" style="color:var(--cat-poultry);background:var(--cat-poultry-l)">Poultry</span><span class="rcard-cooked">Cooked 3×</span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rcard-photo" style="background:var(--cat-seafood-l)">🐟</div>
+              <div class="fav-star off">☆</div>
+              <div class="rcard-body">
+                <div class="rcard-title">Miso Glazed Salmon</div>
+                <div class="rcard-meta"><span class="cat-tag" style="color:var(--cat-seafood);background:var(--cat-seafood-l)">Seafood</span><span class="rcard-cooked">Cooked 1×</span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rcard-photo" style="background:var(--cat-beef-l)">🥩</div>
+              <div class="fav-star off">☆</div>
+              <div class="rcard-body">
+                <div class="rcard-title">Beef Bulgogi Rice Bowls</div>
+                <div class="rcard-meta"><span class="cat-tag" style="color:var(--cat-beef);background:var(--cat-beef-l)">Beef</span><span class="rcard-cooked">Cooked 3×</span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rcard-photo" style="background:var(--cat-vegetables-l)">🥗</div>
+              <div class="fav-star off">☆</div>
+              <div class="rcard-body">
+                <div class="rcard-title">Roasted Veggie Grain Bowl</div>
+                <div class="rcard-meta"><span class="cat-tag" style="color:var(--cat-vegetables);background:var(--cat-vegetables-l)">Vegetables</span></div>
+              </div>
+            </div>
+            <div class="rcard">
+              <div class="rcard-photo" style="background:var(--cat-dessert-l)">🍪</div>
+              <div class="fav-star on">★</div>
+              <div class="rcard-body">
+                <div class="rcard-title">Brown Butter Choc-Chip Cookies</div>
+                <div class="rcard-meta"><span class="cat-tag" style="color:var(--cat-dessert);background:var(--cat-dessert-l)">Dessert</span><span class="rcard-cooked">Cooked 5×</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="fab">+</button>
+      </div>
+    </div>
+
+    <!-- 1b detail -->
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Recipe detail</div>
+      <div class="phone">
+        <div class="screen-head">
+          <button class="back-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></button>
+          <div class="screen-title">Recipe</div>
+          <button class="icon-btn" style="color:#E8A020">★</button>
+        </div>
+        <div class="detail-scroll">
+          <div class="detail-hero" style="background:var(--cat-poultry-l)">🍗</div>
+          <div class="detail-body">
+            <div class="detail-title">Creamy Tuscan Chicken</div>
+            <div class="detail-metarow">
+              <span class="meta-pill">🍽 4 servings</span>
+              <span class="meta-pill">⏱ 15 min prep</span>
+              <span class="meta-pill">🔥 25 min cook</span>
+            </div>
+            <a class="source-link" href="#1b">↗ instagram.com/reel</a>
+            <div class="detail-section">
+              <div class="ing-head">
+                <h3>🧺 Ingredients</h3>
+                <div class="serv-stepper"><button class="ss-btn">−</button><span class="ss-val"><b>4</b> servings</span><button class="ss-btn">+</button></div>
+              </div>
+              <div class="ing-list">
+                <div class="ing-item checked"><div class="ing-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div><div class="ing-text">2 chicken breasts</div></div>
+                <div class="ing-item"><div class="ing-check"></div><div class="ing-text">1 tbsp olive oil</div></div>
+                <div class="ing-item"><div class="ing-check"></div><div class="ing-text">3 cloves garlic, minced</div></div>
+                <div class="ing-item checked"><div class="ing-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div><div class="ing-text">1 cup heavy cream</div></div>
+                <div class="ing-item"><div class="ing-check"></div><div class="ing-text">½ cup sun-dried tomatoes</div></div>
+                <div class="ing-item"><div class="ing-check"></div><div class="ing-text">2 cups baby spinach</div></div>
+                <div class="ing-item"><div class="ing-check"></div><div class="ing-text">½ cup parmesan, grated</div></div>
+              </div>
+            </div>
+            <div class="detail-section">
+              <h3>👩‍🍳 Steps</h3>
+              <div class="step-list">
+                <div class="step-item"><div class="step-num">1</div><div class="step-text">Season chicken with salt and pepper. Heat olive oil in a large skillet over medium-high.</div></div>
+                <div class="step-item"><div class="step-num">2</div><div class="step-text">Sear chicken 5–6 min per side until golden and cooked through, then set aside.</div></div>
+                <div class="step-item"><div class="step-num">3</div><div class="step-text">Add garlic and sun-dried tomatoes; cook 1 min until fragrant.</div></div>
+                <div class="step-item"><div class="step-num">4</div><div class="step-text">Pour in cream, simmer gently, then stir in parmesan until smooth.</div></div>
+              </div>
+            </div>
+            <div class="detail-actions">
+              <button class="da-btn cook">🔥 Cook mode</button>
+              <button class="da-btn accent">🧺 To grocery list</button>
+              <button class="da-btn plan">📅 Add to plan</button>
+              <button class="da-btn">✎ Edit</button>
+              <button class="da-btn danger full">Delete recipe</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1c cook mode -->
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Cook mode (step-by-step)</div>
+      <div class="phone">
+        <div class="cook">
+          <div class="cook-top">
+            <div class="cook-progress">Step 2 / 4</div>
+            <button class="cook-x">✕</button>
+          </div>
+          <div class="cook-bar"><div class="cook-bar-fill" style="width:50%"></div></div>
+          <div class="cook-stage">
+            <div class="cook-stepnum">Step 2</div>
+            <div class="cook-text">Sear the chicken 5–6 minutes per side until golden and cooked through, then set aside.</div>
+            <button class="cook-peek-btn">🧺 Ingredients</button>
+          </div>
+          <div class="cook-nav">
+            <button class="cook-prev">Prev</button>
+            <button class="cook-next">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1d import -->
+    <div class="dv-opt" id="1d">
+      <div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Add / import recipe</div>
+      <div class="phone">
+        <div class="screen-head">
+          <button class="back-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></button>
+          <div class="screen-title">Add a Recipe</div>
+        </div>
+        <div class="screen-body">
+          <div class="import-tabs">
+            <button class="it-btn active">Paste</button>
+            <button class="it-btn">Photo</button>
+            <button class="it-btn">Blank</button>
+          </div>
+          <div class="import-note">Paste an <strong>Instagram reel link</strong>, a <strong>recipe link</strong>, or the <strong>caption text</strong> from a reel. I'll detect which and pull it apart — you can fix anything on the next screen.</div>
+          <textarea class="fin paste-box">Paste an Instagram reel link
+https://www.instagram.com/reel/…
+
+— or a recipe link —
+https://…
+
+— or the caption text —
+
+Creamy Tuscan Chicken 🍗
+Ingredients:
+- 2 chicken breasts
+- ½ cup cream
+…</textarea>
+          <div class="form-actions">
+            <button class="btn-primary">Parse recipe</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1e groceries -->
+    <div class="dv-opt" id="1e">
+      <div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Grocery shopping list</div>
+      <div class="phone">
+        <div class="k-head">
+          <div class="logo"><span class="emoji">🍳</span>Kitchen</div>
+          <div class="head-right">
+            <div class="sync-btn"><div class="sync-dot ok"></div><span>Synced</span></div>
+            <div class="icon-btn"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></div>
+          </div>
+        </div>
+        <div class="mode-bar">
+          <div class="mode-tabs">
+            <button class="mode-btn a-recipes"><span class="emoji">🍳</span>Recipes</button>
+            <button class="mode-btn a-plan"><span class="emoji">📅</span>Plan</button>
+            <button class="mode-btn a-groceries active"><span class="emoji">🧺</span>Groceries</button>
+          </div>
+        </div>
+        <div class="k-main">
+          <div class="tabs">
+            <button class="tab-btn active">Shopping List</button>
+            <button class="tab-btn">Staples</button>
+          </div>
+          <div class="add-row">
+            <div class="add-inputs">
+              <input class="name-input" value="Add an item…">
+              <div class="qty-wrap"><input class="qty-input" value="1"><div class="unit-select">— ▾</div></div>
+            </div>
+            <button class="btn-add">+</button>
+          </div>
+          <div class="reset-banner">
+            <div class="reset-text"><strong>New shopping trip?</strong><span>Clear the list and reload your staples.</span></div>
+            <button class="btn-reset">Reset List</button>
+          </div>
+          <div class="section-header"><span class="section-label">To get</span><button class="section-action danger">Clear checked</button></div>
+          <div class="item-list">
+            <div class="grocery-item"><div class="check-circle"></div><div class="item-info"><div class="item-name">Chicken breasts</div><div class="item-qty">2 lbs</div></div><button class="delete-btn">✕</button></div>
+            <div class="grocery-item"><div class="check-circle"></div><div class="item-info"><div class="item-name">Baby spinach</div><div class="item-qty">1 bag</div></div><button class="delete-btn">✕</button></div>
+            <div class="grocery-item"><div class="check-circle"></div><div class="item-info"><div class="item-name">Heavy cream</div><div class="item-qty">1 pint</div></div><button class="delete-btn">✕</button></div>
+            <div class="grocery-item"><div class="check-circle"></div><div class="item-info"><div class="item-name">Sun-dried tomatoes</div><div class="item-qty">1 jar</div></div><button class="delete-btn">✕</button></div>
+            <div class="grocery-item"><div class="check-circle"></div><div class="item-info"><div class="item-name">Parmesan</div><div class="item-qty">8 oz</div></div><button class="delete-btn">✕</button></div>
+          </div>
+          <div class="section-header" style="margin-top:4px"><span class="section-label">In cart</span></div>
+          <div class="item-list">
+            <div class="grocery-item checked"><div class="check-circle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div><div class="item-info"><div class="item-name">Olive oil</div><div class="item-qty">1 bottle</div></div><button class="delete-btn">✕</button></div>
+            <div class="grocery-item checked"><div class="check-circle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></div><div class="item-info"><div class="item-name">Yellow onion</div><div class="item-qty">2</div></div><button class="delete-btn">✕</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">These match the shipping app. Ask for "variations on the detail / cook mode / groceries", "a meal-plan screen", or "make it a clickable prototype".</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    items: [
+      { id: 1, name: 'Chicken breasts', qty: '3 lbs', from: '🍳 Tuscan Chicken · Bulgogi Bowls', count: 2, checked: false },
+      { id: 2, name: 'Baby spinach', qty: '1 bag', checked: false },
+      { id: 3, name: 'Parmesan', qty: '16 oz', count: 2, sub: 'merged · added twice', checked: false },
+      { id: 4, name: 'Sun-dried tomatoes', qty: '1 jar', from: '🍳 Tuscan Chicken', checked: false },
+      { id: 5, name: 'Heavy cream', qty: '1 pint', checked: false },
+      { id: 6, name: 'Olive oil', qty: '1 bottle', checked: true },
+      { id: 7, name: 'Yellow onion', qty: '2', checked: true },
+    ],
+    dx: {},
+    dragId: null,
+  };
+
+  begin(id, e) {
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    this._start = e.clientX;
+    this.setState({ dragId: id });
+  }
+  move(id, e) {
+    if (this.state.dragId !== id) return;
+    let d = e.clientX - this._start;
+    d = Math.max(-130, Math.min(130, d));
+    this.setState(s => ({ dx: { ...s.dx, [id]: d } }));
+  }
+  end(id) {
+    const d = this.state.dx[id] || 0;
+    if (d > 70) {
+      this.setState(s => ({
+        dragId: null,
+        dx: { ...s.dx, [id]: 0 },
+        items: s.items.map(it => it.id === id ? { ...it, checked: !it.checked } : it),
+      }));
+    } else if (d < -80) {
+      this.setState(s => ({
+        dragId: null,
+        dx: { ...s.dx, [id]: 0 },
+        items: s.items.filter(it => it.id !== id),
+      }));
+    } else {
+      this.setState(s => ({ dragId: null, dx: { ...s.dx, [id]: 0 } }));
+    }
+  }
+
+  row(it) {
+    const h = React.createElement;
+    const dx = this.state.dx[it.id] || 0;
+    const dragging = this.state.dragId === it.id;
+    const mag = Math.min(1, Math.abs(dx) / 80);
+    const behind = dx >= 0
+      ? h('div', { className: 'sw-behind chk', style: { opacity: dx > 4 ? 0.4 + mag * 0.6 : 0 } },
+          h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: '#fff', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M20 6L9 17l-5-5' })),
+          it.checked ? 'Un-check' : 'Got it')
+      : h('div', { className: 'sw-behind del', style: { opacity: 0.4 + mag * 0.6 } },
+          'Delete',
+          h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: '#fff', strokeWidth: 2.4, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6' })));
+
+    const circle = h('div', {
+      className: 'check-circle',
+      style: it.checked ? { background: 'var(--green)', borderColor: 'var(--green)' } : null,
+    }, it.checked ? h('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: '#fff', strokeWidth: 3.5, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M20 6L9 17l-5-5' })) : null);
+
+    const nameChildren = [it.name];
+    if (it.count) nameChildren.push(h('span', { key: 'c', className: 'count-badge' }, '×' + it.count));
+    const info = h('div', { className: 'ci-info', style: { marginLeft: '1px' } },
+      h('div', { className: 'ci-name', style: { fontWeight: 600, textDecoration: it.checked ? 'line-through' : 'none' } }, nameChildren),
+      it.from ? h('span', { className: 'from-tag' }, it.from) : null,
+      it.sub ? h('span', { className: 'ci-time', style: { fontSize: '11.5px', color: 'var(--text-light)' } }, it.sub) : null,
+    );
+
+    const front = h('div', {
+      className: 'sw-front',
+      style: {
+        transform: `translateX(${dx}px)`,
+        transition: dragging ? 'none' : 'transform .24s cubic-bezier(.2,.9,.3,1)',
+        touchAction: 'pan-y',
+        opacity: it.checked ? 0.5 : 1,
+      },
+      onPointerDown: (e) => this.begin(it.id, e),
+      onPointerMove: (e) => this.move(it.id, e),
+      onPointerUp: () => this.end(it.id),
+      onPointerCancel: () => this.end(it.id),
+    },
+      h('div', { className: 'ci-row', style: { border: 'none' } },
+        circle, info,
+        h('span', { className: 'ci-time', style: { fontSize: '12.5px' } }, it.qty),
+      ));
+
+    return h('div', { className: 'sw', key: it.id }, behind, front);
+  }
+
+  renderVals() {
+    const h = React.createElement;
+    const items = this.state.items;
+    const active = items.filter(i => !i.checked);
+    const cart = items.filter(i => i.checked);
+    const pct = items.length ? Math.round((cart.length / items.length) * 100) : 0;
+
+    const sectionHead = (label, action, danger) => h('div', { className: 'section-header' },
+      h('span', { className: 'section-label' }, label),
+      action ? h('button', { className: 'section-action' + (danger ? ' danger' : '') }, action) : null,
+    );
+
+    const list = h('div', null,
+      sectionHead('To get · ' + active.length, 'Reset list', false),
+      h('div', { style: { marginBottom: '20px' } }, active.map(it => this.row(it))),
+      cart.length ? sectionHead('In cart · ' + cart.length, 'Clear checked', true) : null,
+      cart.length ? h('div', null, cart.map(it => this.row(it))) : null,
+    );
+
+    return {
+      list,
+      progWidth: pct + '%',
+      progLabel: cart.length + ' of ' + items.length + ' in cart',
+    };
+  }
+}
+</script>
+</body>
+</html>
