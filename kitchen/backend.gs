@@ -19,7 +19,7 @@
  *   recipes: id | title | category | sourceUrl | imageUrl | ingredients |
  *            steps | servings | prepTime | cookTime | notes | favorite |
  *            cookedDates | createdAt | updatedAt
- *   items:   id | name | qty | unit | checked('1'/'0')
+ *   items:   id | name | qty | unit | checked('1'/'0') | count | from
  *   staples: id | name | qty | unit
  *   plan:    id | date(YYYY-MM-DD) | recipeId | servings | createdAt
  *
@@ -41,7 +41,7 @@ var RECIPE_HEADERS = [
 
 // Sheets addressed by name in POST {sheet:'…'} (everything except recipes).
 var SAVE_SHEETS = {
-  items:   ['id', 'name', 'qty', 'unit', 'checked'],
+  items:   ['id', 'name', 'qty', 'unit', 'checked', 'count', 'from'],
   staples: ['id', 'name', 'qty', 'unit'],
   plan:    ['id', 'date', 'recipeId', 'servings', 'createdAt']
 };

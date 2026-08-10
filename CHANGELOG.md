@@ -3,6 +3,36 @@
 A running history of changes to the apps in this repo (Kitchen + Recipes +
 Groceries + Home Maintenance Log). Newest first.
 
+## 2026-08-10
+
+### Kitchen — Compact-row redesign + smart shopping list
+Adopted from the `kitchen/Kitchen New Design/` design plan. The previous
+card-based layout is preserved untouched under `kitchen/backup-cards/` for
+reference/rollback.
+
+- **Recipe home → compact index rows.** Replaced the photo cards with dense,
+  scannable rows: a rounded thumbnail, category dot + name + cook time, a
+  tappable favorite star, and a quick **+** that sends the recipe's
+  ingredients straight to the grocery review. Same search / chips / sort /
+  Favorites controls and FAB.
+- **Grocery list → smart, swipeable rows:**
+  - **Progress bar** under the tabs ("N of M in cart").
+  - **Swipe right to check / left to delete** (pointer-based, with the
+    green "Got it" / red "Delete" reveal); tapping the circle still toggles.
+  - **×N merge badge** on items combined from multiple sources and a
+    **"🍳 from recipe"** trace tag showing which recipes an item came from.
+- **Recipe detail → "already have it".** Each ingredient is marked
+  **✓ In list** or **★ Staple** when you already have it, a summary note shows
+  how many are covered, and the send button becomes **"Add N missing"** so a
+  recipe only adds what you're actually short.
+- **Data model:** grocery items gained `count` and `from` fields, persisted as
+  two new columns on the `items` sheet (`backend.gs`, `SETUP.md` updated).
+  Backward-compatible — older 5-column sheets keep working; the aggregation
+  engine now also threads source recipe names through the merge.
+- Engine + import node tests still pass (50 + 35); redesign verified in a
+  headless browser (home, detail badges, progress bar, and both swipe
+  directions).
+
 ## 2026-07-29
 
 ### Groceries — cleaner URL

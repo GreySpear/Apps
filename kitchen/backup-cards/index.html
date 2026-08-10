@@ -80,8 +80,7 @@
     .count-label{font-size:12px;color:var(--text-light);font-weight:500}
 
     /* recipe cards */
-    .recipe-grid{display:block}
-    .recipe-grid .ci-row:last-child{border-bottom:none}
+    .recipe-grid{display:flex;flex-direction:column;gap:12px}
     .rcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;display:flex;transition:transform 0.1s;-webkit-tap-highlight-color:transparent;position:relative}
     .rcard:active{transform:scale(0.99)}
     .rcard-photo{width:104px;flex-shrink:0;background-size:cover;background-position:center;position:relative;min-height:104px}
@@ -336,52 +335,6 @@
     .datepick button{font-size:13px;font-weight:600;padding:9px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;color:var(--text-mid);transition:all .12s}
     .datepick button:hover{border-color:var(--plan);color:var(--plan)}
     .datepick button b{display:block;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text)}
-
-    /* ===== compact index rows (recipe home) ===== */
-    .ci-row{display:flex;align-items:center;gap:13px;padding:11px 2px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
-    .ci-row:active{background:var(--terra-light)}
-    .ci-thumb{width:52px;height:52px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;background-size:cover;background-position:center}
-    .ci-info{flex:1;min-width:0}
-    .ci-name{font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .ci-meta{display:flex;align-items:center;gap:7px;margin-top:5px}
-    .ci-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-    .ci-catname{font-size:11.5px;font-weight:600;color:var(--text-mid)}
-    .ci-time{font-size:11.5px;color:var(--text-light);font-weight:500}
-    .ci-fav{border:none;background:none;font-size:20px;width:34px;flex-shrink:0;cursor:pointer;padding:4px;line-height:1;-webkit-tap-highlight-color:transparent}
-    .ci-fav.on{color:#E8A020}.ci-fav.off{color:var(--text-light)}
-    .ci-add{width:34px;height:34px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--green);font-size:19px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .12s}
-    .ci-add:active{background:var(--green-light);border-color:var(--green)}
-
-    /* ===== smart shopping list ===== */
-    .prog-wrap{display:flex;align-items:center;gap:10px;margin:0 0 18px}
-    .prog-track{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden}
-    .prog-fill{height:100%;background:var(--green);border-radius:4px;transition:width .3s}
-    .prog-label{font-size:12px;font-weight:700;color:var(--green);font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap}
-    .count-badge{font-size:11px;font-weight:800;color:var(--green);background:var(--green-light);border-radius:999px;padding:2px 7px;margin-left:7px;vertical-align:middle}
-    .from-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--terra);background:var(--terra-light);padding:2px 8px;border-radius:999px;margin-top:5px;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-    /* swipeable row */
-    .sw{position:relative;overflow:hidden;border-bottom:1px solid var(--border);touch-action:pan-y}
-    .sw-behind{position:absolute;inset:0;display:flex;align-items:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:700;color:#fff;gap:6px;opacity:0}
-    .sw-behind.del{background:var(--danger);justify-content:flex-end;padding-right:20px}
-    .sw-behind.chk{background:var(--green);justify-content:flex-start;padding-left:20px}
-    .sw-front{position:relative;background:var(--bg);will-change:transform}
-    .sw-row{display:flex;align-items:center;gap:13px;padding:11px 2px}
-    .sw-row .item-info{flex:1;min-width:0}
-    .sw-row .item-name{font-size:15px;font-weight:600;color:var(--text);white-space:normal}
-    .sw.done .item-name{text-decoration:line-through;color:var(--text-light)}
-    .sw.done .sw-front{opacity:.5}
-    .sw .check-circle{cursor:pointer}
-    .sw.done .check-circle{background:var(--green);border-color:var(--green)}
-    .sw.done .check-circle svg{display:block}
-    .sw-qty{font-size:12.5px;color:var(--text-light);font-weight:500;flex-shrink:0}
-
-    /* ===== detail "already have it" ===== */
-    .smart-note{background:var(--green-light);border-left:3px solid var(--green);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--green);font-weight:500;line-height:1.55;margin-bottom:14px}
-    .smart-note strong{font-weight:800}
-    .have-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;flex-shrink:0;margin-left:auto}
-    .have-badge.list{color:var(--green);background:var(--green-light)}
-    .have-badge.staple{color:var(--terra);background:var(--terra-light)}
-    .ing-item.have{align-items:center}
   </style>
 </head>
 <body>
@@ -464,10 +417,6 @@
 
     <!-- LIST -->
     <div id="tab-list">
-      <div class="prog-wrap" id="prog-wrap" style="display:none">
-        <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
-        <span class="prog-label" id="prog-label"></span>
-      </div>
       <div class="add-row">
         <div class="add-inputs">
           <input class="name-input" type="text" id="item-name" placeholder="Add an item…" onkeydown="if(event.key==='Enter')addItem()">
@@ -1186,11 +1135,10 @@ function aggregate(entries,opts){
     const canon=canonicalName(p.name);
     if(!canon)return;
     const key=canon+'|'+p.unit;
-    if(!groups[key])groups[key]={canonical:canon,unit:p.unit,qty:0,hasQty:false,sourceCount:0,sources:{},display:p.name.trim()||canon};
+    if(!groups[key])groups[key]={canonical:canon,unit:p.unit,qty:0,hasQty:false,sourceCount:0,display:p.name.trim()||canon};
     const g=groups[key];
     if(p.qty!=null){g.qty+=p.qty*scale;g.hasQty=true;}
     g.sourceCount++;
-    if(e.source)g.sources[e.source]=true;
   });
   const out=Object.keys(groups).map(key=>{
     const g=groups[key];
@@ -1198,7 +1146,7 @@ function aggregate(entries,opts){
       name:g.canonical,canonical:g.canonical,
       qty:g.hasQty?roundQty(g.qty):null,unit:g.unit,display:g.display,
       aisle:aisleFor(g.canonical),isStaple:stapleSet.has(g.canonical),
-      sourceCount:g.sourceCount,sources:Object.keys(g.sources),inList:!!existing[key]
+      sourceCount:g.sourceCount,inList:!!existing[key]
     };
   });
   out.sort((a,b)=>{
@@ -1283,9 +1231,9 @@ function rowToRecipe(row){
     cookedDates:j(row[12],[]),createdAt:String(row[13]||''),updatedAt:String(row[14]||'')
   };
 }
-function itemToRow(i){return [i.id,i.name,i.qty,i.unit,i.checked?'1':'0',i.count||1,i.from||''];}
+function itemToRow(i){return [i.id,i.name,i.qty,i.unit,i.checked?'1':'0'];}
 function stapleToRow(s){return [s.id,s.name,s.qty,s.unit];}
-function itemFromRow(r){return {id:String(r[0]),name:String(r[1]),qty:Number(r[2])||1,unit:String(r[3]||''),checked:r[4]==='1'||r[4]===true,count:Number(r[5])||1,from:String(r[6]||'')};}
+function itemFromRow(r){return {id:String(r[0]),name:String(r[1]),qty:Number(r[2])||1,unit:String(r[3]||''),checked:r[4]==='1'||r[4]===true};}
 function stapleFromRow(r){return {id:String(r[0]),name:String(r[1]),qty:Number(r[2])||1,unit:String(r[3]||'')};}
 function planToRow(p){return [p.id,p.date,p.recipeId,p.servings||'',p.createdAt||''];}
 function planFromRow(r){return {id:String(r[0]),date:String(r[1]||''),recipeId:String(r[2]||''),servings:String(r[3]||''),createdAt:String(r[4]||'')};}
@@ -1452,19 +1400,22 @@ function render(){
 function renderCard(r){
   const cm=CAT_META[r.category]||CAT_META.others;
   const color=catColor(r.category),colorL=catColorL(r.category);
-  const thumb=r.imageUrl
-    ? `<div class="ci-thumb" style="background-image:url('${esc(r.imageUrl)}')"></div>`
-    : `<div class="ci-thumb" style="background:${colorL};color:${color}">${cm.emoji}</div>`;
-  const time=r.cookTime?`<span class="ci-time">· ${esc(r.cookTime)}</span>`:'';
+  const photo=r.imageUrl
+    ? `<div class="rcard-photo" style="background-image:url('${esc(r.imageUrl)}')"></div>`
+    : `<div class="rcard-photo placeholder" style="background:${colorL};color:${color}">${cm.emoji}</div>`;
+  const lc=lastCooked(r);
+  const cookedTxt=lc?`<span class="rcard-cooked">🍽️ ${esc(timeAgo(lc))}</span>`:'';
   const star=r.favorite?'★':'☆';
-  return `<div class="ci-row" onclick="openDetail('${r.id}')">
-    ${thumb}
-    <div class="ci-info">
-      <div class="ci-name">${esc(r.title)||'Untitled'}</div>
-      <div class="ci-meta"><span class="ci-dot" style="background:${color}"></span><span class="ci-catname">${cm.label}</span>${time}</div>
+  return `<div class="rcard" onclick="openDetail('${r.id}')">
+    ${photo}
+    <div class="fav-star ${r.favorite?'on':'off'}" onclick="event.stopPropagation();toggleFav('${r.id}')">${star}</div>
+    <div class="rcard-body">
+      <div class="rcard-title">${esc(r.title)||'Untitled'}</div>
+      <div class="rcard-meta">
+        <span class="cat-tag" style="background:${colorL};color:${color}">${cm.emoji} ${cm.label}</span>
+        ${cookedTxt}
+      </div>
     </div>
-    <button class="ci-fav ${r.favorite?'on':'off'}" onclick="event.stopPropagation();toggleFav('${r.id}')" aria-label="Favorite">${star}</button>
-    <button class="ci-add" onclick="event.stopPropagation();sendRecipeToGrocery('${r.id}')" aria-label="Add ingredients to groceries">+</button>
   </div>`;
 }
 
@@ -1757,22 +1708,10 @@ function openDetail(id){
       <button class="ss-btn" onclick="changeServings(1)" aria-label="More servings">+</button>
       <button class="ss-reset" id="serv-reset" onclick="resetServings()" style="display:none">Reset</button>
     </div>`:'';
-  const ingList=r.ingredients||[];
-  const ingTotal=ingList.length;
-  const ingMissing=ingList.filter(ing=>ingStatus(ing)==='').length;
-  const ingCovered=ingTotal-ingMissing;
-  const smartNote=ingCovered>0
-    ? (ingMissing===0
-        ? `<div class="smart-note">✓ All ${ingTotal} are already on your list or in staples.</div>`
-        : `<div class="smart-note">✓ ${ingCovered} of ${ingTotal} already covered — on your list or in staples. Adding the list will only grab the <strong>${ingMissing} you're missing</strong>.</div>`)
-    : '';
-  const ings=ingTotal?`<div class="detail-section">
+  const ings=(r.ingredients||[]).length?`<div class="detail-section">
       <div class="ing-head"><h3>🧺 Ingredients</h3>${stepper}</div>
-      ${smartNote}
       <div class="ing-list" id="ing-list-wrap">${ingRowsHtml(r.ingredients,1)}</div>
     </div>`:'';
-  const groBtnLabel=(ingCovered>0&&ingMissing>0)?`🧺 Add ${ingMissing} missing`
-    :(ingTotal&&ingMissing===0)?'🧺 All on hand':'🧺 To grocery list';
 
   const steps=(r.steps||[]).length?`<div class="detail-section"><h3>👩‍🍳 Steps</h3><div class="step-list">${
     r.steps.map((s,i)=>`<div class="step-item"><div class="step-num">${i+1}</div><div class="step-text">${esc(s)}</div></div>`).join('')
@@ -1796,7 +1735,7 @@ function openDetail(id){
         ${(r.steps||[]).length?`<button class="da-btn cook full" onclick="startCook('${r.id}')">▶ Cook mode</button>`:''}
         <button class="da-btn accent" onclick="cookedThis('${r.id}')">🍽️ I cooked this</button>
         <button class="da-btn plan" onclick="openPlanPick('${r.id}')">📅 Add to plan</button>
-        <button class="da-btn" onclick="sendRecipeToGrocery('${r.id}')">${groBtnLabel}</button>
+        <button class="da-btn" onclick="sendRecipeToGrocery('${r.id}')">🧺 To grocery list</button>
         <button class="da-btn" onclick="editRecipe('${r.id}')">✎ Edit</button>
         <button class="da-btn danger" onclick="deleteRecipe('${r.id}')">🗑 Delete</button>
       </div>
@@ -1823,20 +1762,8 @@ function ingRowsHtml(ings,factor){
   return (ings||[]).map((ing,i)=>{
     const line=factor===1?ing:scaleIngredientLine(ing,factor);
     const on=checkedIngredients[i]?' checked':'';
-    const st=ingStatus(ing);
-    const badge=st==='list'?'<span class="have-badge list">✓ In list</span>'
-      :st==='staple'?'<span class="have-badge staple">★ Staple</span>':'';
-    return `<div class="ing-item${on}${badge?' have':''}" id="ing-${i}" onclick="toggleIng(${i})"><div class="ing-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ing-text">${esc(line)}</div>${badge}</div>`;
+    return `<div class="ing-item${on}" id="ing-${i}" onclick="toggleIng(${i})"><div class="ing-check"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ing-text">${esc(line)}</div></div>`;
   }).join('');
-}
-/* Is an ingredient already covered? '' = missing, 'list' = on the shopping
-   list, 'staple' = something kept on hand. Mirrors the aggregate matcher. */
-function ingStatus(line){
-  const canon=canonicalName(parseIngredient(line).name);
-  if(!canon)return '';
-  if(staples.some(s=>canonicalName(s.name)===canon))return 'staple';
-  if(items.some(g=>canonicalName(g.name)===canon))return 'list';
-  return '';
 }
 /* Servings shown as a tidy number (½, 1 ½, 4) — reuses the ingredient fraction
    formatter, falling back to a rounded value for odd scales. */
@@ -2055,7 +1982,7 @@ function buildGroceryFromWeek(){
     if(!r||!(r.ingredients||[]).length)return;
     const baseServ=parseFloat(r.servings)||0,wantServ=parseFloat(pe.servings)||0;
     const scale=(baseServ>0&&wantServ>0)?(wantServ/baseServ):1;
-    r.ingredients.forEach(ing=>ingEntries.push({ingredient:ing,scale,source:r.title||''}));
+    r.ingredients.forEach(ing=>ingEntries.push({ingredient:ing,scale}));
   });
   if(!ingEntries.length){toast('Planned recipes have no ingredients');return;}
   openReview(aggregate(ingEntries,{staples,existingItems:items}),
@@ -2073,7 +2000,7 @@ function sendRecipeToGrocery(id){
   const sub=scale!==1
     ? `Scaled to ${fmtServ(detailServ)} servings, grouped by aisle. Staples you keep on hand are pre-unchecked.`
     : 'Grouped by aisle. Staples you keep on hand are pre-unchecked.';
-  openReview(aggregate(r.ingredients.map(ing=>({ingredient:ing,scale,source:r.title||''})),{staples,existingItems:items}),
+  openReview(aggregate(r.ingredients.map(ing=>({ingredient:ing,scale})),{staples,existingItems:items}),
     {title:'Add to grocery list',sub});
 }
 function openReview(candidates,opts){
@@ -2099,16 +2026,6 @@ function renderReview(){
   });
   $('review-list').innerHTML=html;
 }
-/* Union the recipe-trace labels already on an item with newly-added ones,
-   keeping them unique and in first-seen order. */
-function mergeFrom(existing,newSrcs){
-  const seen=[];
-  String(existing||'').split(' · ').concat(newSrcs||[]).forEach(s=>{
-    s=String(s||'').trim();
-    if(s&&seen.indexOf(s)<0)seen.push(s);
-  });
-  return seen.join(' · ');
-}
 function toggleReview(idx){const it=reviewItems.find(x=>x.idx===idx);if(!it)return;it.on=!it.on;$('rev-'+idx).classList.toggle('on',it.on);}
 function closeReview(){$('review-modal').classList.remove('open');}
 function confirmReview(){
@@ -2116,16 +2033,12 @@ function confirmReview(){
   if(!chosen.length){toast('Nothing selected');return;}
   chosen.forEach(it=>{
     const canon=canonicalName(it.name),unit=it.unit||'';
-    const srcs=it.sources||[];
     const match=items.find(g=>canonicalName(g.name)===canon&&(g.unit||'')===unit);
     if(match){
       if(it.qty!=null)match.qty=roundQty((Number(match.qty)||0)+it.qty);
       match.checked=false;
-      match.count=(Number(match.count)||1)+(it.sourceCount||1);
-      match.from=mergeFrom(match.from,srcs);
     }else{
-      items.push({id:uid(),name:it.display||it.name,qty:it.qty!=null?it.qty:1,unit,checked:false,
-        count:it.sourceCount||1,from:srcs.join(' · ')});
+      items.push({id:uid(),name:it.display||it.name,qty:it.qty!=null?it.qty:1,unit,checked:false});
     }
   });
   scheduleGroceryPush();
@@ -2147,7 +2060,7 @@ function switchGTab(t){
 
 function addItem(){
   const name=$('item-name').value.trim();if(!name){$('item-name').focus();return;}
-  items.push({id:uid(),name,qty:parseFloat($('item-qty').value)||1,unit:$('item-unit').value,checked:false,count:1,from:''});
+  items.push({id:uid(),name,qty:parseFloat($('item-qty').value)||1,unit:$('item-unit').value,checked:false});
   $('item-name').value='';$('item-qty').value='1';$('item-unit').value='';$('item-name').focus();
   scheduleGroceryPush();renderGroceries();toast('Added!');
 }
@@ -2156,7 +2069,7 @@ function deleteItem(id,e){e.stopPropagation();items=items.filter(i=>i.id!==id);s
 function clearChecked(){items=items.filter(i=>!i.checked);scheduleGroceryPush();renderGroceries();toast('Checked items cleared.');}
 function resetList(){
   if(!confirm('Start a fresh shopping trip? This clears the whole list and reloads your staples.'))return;
-  items=staples.map(s=>({id:uid(),name:s.name,qty:s.qty,unit:s.unit,checked:false,count:1,from:''}));
+  items=staples.map(s=>({id:uid(),name:s.name,qty:s.qty,unit:s.unit,checked:false}));
   scheduleGroceryPush();renderGroceries();toast('List reset!');
 }
 
@@ -2170,89 +2083,21 @@ function deleteStaple(id,e){e.stopPropagation();staples=staples.filter(s=>s.id!=
 function clearAllStaples(){if(!confirm('Remove all staples?'))return;staples=[];scheduleGroceryPush();renderGroceries();toast('Staples cleared.');}
 
 function qtyStr(item){const q=item.qty&&item.qty!==1?item.qty:(item.unit?'':'');return[q,item.unit].filter(Boolean).join(' ');}
-const CHK_SVG='<svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const CHK_SVG_W='<svg width="15" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
-const TRASH_SVG='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>';
-/* One swipeable shopping-list row: drag right to check / left to delete,
-   tap the circle (or a still tap) to toggle. Shows a ×N merge badge and a
-   "🍳 from recipe" trace when present. */
-function renderGroceryItem(item){
-  const qs=qtyStr(item);
-  const cnt=(Number(item.count)||1)>1?`<span class="count-badge">&times;${Number(item.count)}</span>`:'';
-  const from=item.from?`<span class="from-tag">🍳 ${esc(item.from)}</span>`:'';
-  return `<div class="sw ${item.checked?'done':''}" data-id="${item.id}">
-    <div class="sw-behind chk">${CHK_SVG_W} ${item.checked?'Un-check':'Got it'}</div>
-    <div class="sw-behind del">Delete ${TRASH_SVG}</div>
-    <div class="sw-front">
-      <div class="sw-row">
-        <div class="check-circle" onclick="toggleCheck('${item.id}')">${CHK_SVG}</div>
-        <div class="item-info"><div class="item-name">${esc(item.name)}${cnt}</div>${from}</div>
-        ${qs?`<span class="sw-qty">${esc(qs)}</span>`:''}
-      </div>
-    </div>
-  </div>`;
-}
+function renderGroceryItem(item){const qs=qtyStr(item);return`<div class="grocery-item ${item.checked?'checked':''}" onclick="toggleCheck('${item.id}')"><div class="check-circle"><svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="item-info"><div class="item-name">${esc(item.name)}</div>${qs?`<div class="item-qty">${esc(qs)}</div>`:''}</div><button class="delete-btn" onclick="deleteItem('${item.id}',event)">&#x2715;</button></div>`;}
 function renderStapleItem(s){const qs=qtyStr(s);return`<div class="staple-item"><div class="staple-star">&#11088;</div><div class="item-info"><div class="item-name">${esc(s.name)}</div>${qs?`<div class="item-qty">${esc(qs)}</div>`:''}</div><button class="delete-btn" onclick="deleteStaple('${s.id}',event)">&#x2715;</button></div>`;}
 
 function renderGroceries(){
   const active=items.filter(i=>!i.checked),checked=items.filter(i=>i.checked);
-  const total=items.length;
-  const pw=$('prog-wrap');
-  if(total>0){
-    pw.style.display='flex';
-    $('prog-fill').style.width=Math.round((checked.length/total)*100)+'%';
-    $('prog-label').textContent=`${checked.length} of ${total} in cart`;
-  }else{pw.style.display='none';}
   $('active-label').textContent=`To get (${active.length})`;
   $('active-list').innerHTML=active.length===0&&checked.length===0?`<div class="empty-state"><span class="e">&#x1F6D2;</span>Your list is empty.<br>Add something above, or tap <strong>Reset List</strong> to load your staples.</div>`:active.map(renderGroceryItem).join('');
   const hasChecked=checked.length>0;
   $('checked-section').style.display=hasChecked?'block':'none';
   $('clear-btn').style.display=hasChecked?'inline-block':'none';
   if(hasChecked)$('checked-list').innerHTML=checked.map(renderGroceryItem).join('');
-  bindSwipe();
   $('staples-label').textContent=`Staples (${staples.length})`;
   $('staples-list').innerHTML=staples.length===0?`<div class="empty-state"><span class="e">&#11088;</span>No staples yet.<br>Add things you buy every week &#8212; milk, eggs, bread&hellip;</div>`:staples.map(renderStapleItem).join('');
   $('setup-banner').style.display=sheetUrl?'none':'block';
 }
-
-/* ---------- swipe gestures on shopping-list rows ---------- */
-const SWIPE_MAX=130, SWIPE_CHECK=70, SWIPE_DELETE=80;
-function bindSwipe(){
-  document.querySelectorAll('#tab-list .sw').forEach(sw=>{
-    if(sw._bound)return; sw._bound=true;
-    const front=sw.querySelector('.sw-front');
-    const chk=sw.querySelector('.sw-behind.chk'), del=sw.querySelector('.sw-behind.del');
-    let startX=0,dx=0,dragging=false,moved=false;
-    const setDx=v=>{
-      dx=Math.max(-SWIPE_MAX,Math.min(SWIPE_MAX,v));
-      front.style.transform=`translateX(${dx}px)`;
-      const mag=Math.min(1,Math.abs(dx)/SWIPE_CHECK);
-      chk.style.opacity=dx>4?(0.4+mag*0.6):0;
-      del.style.opacity=dx<-4?(0.4+mag*0.6):0;
-    };
-    front.addEventListener('pointerdown',e=>{
-      dragging=true;moved=false;startX=e.clientX;front.style.transition='none';
-      try{front.setPointerCapture(e.pointerId);}catch(_){}
-    });
-    front.addEventListener('pointermove',e=>{
-      if(!dragging)return;
-      const d=e.clientX-startX;
-      if(Math.abs(d)>6)moved=true;
-      setDx(d);
-    });
-    const finish=()=>{
-      if(!dragging)return;dragging=false;
-      front.style.transition='transform .24s cubic-bezier(.2,.9,.3,1)';
-      const id=sw.getAttribute('data-id');
-      if(dx>SWIPE_CHECK){front.style.transform='';setDx(0);toggleCheck(id);}
-      else if(dx<-SWIPE_DELETE){front.style.transform='';setDx(0);removeItem(id);}
-      else{front.style.transform='';setDx(0);}
-    };
-    front.addEventListener('pointerup',finish);
-    front.addEventListener('pointercancel',finish);
-  });
-}
-function removeItem(id){items=items.filter(i=>i.id!==id);scheduleGroceryPush();renderGroceries();}
 
 /* ============================================================
    SETTINGS

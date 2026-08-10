@@ -54,7 +54,7 @@ runs:
 recipes:  id | title | category | sourceUrl | imageUrl | ingredients | steps |
           servings | prepTime | cookTime | notes | favorite | cookedDates |
           createdAt | updatedAt
-items:    id | name | qty | unit | checked
+items:    id | name | qty | unit | checked | count | from
 staples:  id | name | qty | unit
 ```
 
