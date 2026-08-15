@@ -1,6 +1,7 @@
 /*
  * Tests for the recipe web search scraper (extractSearchResults_), run against
- * the ACTUAL shipped backend code in ../backend.gs.
+ * the ACTUAL shipped backend code in ../backend.gs. The scraper parses
+ * DuckDuckGo HTML search results.
  *
  *   node kitchen/test/search.test.js
  */
@@ -8,10 +9,19 @@ const fs = require('fs');
 const path = require('path');
 
 const gs = fs.readFileSync(path.join(__dirname, '..', 'backend.gs'), 'utf8');
-const m = gs.match(/function extractSearchResults_[\s\S]*?^}/m);
-if (!m) { console.error('Could not find extractSearchResults_ in backend.gs'); process.exit(2); }
 
-const fn = new Function('html', m[0] + '\nreturn extractSearchResults_(html);');
+// Extract extractSearchResults_, extractDdgUrl_, and decodeEntities_ together.
+const fnBlock = gs.match(/function extractSearchResults_[\s\S]*?^}/m);
+const ddgBlock = gs.match(/function extractDdgUrl_[\s\S]*?^}/m);
+const decBlock = gs.match(/function decodeEntities_[\s\S]*?^}/m);
+if (!fnBlock || !ddgBlock || !decBlock) {
+  console.error('Could not find scraper functions in backend.gs');
+  process.exit(2);
+}
+
+const src = fnBlock[0] + '\n' + ddgBlock[0] + '\n' + decBlock[0] +
+  '\nreturn extractSearchResults_(html);';
+const fn = new Function('html', src);
 
 let pass = 0, fail = 0;
 const eq = (n, g, w) => {
@@ -19,63 +29,57 @@ const eq = (n, g, w) => {
   if (a === b) pass++; else { fail++; console.log('FAIL', n, '\n  got ', a, '\n  want', b); }
 };
 
-// --- basic card extraction ---
-eq('single card with img alt+src',
-  fn(`<a href="https://www.allrecipes.com/recipe/12345/chicken-tikka/">
-        <img alt="Chicken Tikka Masala" src="https://cdn.allrecipes.com/img/12345.jpg">
-      </a>`),
-  [{ title: 'Chicken Tikka Masala', url: 'https://www.allrecipes.com/recipe/12345/chicken-tikka/', image: 'https://cdn.allrecipes.com/img/12345.jpg' }]
+// Helper: build a DuckDuckGo-style result link
+const ddgResult = (title, url) =>
+  `<a rel="nofollow" class="result__a" href="//duckduckgo.com/l/?uddg=${encodeURIComponent(url)}&rut=abc">${title}</a>`;
+
+// --- basic extraction ---
+eq('single result',
+  fn(ddgResult('Chicken Tikka Masala', 'https://www.allrecipes.com/recipe/12345/chicken-tikka/')),
+  [{ title: 'Chicken Tikka Masala', url: 'https://www.allrecipes.com/recipe/12345/chicken-tikka/', image: '', domain: 'allrecipes.com' }]
 );
 
-eq('deduplicates same recipe ID',
-  fn(`<a href="https://www.allrecipes.com/recipe/99/pasta/"><img alt="Pasta" src="https://cdn.example.com/1.jpg"></a>
-      <a href="https://www.allrecipes.com/recipe/99/pasta/"><img alt="Pasta" src="https://cdn.example.com/1.jpg"></a>`),
-  [{ title: 'Pasta', url: 'https://www.allrecipes.com/recipe/99/pasta/', image: 'https://cdn.example.com/1.jpg' }]
+// --- deduplicates same URL ---
+eq('deduplicates same URL',
+  fn(ddgResult('Pasta', 'https://food.com/recipe/pasta') + ddgResult('Pasta Again', 'https://food.com/recipe/pasta')),
+  [{ title: 'Pasta', url: 'https://food.com/recipe/pasta', image: '', domain: 'food.com' }]
 );
 
-eq('multiple cards',
-  fn(`<a href="https://www.allrecipes.com/recipe/1/aaa/"><img alt="Recipe A" src="https://cdn.example.com/a.jpg"></a>
-      <a href="https://www.allrecipes.com/recipe/2/bbb/"><img alt="Recipe B" src="https://cdn.example.com/b.jpg"></a>`),
+// --- multiple results ---
+eq('multiple results',
+  fn(ddgResult('Recipe A', 'https://a.com/r1') + ddgResult('Recipe B', 'https://b.com/r2')),
   [
-    { title: 'Recipe A', url: 'https://www.allrecipes.com/recipe/1/aaa/', image: 'https://cdn.example.com/a.jpg' },
-    { title: 'Recipe B', url: 'https://www.allrecipes.com/recipe/2/bbb/', image: 'https://cdn.example.com/b.jpg' }
+    { title: 'Recipe A', url: 'https://a.com/r1', image: '', domain: 'a.com' },
+    { title: 'Recipe B', url: 'https://b.com/r2', image: '', domain: 'b.com' }
   ]
-);
-
-// --- normalizes trailing slashes ---
-eq('adds trailing slash',
-  fn(`<a href="https://www.allrecipes.com/recipe/55/soup"><img alt="Soup" src="https://cdn.example.com/s.jpg"></a>`),
-  [{ title: 'Soup', url: 'https://www.allrecipes.com/recipe/55/soup/', image: 'https://cdn.example.com/s.jpg' }]
-);
-
-// --- skips logo/icon alt text ---
-eq('skips logo images',
-  fn(`<a href="https://www.allrecipes.com/recipe/77/cake/">
-        <img alt="AllRecipes Logo" src="https://cdn.example.com/logo.png">
-        <img alt="Chocolate Cake" src="https://cdn.example.com/cake.jpg">
-      </a>`),
-  [{ title: 'Chocolate Cake', url: 'https://www.allrecipes.com/recipe/77/cake/', image: 'https://cdn.example.com/cake.jpg' }]
 );
 
 // --- HTML entity decoding ---
 eq('decodes HTML entities',
-  fn(`<a href="https://www.allrecipes.com/recipe/88/mac/">
-        <img alt="Mac &amp; Cheese" src="https://cdn.example.com/mac.jpg">
-      </a>`),
-  [{ title: 'Mac & Cheese', url: 'https://www.allrecipes.com/recipe/88/mac/', image: 'https://cdn.example.com/mac.jpg' }]
+  fn(ddgResult('Mac &amp; Cheese', 'https://food.com/mac')),
+  [{ title: 'Mac & Cheese', url: 'https://food.com/mac', image: '', domain: 'food.com' }]
 );
 
-// --- fallback to class-based title ---
-eq('fallback to card__title class',
-  fn(`<a href="https://www.allrecipes.com/recipe/42/stew/">
-        <span class="card__title">Beef Stew</span>
-      </a>`),
-  [{ title: 'Beef Stew', url: 'https://www.allrecipes.com/recipe/42/stew/', image: '' }]
+eq('decodes &#39; apostrophe',
+  fn(ddgResult('Grandma&#39;s Pie', 'https://food.com/pie')),
+  [{ title: "Grandma's Pie", url: 'https://food.com/pie', image: '', domain: 'food.com' }]
 );
 
-// --- no title, skips ---
-eq('skips cards with no title',
-  fn(`<a href="https://www.allrecipes.com/recipe/11/x/"></a>`),
+// --- strips www. from domain ---
+eq('strips www from domain',
+  fn(ddgResult('Soup', 'https://www.example.com/soup')),
+  [{ title: 'Soup', url: 'https://www.example.com/soup', image: '', domain: 'example.com' }]
+);
+
+// --- skips non-http hrefs ---
+eq('skips non-http href',
+  fn(`<a class="result__a" href="javascript:void(0)">Bad</a>`),
+  []
+);
+
+// --- skips very short titles ---
+eq('skips short title',
+  fn(ddgResult('AB', 'https://x.com/y')),
   []
 );
 
@@ -84,16 +88,20 @@ eq('empty HTML', fn(''), []);
 
 // --- caps at 12 results ---
 const many = Array.from({length: 20}, (_, i) =>
-  `<a href="https://www.allrecipes.com/recipe/${i}/r${i}/"><img alt="Recipe ${i}" src="https://cdn.example.com/${i}.jpg"></a>`
+  ddgResult('Recipe ' + i, 'https://example.com/r' + i)
 ).join('\n');
 eq('caps at 12', fn(many).length, 12);
 
-// --- data-src fallback ---
-eq('uses data-src when src missing',
-  fn(`<a href="https://www.allrecipes.com/recipe/33/pie/">
-        <img alt="Apple Pie" data-src="https://cdn.example.com/pie.jpg">
-      </a>`),
-  [{ title: 'Apple Pie', url: 'https://www.allrecipes.com/recipe/33/pie/', image: 'https://cdn.example.com/pie.jpg' }]
+// --- handles direct http href (no uddg redirect) ---
+eq('direct http href',
+  fn(`<a class="result__a" href="https://food.com/direct-recipe">Direct Recipe</a>`),
+  [{ title: 'Direct Recipe', url: 'https://food.com/direct-recipe', image: '', domain: 'food.com' }]
+);
+
+// --- strips inner HTML tags from title ---
+eq('strips inner tags',
+  fn(`<a class="result__a" href="//duckduckgo.com/l/?uddg=${encodeURIComponent('https://food.com/x')}"><b>Bold</b> Title</a>`),
+  [{ title: 'Bold Title', url: 'https://food.com/x', image: '', domain: 'food.com' }]
 );
 
 console.log(`\n${pass} passed, ${fail} failed`);

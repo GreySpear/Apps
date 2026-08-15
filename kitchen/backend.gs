@@ -15,7 +15,7 @@
  *   - POST {action:'ocr',   image:'<base64>', mimeType:'image/jpeg'}
  *                                            -> Drive OCR of a recipe photo
  *   - POST {action:'search', query:'chicken tikka'}
- *                                            -> web recipe search (AllRecipes)
+ *                                            -> web recipe search (DuckDuckGo)
  *
  * Row shapes (must match the client's row mappers):
  *   recipes: id | title | category | sourceUrl | imageUrl | ingredients |
@@ -243,7 +243,7 @@ function capResponseSize_(result) {
   return result;
 }
 
-// ---- Search (web recipe search via AllRecipes) ----------------------------
+// ---- Search (web recipe search via DuckDuckGo) ---------------------------
 
 function handleSearch_(data) {
   var query = String(data.query || '').trim();
@@ -251,7 +251,7 @@ function handleSearch_(data) {
     return jsonOutput_({ ok: false, error: 'Empty search query' });
   }
 
-  var url = 'https://www.allrecipes.com/search?q=' + encodeURIComponent(query);
+  var url = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent('recipe ' + query);
   var response;
   try {
     response = UrlFetchApp.fetch(url, {
@@ -273,67 +273,53 @@ function handleSearch_(data) {
 }
 
 /**
- * Parses AllRecipes search-results HTML for recipe cards. Extracts each
- * unique /recipe/ID/name/ URL along with its title and thumbnail image
- * by scanning the HTML around each link for <img> alt text and src.
+ * Parses DuckDuckGo HTML search results. Each result link has class
+ * "result__a" with an href containing ?uddg=ENCODED_REAL_URL. We decode
+ * that, grab the link text as the title, and extract the domain for display.
  */
 function extractSearchResults_(html) {
   var results = [];
   var seen = {};
 
-  var re = /href\s*=\s*["'](https?:\/\/(?:www\.)?allrecipes\.com\/recipe\/(\d+)\/[^"'#?]*?)["']/gi;
+  var re = /<a[^>]+class\s*=\s*["'][^"']*result__a[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi;
   var m;
   while ((m = re.exec(html)) !== null && results.length < 12) {
-    var recipeUrl = m[1].replace(/\/+$/, '') + '/';
-    var id = m[2];
-    if (seen[id]) continue;
-    seen[id] = true;
+    var tag = m[0];
+    var innerText = m[1].replace(/<[^>]+>/g, '').trim();
 
-    // Look forward from the link (same card) then a short window back.
-    var start = Math.max(0, m.index - 300);
-    var end = Math.min(html.length, m.index + 1500);
-    var vicinity = html.substring(start, end);
-    var linkOffset = m.index - start;
+    var hrefM = tag.match(/href\s*=\s*["']([^"']+)["']/i);
+    if (!hrefM) continue;
 
-    var title = '';
-    var image = '';
+    var rawUrl = extractDdgUrl_(hrefM[1]);
+    if (!rawUrl) continue;
+    if (!innerText || innerText.length < 3) continue;
+    if (seen[rawUrl]) continue;
+    seen[rawUrl] = true;
 
-    // Collect all valid <img> tags in the vicinity, pick the one nearest to the link.
-    var imgRe = /<img[^>]+>/gi;
-    var im;
-    var bestDist = Infinity;
-    while ((im = imgRe.exec(vicinity)) !== null) {
-      var tag = im[0];
-      var altM = tag.match(/alt\s*=\s*["']([^"']{4,150})["']/i);
-      var srcM = tag.match(/(?:data-src|src)\s*=\s*["'](https?:\/\/[^"']+)["']/i);
-      if (altM && srcM) {
-        var alt = altM[1].trim();
-        if (!/allrecipes|logo|icon|avatar|profile|advertisement/i.test(alt)) {
-          var dist = Math.abs(im.index - linkOffset);
-          if (dist < bestDist) {
-            bestDist = dist;
-            title = alt;
-            image = srcM[1];
-          }
-        }
-      }
-    }
+    var title = decodeEntities_(innerText);
 
-    if (!title) {
-      var titleRe = /class\s*=\s*["'][^"']*(?:card__title|mntl-card)[^"']*["'][^>]*>([^<]{4,120})/gi;
-      var tm = titleRe.exec(vicinity);
-      if (tm) title = tm[1].trim();
-    }
+    var domainMatch = rawUrl.match(/^https?:\/\/(?:www\.)?([^\/]+)/i);
+    var domain = domainMatch ? domainMatch[1] : '';
 
-    if (!title) continue;
-
-    title = title.replace(/&amp;/g, '&').replace(/&#39;/g, "'")
-                 .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-
-    results.push({ title: title, url: recipeUrl, image: image });
+    results.push({ title: title, url: rawUrl, image: '', domain: domain });
   }
 
   return results;
+}
+
+function extractDdgUrl_(href) {
+  var uddgM = href.match(/[?&]uddg=([^&]+)/);
+  if (uddgM) {
+    try { var u = decodeURIComponent(uddgM[1]); return u.indexOf('http') === 0 ? u : null; }
+    catch (e) { return null; }
+  }
+  if (href.indexOf('http') === 0) return href;
+  return null;
+}
+
+function decodeEntities_(s) {
+  return s.replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&#x27;/g, "'")
+          .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 }
 
 // ---- OCR (photo of a written/printed recipe -> text) ---------------------

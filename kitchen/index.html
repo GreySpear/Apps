@@ -1643,7 +1643,7 @@ async function doWebSearch(){
     $('search-results').innerHTML=results.map((r,i)=>{
       const img=r.image?`<div class="sr-img" style="background-image:url('${esc(r.image)}')"></div>`
         :`<div class="sr-img empty">🍽️</div>`;
-      return `<div class="sr-card" onclick="importSearchResult(${i})">${img}<div class="sr-body"><div class="sr-title">${esc(r.title)}</div><div class="sr-source">allrecipes.com</div></div></div>`;
+      return `<div class="sr-card" onclick="importSearchResult(${i})">${img}<div class="sr-body"><div class="sr-title">${esc(r.title)}</div><div class="sr-source">${esc(r.domain||'')}</div></div></div>`;
     }).join('');
   }catch(e){
     const msg=String(e&&e.message||e||'');
