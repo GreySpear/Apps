@@ -14,6 +14,8 @@
  *         page (avoids CORS), returns JSON-LD blocks + og/twitter meta tags
  *   - POST {action:'ocr',   image:'<base64>', mimeType:'image/jpeg'}
  *                                            -> Drive OCR of a recipe photo
+ *   - POST {action:'search', query:'chicken tikka'}
+ *                                            -> web recipe search (AllRecipes)
  *
  * Row shapes (must match the client's row mappers):
  *   recipes: id | title | category | sourceUrl | imageUrl | ingredients |
@@ -97,9 +99,10 @@ function doPost(e) {
       return fullReplace_(getSheet_(data.sheet, SAVE_SHEETS[data.sheet]), SAVE_SHEETS[data.sheet].length, data.rows || []);
     }
     // Recipe operations are addressed by action.
-    if (data.action === 'save')  return handleRecipeSave_(data);
-    if (data.action === 'fetch') return handleFetch_(data);
-    if (data.action === 'ocr')   return handleOcr_(data);
+    if (data.action === 'save')   return handleRecipeSave_(data);
+    if (data.action === 'fetch')  return handleFetch_(data);
+    if (data.action === 'ocr')    return handleOcr_(data);
+    if (data.action === 'search') return handleSearch_(data);
 
     return jsonOutput_({ ok: false, error: 'Unknown action or sheet' });
   } catch (err) {
@@ -238,6 +241,99 @@ function capResponseSize_(result) {
   }
 
   return result;
+}
+
+// ---- Search (web recipe search via AllRecipes) ----------------------------
+
+function handleSearch_(data) {
+  var query = String(data.query || '').trim();
+  if (!query) {
+    return jsonOutput_({ ok: false, error: 'Empty search query' });
+  }
+
+  var url = 'https://www.allrecipes.com/search?q=' + encodeURIComponent(query);
+  var response;
+  try {
+    response = UrlFetchApp.fetch(url, {
+      muteHttpExceptions: true,
+      followRedirects: true,
+      headers: { 'User-Agent': USER_AGENT }
+    });
+  } catch (err) {
+    return jsonOutput_({ ok: false, error: 'Search failed: ' + String(err) });
+  }
+
+  var code = response.getResponseCode();
+  if (code >= 400) {
+    return jsonOutput_({ ok: false, error: 'Search returned HTTP ' + code });
+  }
+
+  var html = response.getContentText();
+  return jsonOutput_({ ok: true, results: extractSearchResults_(html) });
+}
+
+/**
+ * Parses AllRecipes search-results HTML for recipe cards. Extracts each
+ * unique /recipe/ID/name/ URL along with its title and thumbnail image
+ * by scanning the HTML around each link for <img> alt text and src.
+ */
+function extractSearchResults_(html) {
+  var results = [];
+  var seen = {};
+
+  var re = /href\s*=\s*["'](https?:\/\/(?:www\.)?allrecipes\.com\/recipe\/(\d+)\/[^"'#?]*?)["']/gi;
+  var m;
+  while ((m = re.exec(html)) !== null && results.length < 12) {
+    var recipeUrl = m[1].replace(/\/+$/, '') + '/';
+    var id = m[2];
+    if (seen[id]) continue;
+    seen[id] = true;
+
+    // Look forward from the link (same card) then a short window back.
+    var start = Math.max(0, m.index - 300);
+    var end = Math.min(html.length, m.index + 1500);
+    var vicinity = html.substring(start, end);
+    var linkOffset = m.index - start;
+
+    var title = '';
+    var image = '';
+
+    // Collect all valid <img> tags in the vicinity, pick the one nearest to the link.
+    var imgRe = /<img[^>]+>/gi;
+    var im;
+    var bestDist = Infinity;
+    while ((im = imgRe.exec(vicinity)) !== null) {
+      var tag = im[0];
+      var altM = tag.match(/alt\s*=\s*["']([^"']{4,150})["']/i);
+      var srcM = tag.match(/(?:data-src|src)\s*=\s*["'](https?:\/\/[^"']+)["']/i);
+      if (altM && srcM) {
+        var alt = altM[1].trim();
+        if (!/allrecipes|logo|icon|avatar|profile|advertisement/i.test(alt)) {
+          var dist = Math.abs(im.index - linkOffset);
+          if (dist < bestDist) {
+            bestDist = dist;
+            title = alt;
+            image = srcM[1];
+          }
+        }
+      }
+    }
+
+    if (!title) {
+      var titleRe = /class\s*=\s*["'][^"']*(?:card__title|mntl-card)[^"']*["'][^>]*>([^<]{4,120})/gi;
+      var tm = titleRe.exec(vicinity);
+      if (tm) title = tm[1].trim();
+    }
+
+    if (!title) continue;
+
+    title = title.replace(/&amp;/g, '&').replace(/&#39;/g, "'")
+                 .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+
+    results.push({ title: title, url: recipeUrl, image: image });
+  }
+
+  return results;
 }
 
 // ---- OCR (photo of a written/printed recipe -> text) ---------------------

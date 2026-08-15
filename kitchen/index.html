@@ -139,6 +139,13 @@
     .it-btn{flex:1;font-size:13.5px;font-weight:600;color:var(--text-mid);background:none;border:none;padding:10px;border-radius:9px;cursor:pointer;transition:all .15s}
     .it-btn.active{background:var(--terra);color:#fff;font-weight:700}
     .import-note{background:var(--terra-light);border-left:3px solid var(--terra);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--terra-dark);line-height:1.55;margin-bottom:16px}
+    .sr-card{display:flex;align-items:center;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent;transition:transform .1s;margin-bottom:10px}
+    .sr-card:active{transform:scale(0.98)}
+    .sr-img{width:80px;height:80px;flex-shrink:0;background-size:cover;background-position:center;background-color:var(--terra-light)}
+    .sr-img.empty{display:flex;align-items:center;justify-content:center;font-size:28px}
+    .sr-body{flex:1;padding:12px 14px 12px 14px;min-width:0}
+    .sr-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:14.5px;font-weight:700;line-height:1.3;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .sr-source{font-size:11.5px;color:var(--text-light);margin-top:4px;font-weight:500}
 
     /* detail view */
     .detail-hero{width:100%;height:230px;background-size:cover;background-position:center;background-color:var(--cat-others-l)}
@@ -548,8 +555,17 @@
   <div class="screen-body">
     <div class="import-tabs">
       <button class="it-btn active" id="imp-tab-paste" onclick="setImportTab('paste')">Paste</button>
+      <button class="it-btn" id="imp-tab-search" onclick="setImportTab('search')">Search</button>
       <button class="it-btn" id="imp-tab-photo" onclick="setImportTab('photo')">Photo</button>
       <button class="it-btn" id="imp-tab-blank" onclick="setImportTab('blank')">Blank</button>
+    </div>
+    <div id="imp-search" style="display:none">
+      <div class="import-note">Search for recipes across the web. Tap a result to import the full recipe.</div>
+      <div style="display:flex;gap:8px">
+        <input class="fin" id="search-query" type="search" placeholder="e.g. chicken tikka masala" onkeydown="if(event.key==='Enter')doWebSearch()">
+        <button class="btn-primary" id="web-search-btn" onclick="doWebSearch()" style="width:auto;padding:12px 20px;flex-shrink:0">Search</button>
+      </div>
+      <div id="search-results" style="margin-top:16px"></div>
     </div>
     <div id="imp-paste">
       <div class="import-note" id="imp-hint">Paste an <strong>Instagram reel link</strong>, a <strong>recipe link</strong>, or the <strong>caption text</strong> from a reel. I'll detect which and pull it apart — if a caption links out to a full recipe, I'll follow it. You can fix anything on the next screen.</div>
@@ -1486,10 +1502,10 @@ function goHome(){['import-screen','edit-screen','detail-screen','pick-screen'].
 
 /* ---------- import ---------- */
 let importTab='paste';
-function openImport(){importTab='paste';setImportTab('paste');$('paste-box').value='';openScreen('import-screen');}
+function openImport(){importTab='paste';setImportTab('paste');$('paste-box').value='';$('search-query').value='';$('search-results').innerHTML='';searchResultUrls=[];openScreen('import-screen');}
 function setImportTab(t){
   importTab=t;
-  ['paste','photo','blank'].forEach(x=>{
+  ['paste','search','photo','blank'].forEach(x=>{
     $('imp-tab-'+x).classList.toggle('active',t===x);
     $('imp-'+x).style.display=t===x?'block':'none';
   });
@@ -1607,6 +1623,52 @@ async function handleInstagramUrl(url){
   }finally{btn.textContent='Parse recipe';btn.disabled=false;}
 }
 function startBlank(){openEditor({category:'others'});}
+
+/* ---------- web search ---------- */
+let searchResultUrls=[];
+async function doWebSearch(){
+  const query=$('search-query').value.trim();
+  if(!query){toast('Type something to search for');return;}
+  if(!sheetUrl){toast('Web search needs the backend — opening settings');openSettings();return;}
+  const btn=$('web-search-btn');btn.textContent='Searching…';btn.disabled=true;
+  $('search-results').innerHTML='';
+  searchResultUrls=[];
+  try{
+    const res=await fetch(sheetUrl,{method:'POST',body:JSON.stringify({action:'search',query})});
+    const data=await res.json();
+    if(!data||data.ok===false)throw new Error((data&&data.error)||'search failed');
+    const results=data.results||[];
+    if(!results.length){$('search-results').innerHTML='<div class="empty-state"><span class="e">🔍</span>No recipes found.<br>Try different keywords.</div>';return;}
+    searchResultUrls=results.map(r=>r.url);
+    $('search-results').innerHTML=results.map((r,i)=>{
+      const img=r.image?`<div class="sr-img" style="background-image:url('${esc(r.image)}')"></div>`
+        :`<div class="sr-img empty">🍽️</div>`;
+      return `<div class="sr-card" onclick="importSearchResult(${i})">${img}<div class="sr-body"><div class="sr-title">${esc(r.title)}</div><div class="sr-source">allrecipes.com</div></div></div>`;
+    }).join('');
+  }catch(e){
+    const msg=String(e&&e.message||e||'');
+    if(msg.indexOf('Unknown action')>-1)$('search-results').innerHTML='<div class="empty-state">Your backend needs updating — paste the latest <strong>backend.gs</strong> into Apps Script and deploy a <em>New version</em>.</div>';
+    else $('search-results').innerHTML='<div class="empty-state">Search failed: '+esc(msg.slice(0,200))+'</div>';
+  }finally{btn.textContent='Search';btn.disabled=false;}
+}
+async function importSearchResult(idx){
+  const url=searchResultUrls[idx];
+  if(!url)return;
+  $('search-results').innerHTML='<div class="empty-state" style="padding:30px 20px">Fetching recipe…</div>';
+  try{
+    const {parsed}=await fetchAndParseRecipe(url);
+    const cat=categorize(parsed.title,parsed.ingredients);
+    openEditor({
+      title:parsed.title,category:cat,sourceUrl:url,imageUrl:parsed.imageUrl,
+      ingredients:parsed.ingredients,steps:parsed.steps,servings:parsed.servings,
+      prepTime:parsed.prepTime,cookTime:parsed.cookTime,notes:parsed.notes
+    });
+    if(!parsed.sourceFound)toast('No structured recipe data found — filled what I could');
+  }catch(e){
+    toast('Couldn\'t fetch that recipe — try another');
+    $('search-results').innerHTML='<div class="empty-state">Couldn\'t load that recipe. Tap back and try a different result.</div>';
+  }
+}
 
 /* ---------- photo import (Drive OCR via backend) ---------- */
 async function photoPicked(input){
