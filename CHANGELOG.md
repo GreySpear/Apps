@@ -3,6 +3,23 @@
 A running history of changes to the apps in this repo (Kitchen + Recipes +
 Groceries + Home Maintenance Log). Newest first.
 
+## 2026-08-22
+
+### Kitchen — Fix unreachable Cook mode (step-by-step guide)
+The step-by-step cooking guide ("Cook mode") was fully implemented but could
+never be launched: the fullscreen overlay is `<div class="cook" id="cook">`
+with a `.cook{display:none}` rule (shown via `.cook.open`), and the launch
+button also carried the class `cook` (`da-btn cook full`), so the bare `.cook`
+selector hid the button itself.
+
+- **Fix:** scoped the overlay rules to `#cook` / `#cook.open` so `display:none`
+  no longer bleeds onto the "▶ Cook mode" button. The button keeps its green
+  `.da-btn.cook` styling. Verified in a headless browser — the button is now
+  visible, a real click opens the guide, and Next/Prev step through correctly.
+- **Service worker:** bumped `sw.js` `VERSION` `v1` → `v2` so old shell/runtime
+  caches roll on activate, giving a clean swap to the fix rather than relying
+  solely on stale-while-revalidate.
+
 ## 2026-08-10
 
 ### Kitchen — Compact-row redesign + smart shopping list
