@@ -3,6 +3,28 @@
 A running history of changes to the apps in this repo (Kitchen + Recipes +
 Groceries + Home Maintenance Log). Newest first.
 
+## 2026-08-30
+
+### Kitchen — Read Threads post links on recipe import
+Pasting a Threads link (e.g. `https://www.threads.com/share/BCKQjP4SNv/`) into
+the recipe importer failed: the app tried to parse it as a plain recipe page
+looking for recipe JSON-LD, which Threads posts don't have — their caption
+lives in the `og:description` preview, exactly like Instagram.
+
+- **Fix:** Threads links now take the same caption-lifting path as Instagram.
+  Added `isThreadsUrl` (accepts both the new `threads.com` and legacy
+  `threads.net` domains) and `isSocialPostUrl`; `doParse` routes Instagram
+  **and** Threads to the renamed `handleSocialUrl`, which fetches the og:
+  preview, lifts the caption, and runs it through the caption + link-following
+  parser. If the post links out to a full recipe, that link is followed.
+- **`threads.com` added to `SOCIAL_HOSTS`** so a Threads link found inside a
+  pasted caption is skipped as the source rather than followed as a recipe.
+- **Login wall / unreachable** falls back to the existing "paste the caption
+  text instead" ask, now worded for posts (not just reels).
+- Updated the paste hint to mention Threads. New tests cover Threads detection
+  on both domains and social-post routing (`kitchen/test/import.test.js`).
+- **Service worker:** bumped `sw.js` `VERSION` `v2` → `v3` to roll caches.
+
 ## 2026-08-22
 
 ### Kitchen — Fix unreachable Cook mode (step-by-step guide)

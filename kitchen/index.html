@@ -568,7 +568,7 @@
       <div id="search-results" style="margin-top:16px"></div>
     </div>
     <div id="imp-paste">
-      <div class="import-note" id="imp-hint">Paste an <strong>Instagram reel link</strong>, a <strong>recipe link</strong>, or the <strong>caption text</strong> from a reel. I'll detect which and pull it apart — if a caption links out to a full recipe, I'll follow it. You can fix anything on the next screen.</div>
+      <div class="import-note" id="imp-hint">Paste an <strong>Instagram or Threads link</strong>, a <strong>recipe link</strong>, or the <strong>caption text</strong> from a post. I'll detect which and pull it apart — if a caption links out to a full recipe, I'll follow it. You can fix anything on the next screen.</div>
       <textarea class="fin paste-box" id="paste-box" placeholder="Paste an Instagram reel link&#10;https://www.instagram.com/reel/…&#10;&#10;— or a recipe link —&#10;https://…&#10;&#10;— or the caption text —&#10;&#10;Creamy Tuscan Chicken 🍗&#10;Ingredients:&#10;- 2 chicken breasts&#10;- ½ cup cream&#10;…"></textarea>
       <div class="form-actions">
         <button class="btn-primary" id="parse-btn" onclick="doParse()">Parse recipe</button>
@@ -975,7 +975,7 @@ const AGGREGATOR_HOSTS=['linktr.ee','beacons.ai','beacons.page','linkin.bio','ln
 /* Social/video hosts that are the source, not a recipe page to follow. */
 const SOCIAL_HOSTS=['instagram.com','instagr.am','tiktok.com','vm.tiktok.com','youtube.com',
   'youtu.be','facebook.com','fb.watch','fb.me','twitter.com','x.com','pinterest.com',
-  'pin.it','threads.net','snapchat.com'];
+  'pin.it','threads.net','threads.com','snapchat.com'];
 
 function hostMatches_(host,list){
   return list.some(function(s){return host===s||host.endsWith('.'+s);});
@@ -993,6 +993,19 @@ function classifyLink(url){
 function isInstagramUrl(url){
   const h=urlHost(url);
   return h==='instagram.com'||h==='instagr.am';
+}
+
+/* Threads (Meta) — rebranded from threads.net to threads.com; accept both. */
+function isThreadsUrl(url){
+  const h=urlHost(url);
+  return h==='threads.net'||h==='threads.com';
+}
+
+/* Instagram or Threads: Meta social posts whose caption lives in the og:
+   preview, not in recipe JSON-LD. Both take the caption-lifting path rather
+   than being fetched as a plain recipe page. */
+function isSocialPostUrl(url){
+  return isInstagramUrl(url)||isThreadsUrl(url);
 }
 
 /* reel | reels | p | tv | share for post-style links; 'profile' for a bare
@@ -1516,7 +1529,7 @@ async function doParse(){
   const raw=$('paste-box').value.trim();
   if(!raw){toast('Paste something first');return;}
   if(isUrl(raw)){
-    if(isInstagramUrl(raw))return handleInstagramUrl(raw);
+    if(isSocialPostUrl(raw))return handleSocialUrl(raw);
     return handleRecipeUrl(raw);
   }
   return handleCaptionText(raw);
@@ -1598,13 +1611,14 @@ async function handleCaptionText(raw,srcUrl){
   openEditor(data);
 }
 
-/* A pasted Instagram reel/post link. Best-effort: the backend fetches it with
-   a browser user-agent and we try to lift the caption from the og: preview
-   tags, then run it through the same caption + link-following path. When
-   Instagram serves a login wall instead, fall back to a clear ask. */
-async function handleInstagramUrl(url){
-  if(!sheetUrl){toast('Reel import needs the backend — opening settings');openSettings();return;}
-  const btn=$('parse-btn');btn.textContent='Reading reel…';btn.disabled=true;
+/* A pasted Instagram or Threads post link. Best-effort: the backend fetches it
+   with a browser user-agent and we try to lift the caption from the og: preview
+   tags, then run it through the same caption + link-following path. When the
+   site serves a login wall instead, fall back to a clear ask. */
+async function handleSocialUrl(url){
+  const kind=isThreadsUrl(url)?'Threads':'Instagram';
+  if(!sheetUrl){toast(kind+' import needs the backend — opening settings');openSettings();return;}
+  const btn=$('parse-btn');btn.textContent='Reading post…';btn.disabled=true;
   try{
     const res=await fetch(sheetUrl,{method:'POST',body:JSON.stringify({action:'fetch',url})});
     const data=await res.json();
@@ -1614,11 +1628,11 @@ async function handleInstagramUrl(url){
       btn.textContent='Parse recipe';btn.disabled=false;
       return handleCaptionText(caption,url);
     }
-    toast('Instagram didn\'t share the caption (it often blocks this). Open the reel, '+
+    toast(kind+' didn\'t share the caption (it often blocks this). Open the post, '+
       'copy its caption text, and paste that here instead.','OK');
     openEditor({sourceUrl:url,category:'others'});
   }catch(e){
-    toast('Couldn\'t reach that reel — paste the caption text here instead','OK');
+    toast('Couldn\'t reach that post — paste the caption text here instead','OK');
     openEditor({sourceUrl:url,category:'others'});
   }finally{btn.textContent='Parse recipe';btn.disabled=false;}
 }

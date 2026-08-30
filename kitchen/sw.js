@@ -22,7 +22,7 @@
  * Even without a bump, stale-while-revalidate pulls a fresh index.html in the
  * background, so shipping a new build reaches devices on their next-but-one open.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL_CACHE = 'kitchen-shell-' + VERSION;
 const RUNTIME_CACHE = 'kitchen-runtime-' + VERSION;
 const SHELL = ['./', './index.html'];

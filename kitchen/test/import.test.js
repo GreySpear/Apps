@@ -14,8 +14,9 @@ const m = html.match(/KITCHEN-IMPORT-START[\s\S]*?\*\/([\s\S]*?)\/\*\s*KITCHEN-I
 if (!m) { console.error('Could not find import markers in index.html'); process.exit(2); }
 
 const src = m[1] +
-  '\n;return {extractUrls,urlHost,classifyLink,isInstagramUrl,instagramKind,' +
-  'extractInstagramCaption,usableCaptionFromOg,AGGREGATOR_HOSTS,SOCIAL_HOSTS};';
+  '\n;return {extractUrls,urlHost,classifyLink,isInstagramUrl,isThreadsUrl,' +
+  'isSocialPostUrl,instagramKind,extractInstagramCaption,usableCaptionFromOg,' +
+  'AGGREGATOR_HOSTS,SOCIAL_HOSTS};';
 const E = new Function(src)();
 
 let pass = 0, fail = 0;
@@ -48,6 +49,8 @@ eq('c biolink',    E.classifyLink('https://bio.link/somecook'), 'aggregator');
 eq('c instagram',  E.classifyLink('https://www.instagram.com/reel/abc/'), 'social');
 eq('c tiktok',     E.classifyLink('https://www.tiktok.com/@x/video/1'), 'social');
 eq('c youtube',    E.classifyLink('https://youtu.be/abc'), 'social');
+eq('c threads.net', E.classifyLink('https://www.threads.net/@x/post/abc'), 'social');
+eq('c threads.com', E.classifyLink('https://www.threads.com/share/BCKQjP4SNv/'), 'social');
 
 // --- isInstagramUrl / instagramKind ---
 eq('ig reel',    E.isInstagramUrl('https://www.instagram.com/reel/abc/'), true);
@@ -62,6 +65,14 @@ eq('kind share-reel', E.instagramKind('https://www.instagram.com/share/reel/Cabc
 eq('kind user-prefixed', E.instagramKind('https://www.instagram.com/somecook/reel/Cabc/'), 'reel');
 eq('kind profile', E.instagramKind('https://www.instagram.com/somecook/'), 'profile');
 eq('kind not-ig', E.instagramKind('https://food.com/x'), null);
+
+// --- isThreadsUrl / isSocialPostUrl: Threads (both domains) route like Instagram ---
+eq('threads com',   E.isThreadsUrl('https://www.threads.com/share/BCKQjP4SNv/'), true);
+eq('threads net',   E.isThreadsUrl('https://www.threads.net/@chef/post/abc'), true);
+eq('threads no',    E.isThreadsUrl('https://www.instagram.com/reel/abc/'), false);
+eq('social ig',     E.isSocialPostUrl('https://www.instagram.com/reel/abc/'), true);
+eq('social threads',E.isSocialPostUrl('https://www.threads.com/share/BCKQjP4SNv/'), true);
+eq('social recipe', E.isSocialPostUrl('https://allrecipes.com/recipe/123'), false);
 
 // --- extractInstagramCaption: lift caption out of og:description ---
 eq('cap stats prefix',
