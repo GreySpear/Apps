@@ -2,10 +2,11 @@
 
 ## Current Status (update this each session)
 
-- **Phase:** Step 5 complete — encryption at rest.
-- **Next task:** Step 6 — hardening (dependency audit for phone-home behavior, model-size picker UI).
+- **Phase:** Step 6 complete — hardening.
+- **Next task:** Step 7 — use for ~2 weeks, then decide if note-taking layer is worth adding.
 - **Blocked on:** Clone whisper.cpp into `app/src/main/cpp/whisper.cpp/` before building (`git clone https://github.com/ggerganov/whisper.cpp.git`).
 - **Recent decisions / notes:**
+  - Step 6 done: Model-size picker (toolbar overflow menu, SharedPreferences for selected model, download-on-select, releases loaded model on switch). Dependency audit: all deps are AndroidX/Google Material (no telemetry, no network). WorkManager included for future background transcription but does not phone home without Firebase. allowBackup=false + data extraction rules already in place from Step 5.
   - Step 5 done: CryptoManager (AES-256-GCM via Android Keystore, key alias "recorder_file_key"), RecordingService records to temp file then encrypts on stop, AudioPlayer decrypts to temp file for playback, TranscriptionManager decrypts before reading WAV samples. Graceful fallback to plaintext if encrypt/decrypt fails. allowBackup=false + data extraction rules already in place.
   - Step 4 done: JNI bridge (whisper_jni.cpp + CMakeLists.txt), WhisperLib Kotlin wrapper, ModelManager (downloads ggml models from HuggingFace, tracks tiny/base/small), TranscriptionManager (loads model, reads WAV→float samples, calls whisper_full), transcript stored in Recording entity (DB migration v1→v2), per-item Transcribe button, re-transcribe via overflow menu. Default model: base.
   - Step 3 done: Room database, RecordingAdapter, popup menu for rename/delete, single-activity layout.

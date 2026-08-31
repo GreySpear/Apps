@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -12,6 +13,8 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.PopupMenu
@@ -41,6 +44,8 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val REQUEST_PERMISSIONS = 1
+        private const val PREFS_NAME = "recorder_prefs"
+        private const val PREF_MODEL = "whisper_model"
         private const val DEFAULT_MODEL = "base"
     }
 
@@ -53,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dao: RecordingDao
     private lateinit var adapter: RecordingAdapter
     private lateinit var modelManager: ModelManager
+    private lateinit var prefs: SharedPreferences
     private val transcriptionManager = TranscriptionManager()
     private val player = AudioPlayer()
     private val handler = Handler(Looper.getMainLooper())
@@ -92,9 +98,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setSupportActionBar(findViewById(R.id.toolbar))
 
         dao = AppDatabase.get(this).recordingDao()
         modelManager = ModelManager(this)
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
         tvStatus = findViewById(R.id.tvStatus)
         tvTimer = findViewById(R.id.tvTimer)
@@ -225,9 +233,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun transcribeRecording(rec: Recording) {
-        val modelFile = modelManager.getModelFile(DEFAULT_MODEL)
+        val model = selectedModel()
+        val modelFile = modelManager.getModelFile(model)
 
-        if (!modelManager.isModelDownloaded(DEFAULT_MODEL)) {
+        if (!modelManager.isModelDownloaded(model)) {
             promptModelDownload(rec)
             return
         }
@@ -259,19 +268,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun promptModelDownload(rec: Recording) {
+        val model = selectedModel()
+        val sizeMb = modelManager.getAvailableModels()
+            .find { it.name == model }?.sizeBytes?.let { it / 1_000_000 } ?: "?"
         AlertDialog.Builder(this)
             .setTitle(R.string.model_settings)
-            .setMessage("The $DEFAULT_MODEL model needs to be downloaded (~${modelManager.getAvailableModels().find { it.name == DEFAULT_MODEL }?.sizeBytes?.let { it / 1_000_000 } ?: "?"}MB). Download now?")
+            .setMessage("The $model model needs to be downloaded (~${sizeMb}MB). Download now?")
             .setPositiveButton("Download") { _, _ -> downloadAndTranscribe(rec) }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 
     private fun downloadAndTranscribe(rec: Recording) {
+        val model = selectedModel()
         lifecycleScope.launch {
             tvStatus.text = getString(R.string.model_downloading, 0)
 
-            val result = modelManager.downloadModel(DEFAULT_MODEL) { downloaded, total ->
+            val result = modelManager.downloadModel(model) { downloaded, total ->
                 if (total > 0) {
                     val pct = (downloaded * 100 / total).toInt()
                     handler.post {
@@ -378,6 +391,94 @@ class MainActivity : AppCompatActivity() {
         }
         if (missing.isNotEmpty()) {
             ActivityCompat.requestPermissions(this, missing.toTypedArray(), REQUEST_PERMISSIONS)
+        }
+    }
+
+    private fun selectedModel(): String =
+        prefs.getString(PREF_MODEL, DEFAULT_MODEL) ?: DEFAULT_MODEL
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_model -> { showModelPicker(); true }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showModelPicker() {
+        val models = modelManager.getAvailableModels()
+        val current = selectedModel()
+        val labels = models.map { m ->
+            val sizeMb = m.sizeBytes / 1_000_000
+            val status = when {
+                m.name == current && m.downloaded -> "active"
+                m.downloaded -> "downloaded"
+                else -> "not downloaded"
+            }
+            "${m.name} (~${sizeMb}MB) — $status"
+        }.toTypedArray()
+
+        val currentIdx = models.indexOfFirst { it.name == current }.coerceAtLeast(0)
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.model_settings)
+            .setSingleChoiceItems(labels, currentIdx) { dialog, which ->
+                val chosen = models[which]
+                if (!chosen.downloaded) {
+                    dialog.dismiss()
+                    promptModelDownloadForPicker(chosen.name)
+                } else {
+                    selectModel(chosen.name)
+                    dialog.dismiss()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun selectModel(modelName: String) {
+        val previous = selectedModel()
+        prefs.edit().putString(PREF_MODEL, modelName).apply()
+        if (previous != modelName && transcriptionManager.isLoaded) {
+            transcriptionManager.release()
+        }
+        Toast.makeText(this, "Model set to $modelName", Toast.LENGTH_SHORT).show()
+        Log.i(TAG, "Whisper model changed: $previous → $modelName")
+    }
+
+    private fun promptModelDownloadForPicker(modelName: String) {
+        val sizeMb = modelManager.getAvailableModels()
+            .find { it.name == modelName }?.sizeBytes?.let { it / 1_000_000 } ?: "?"
+        AlertDialog.Builder(this)
+            .setTitle(R.string.model_settings)
+            .setMessage("Download the $modelName model (~${sizeMb}MB)?")
+            .setPositiveButton("Download") { _, _ -> downloadModelForPicker(modelName) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun downloadModelForPicker(modelName: String) {
+        lifecycleScope.launch {
+            tvStatus.text = getString(R.string.model_downloading, 0)
+
+            val result = modelManager.downloadModel(modelName) { downloaded, total ->
+                if (total > 0) {
+                    val pct = (downloaded * 100 / total).toInt()
+                    handler.post { tvStatus.text = getString(R.string.model_downloading, pct) }
+                }
+            }
+
+            result.onSuccess {
+                selectModel(modelName)
+                tvStatus.text = getString(R.string.status_idle)
+            }.onFailure { e ->
+                tvStatus.text = getString(R.string.model_download_failed)
+                Toast.makeText(this@MainActivity, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 }
