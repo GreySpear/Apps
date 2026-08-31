@@ -13,14 +13,25 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.widget.EditText
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.greyspear.recorder.data.AppDatabase
+import com.greyspear.recorder.data.Recording
+import com.greyspear.recorder.data.RecordingDao
+import kotlinx.coroutines.launch
 import java.io.File
-import java.io.RandomAccessFile
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -32,13 +43,15 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tvStatus: TextView
     private lateinit var tvTimer: TextView
-    private lateinit var tvFormat: TextView
     private lateinit var btnRecord: MaterialButton
-    private lateinit var btnPlay: MaterialButton
+    private lateinit var rvRecordings: RecyclerView
+    private lateinit var tvEmpty: TextView
 
+    private lateinit var dao: RecordingDao
+    private lateinit var adapter: RecordingAdapter
     private val player = AudioPlayer()
     private val handler = Handler(Looper.getMainLooper())
-    private var lastRecordingFile: File? = null
+    private var currentlyPlayingId: Long? = null
 
     private var service: RecordingService? = null
     private var bound = false
@@ -75,19 +88,31 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        dao = AppDatabase.get(this).recordingDao()
+
         tvStatus = findViewById(R.id.tvStatus)
         tvTimer = findViewById(R.id.tvTimer)
-        tvFormat = findViewById(R.id.tvFormat)
         btnRecord = findViewById(R.id.btnRecord)
-        btnPlay = findViewById(R.id.btnPlay)
+        rvRecordings = findViewById(R.id.rvRecordings)
+        tvEmpty = findViewById(R.id.tvEmpty)
+
+        adapter = RecordingAdapter(
+            onPlay = { rec -> togglePlayback(rec) },
+            onMore = { anchor, rec -> showPopupMenu(anchor, rec) }
+        )
+        rvRecordings.layoutManager = LinearLayoutManager(this)
+        rvRecordings.adapter = adapter
 
         btnRecord.setOnClickListener { toggleRecording() }
-        btnPlay.setOnClickListener { togglePlayback() }
 
         player.onCompletion = {
-            runOnUiThread { onPlaybackStopped() }
+            runOnUiThread {
+                currentlyPlayingId = null
+                tvStatus.text = getString(R.string.status_idle)
+            }
         }
 
+        observeRecordings()
         requestRequiredPermissions()
     }
 
@@ -101,7 +126,10 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         handler.removeCallbacks(timerTick)
-        if (player.isPlaying) player.stop()
+        if (player.isPlaying) {
+            player.stop()
+            currentlyPlayingId = null
+        }
         if (bound) {
             unbindService(connection)
             bound = false
@@ -114,11 +142,18 @@ class MainActivity : AppCompatActivity() {
         player.stop()
     }
 
+    private fun observeRecordings() {
+        lifecycleScope.launch {
+            dao.getAll().collect { recordings ->
+                adapter.submitList(recordings)
+                tvEmpty.visibility = if (recordings.isEmpty()) View.VISIBLE else View.GONE
+            }
+        }
+    }
+
     private fun onReconnectedWhileRecording() {
         tvStatus.text = getString(R.string.status_recording)
         btnRecord.text = getString(R.string.stop)
-        btnPlay.visibility = View.GONE
-        tvFormat.visibility = View.GONE
         handler.post(timerTick)
     }
 
@@ -137,103 +172,118 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val file = File(filesDir, "recording_${System.currentTimeMillis()}.wav")
-        lastRecordingFile = file
+        if (player.isPlaying) {
+            player.stop()
+            currentlyPlayingId = null
+        }
 
+        val file = File(filesDir, "recording_${System.currentTimeMillis()}.wav")
         val intent = RecordingService.startIntent(this, file.absolutePath)
         ContextCompat.startForegroundService(this, intent)
 
         tvStatus.text = getString(R.string.status_recording)
         tvTimer.text = formatSeconds(0)
-        tvFormat.visibility = View.GONE
         btnRecord.text = getString(R.string.stop)
-        btnPlay.visibility = View.GONE
 
         handler.postDelayed(timerTick, 500)
     }
 
     private fun stopRecording(svc: RecordingService) {
         handler.removeCallbacks(timerTick)
+        val startMs = svc.recordingStartMs
         val file = svc.stopRecording()
-        lastRecordingFile = file
 
         tvStatus.text = getString(R.string.status_done)
         btnRecord.text = getString(R.string.record)
 
-        file?.let {
-            if (it.exists()) {
-                btnPlay.visibility = View.VISIBLE
-                showFormatInfo(it)
-                verifyWavFormat(it)
+        if (file != null && file.exists()) {
+            val durationMs = System.currentTimeMillis() - startMs
+            val title = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                .format(Date(startMs))
+
+            lifecycleScope.launch {
+                dao.insert(
+                    Recording(
+                        title = title,
+                        filePath = file.absolutePath,
+                        createdAt = startMs,
+                        durationMs = durationMs,
+                        sizeBytes = file.length()
+                    )
+                )
+                Log.i(TAG, "Saved recording: $title (${file.length()} bytes, ${durationMs}ms)")
             }
         }
     }
 
-    private fun togglePlayback() {
-        if (player.isPlaying) {
+    private fun togglePlayback(rec: Recording) {
+        if (currentlyPlayingId == rec.id) {
             player.stop()
-            onPlaybackStopped()
+            currentlyPlayingId = null
+            tvStatus.text = getString(R.string.status_idle)
         } else {
-            lastRecordingFile?.let { file ->
-                player.play(file)
-                tvStatus.text = getString(R.string.status_playing)
-                btnPlay.text = getString(R.string.stop_play)
+            val file = File(rec.filePath)
+            if (!file.exists()) {
+                Toast.makeText(this, "Audio file not found", Toast.LENGTH_SHORT).show()
+                return
             }
+            player.play(file)
+            currentlyPlayingId = rec.id
+            tvStatus.text = getString(R.string.status_playing)
         }
     }
 
-    private fun onPlaybackStopped() {
-        tvStatus.text = getString(R.string.status_done)
-        btnPlay.text = getString(R.string.play)
-    }
-
-    private fun showFormatInfo(file: File) {
-        val sizeKb = file.length() / 1024
-        val sizeStr = if (sizeKb > 1024) "%.1f MB".format(sizeKb / 1024.0) else "$sizeKb KB"
-        tvFormat.text = "${AudioRecorder.SAMPLE_RATE} Hz · mono · 16-bit PCM · $sizeStr"
-        tvFormat.visibility = View.VISIBLE
-    }
-
-    private fun verifyWavFormat(file: File) {
-        try {
-            RandomAccessFile(file, "r").use { raf ->
-                val header = ByteArray(44)
-                raf.read(header)
-
-                val sampleRate = readInt32LE(header, 24)
-                val channels = readInt16LE(header, 22)
-                val bitsPerSample = readInt16LE(header, 34)
-                val audioFormat = readInt16LE(header, 20)
-                val dataSize = readInt32LE(header, 40)
-
-                Log.i(TAG, "WAV verification — format=$audioFormat rate=$sampleRate " +
-                        "channels=$channels bits=$bitsPerSample dataSize=$dataSize")
-
-                if (sampleRate != AudioRecorder.SAMPLE_RATE) {
-                    Log.w(TAG, "Sample rate mismatch! Expected ${AudioRecorder.SAMPLE_RATE}, got $sampleRate")
-                    Toast.makeText(this, "Warning: sample rate is $sampleRate, expected ${AudioRecorder.SAMPLE_RATE}", Toast.LENGTH_LONG).show()
-                }
-                if (channels != 1) {
-                    Log.w(TAG, "Channel count mismatch! Expected 1, got $channels")
-                }
-                if (bitsPerSample != 16) {
-                    Log.w(TAG, "Bits per sample mismatch! Expected 16, got $bitsPerSample")
+    private fun showPopupMenu(anchor: View, rec: Recording) {
+        PopupMenu(this, anchor).apply {
+            menu.add(0, 1, 0, R.string.rename)
+            menu.add(0, 2, 1, R.string.delete)
+            setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    1 -> { showRenameDialog(rec); true }
+                    2 -> { showDeleteDialog(rec); true }
+                    else -> false
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "WAV verification failed", e)
+            show()
         }
     }
 
-    private fun readInt32LE(buf: ByteArray, offset: Int): Int =
-        (buf[offset].toInt() and 0xFF) or
-        ((buf[offset + 1].toInt() and 0xFF) shl 8) or
-        ((buf[offset + 2].toInt() and 0xFF) shl 16) or
-        ((buf[offset + 3].toInt() and 0xFF) shl 24)
+    private fun showRenameDialog(rec: Recording) {
+        val input = EditText(this).apply {
+            setText(rec.title)
+            selectAll()
+            setPadding(64, 32, 64, 16)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.rename_title)
+            .setView(input)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val newTitle = input.text.toString().trim()
+                if (newTitle.isNotEmpty()) {
+                    lifecycleScope.launch { dao.rename(rec.id, newTitle) }
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
 
-    private fun readInt16LE(buf: ByteArray, offset: Int): Int =
-        (buf[offset].toInt() and 0xFF) or
-        ((buf[offset + 1].toInt() and 0xFF) shl 8)
+    private fun showDeleteDialog(rec: Recording) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.delete_confirm_title)
+            .setMessage(getString(R.string.delete_confirm_message, rec.title))
+            .setPositiveButton(R.string.delete) { _, _ ->
+                if (currentlyPlayingId == rec.id) {
+                    player.stop()
+                    currentlyPlayingId = null
+                }
+                lifecycleScope.launch {
+                    dao.delete(rec.id)
+                    File(rec.filePath).delete()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
 
     private fun formatSeconds(s: Long): String =
         String.format(Locale.US, "%02d:%02d", s / 60, s % 60)

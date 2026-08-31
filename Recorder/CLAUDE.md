@@ -2,14 +2,14 @@
 
 ## Current Status (update this each session)
 
-- **Phase:** Step 2 complete — foreground service + Doze survival.
-- **Next task:** Step 3 — storage + list UI (Room metadata, list/rename/delete/playback).
+- **Phase:** Step 3 complete — storage + list UI.
+- **Next task:** Step 4 — Whisper integration (JNI, model download, transcribe a finished file, show transcript).
 - **Blocked on:** —
 - **Recent decisions / notes:**
-  - Step 2 done: RecordingService (foreground service, microphone type, partial wake lock 4h max), RecorderApp (notification channel), notification with stop action, service binding with reconnect-while-recording support. Activity delegates to service; singleTop launch mode.
-  - Step 1 done: AudioRecorder (16kHz mono PCM → WAV), AudioPlayer (MediaPlayer), UI with record/play/timer, WAV header verification logging.
-  - Package: `com.greyspear.recorder`, minSdk 26, targetSdk 34.
-  - Format verification reads WAV header back and logs + toasts on mismatch.
+  - Step 3 done: Room database (Recording entity, RecordingDao with Flow), RecordingAdapter (RecyclerView + DiffUtil), popup menu for rename/delete with confirmation dialogs, recordings auto-saved on stop with timestamp title. Single-activity layout: controls card + scrollable list.
+  - Step 2 done: RecordingService (foreground service, microphone type, partial wake lock 4h max), notification with stop action, service binding with reconnect support.
+  - Step 1 done: AudioRecorder (16kHz mono PCM → WAV), AudioPlayer (MediaPlayer), WAV header verification logging.
+  - Package: `com.greyspear.recorder`, minSdk 26, targetSdk 34. Room + KSP added.
 
 > Update this block at the end of each session so the next one starts with accurate context. Keep it short — it's a pointer, not a changelog.
 
