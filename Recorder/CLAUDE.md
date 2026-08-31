@@ -2,14 +2,15 @@
 
 ## Current Status (update this each session)
 
-- **Phase:** Step 3 complete — storage + list UI.
-- **Next task:** Step 4 — Whisper integration (JNI, model download, transcribe a finished file, show transcript).
-- **Blocked on:** —
+- **Phase:** Step 4 complete — Whisper integration.
+- **Next task:** Step 5 — encryption at rest (Keystore key, encrypt audio + transcript storage).
+- **Blocked on:** Clone whisper.cpp into `app/src/main/cpp/whisper.cpp/` before building (`git clone https://github.com/ggerganov/whisper.cpp.git`).
 - **Recent decisions / notes:**
-  - Step 3 done: Room database (Recording entity, RecordingDao with Flow), RecordingAdapter (RecyclerView + DiffUtil), popup menu for rename/delete with confirmation dialogs, recordings auto-saved on stop with timestamp title. Single-activity layout: controls card + scrollable list.
-  - Step 2 done: RecordingService (foreground service, microphone type, partial wake lock 4h max), notification with stop action, service binding with reconnect support.
-  - Step 1 done: AudioRecorder (16kHz mono PCM → WAV), AudioPlayer (MediaPlayer), WAV header verification logging.
-  - Package: `com.greyspear.recorder`, minSdk 26, targetSdk 34. Room + KSP added.
+  - Step 4 done: JNI bridge (whisper_jni.cpp + CMakeLists.txt), WhisperLib Kotlin wrapper, ModelManager (downloads ggml models from HuggingFace, tracks tiny/base/small), TranscriptionManager (loads model, reads WAV→float samples, calls whisper_full), transcript stored in Recording entity (DB migration v1→v2), per-item Transcribe button, re-transcribe via overflow menu. Default model: base.
+  - Step 3 done: Room database, RecordingAdapter, popup menu for rename/delete, single-activity layout.
+  - Step 2 done: RecordingService (foreground service, wake lock), notification with stop action.
+  - Step 1 done: AudioRecorder (16kHz mono PCM → WAV), AudioPlayer, WAV verification.
+  - Package: `com.greyspear.recorder`, minSdk 26, targetSdk 34. NDK 26.1, arm64-v8a + armeabi-v7a.
 
 > Update this block at the end of each session so the next one starts with accurate context. Keep it short — it's a pointer, not a changelog.
 

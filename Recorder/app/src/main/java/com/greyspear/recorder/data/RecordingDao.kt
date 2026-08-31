@@ -24,6 +24,9 @@ interface RecordingDao {
     @Query("UPDATE recordings SET title = :title WHERE id = :id")
     suspend fun rename(id: Long, title: String)
 
+    @Query("UPDATE recordings SET transcript = :transcript, transcribedAt = :transcribedAt WHERE id = :id")
+    suspend fun setTranscript(id: Long, transcript: String, transcribedAt: Long)
+
     @Query("DELETE FROM recordings WHERE id = :id")
     suspend fun delete(id: Long)
 }

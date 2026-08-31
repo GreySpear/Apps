@@ -28,6 +28,8 @@ import com.google.android.material.button.MaterialButton
 import com.greyspear.recorder.data.AppDatabase
 import com.greyspear.recorder.data.Recording
 import com.greyspear.recorder.data.RecordingDao
+import com.greyspear.recorder.whisper.ModelManager
+import com.greyspear.recorder.whisper.TranscriptionManager
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -39,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val REQUEST_PERMISSIONS = 1
+        private const val DEFAULT_MODEL = "base"
     }
 
     private lateinit var tvStatus: TextView
@@ -49,6 +52,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var dao: RecordingDao
     private lateinit var adapter: RecordingAdapter
+    private lateinit var modelManager: ModelManager
+    private val transcriptionManager = TranscriptionManager()
     private val player = AudioPlayer()
     private val handler = Handler(Looper.getMainLooper())
     private var currentlyPlayingId: Long? = null
@@ -89,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         dao = AppDatabase.get(this).recordingDao()
+        modelManager = ModelManager(this)
 
         tvStatus = findViewById(R.id.tvStatus)
         tvTimer = findViewById(R.id.tvTimer)
@@ -98,7 +104,8 @@ class MainActivity : AppCompatActivity() {
 
         adapter = RecordingAdapter(
             onPlay = { rec -> togglePlayback(rec) },
-            onMore = { anchor, rec -> showPopupMenu(anchor, rec) }
+            onMore = { anchor, rec -> showPopupMenu(anchor, rec) },
+            onTranscribe = { rec -> transcribeRecording(rec) }
         )
         rvRecordings.layoutManager = LinearLayoutManager(this)
         rvRecordings.adapter = adapter
@@ -140,6 +147,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         player.stop()
+        transcriptionManager.release()
     }
 
     private fun observeRecordings() {
@@ -216,6 +224,71 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun transcribeRecording(rec: Recording) {
+        val modelFile = modelManager.getModelFile(DEFAULT_MODEL)
+
+        if (!modelManager.isModelDownloaded(DEFAULT_MODEL)) {
+            promptModelDownload(rec)
+            return
+        }
+
+        tvStatus.text = getString(R.string.model_loading)
+
+        lifecycleScope.launch {
+            if (!transcriptionManager.isLoaded) {
+                val loaded = transcriptionManager.loadModel(modelFile)
+                if (!loaded) {
+                    tvStatus.text = getString(R.string.transcription_failed)
+                    Toast.makeText(this@MainActivity, "Failed to load model", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+            }
+
+            tvStatus.text = getString(R.string.transcribing)
+            val result = transcriptionManager.transcribe(File(rec.filePath))
+
+            result.onSuccess { text ->
+                dao.setTranscript(rec.id, text, System.currentTimeMillis())
+                tvStatus.text = getString(R.string.status_idle)
+                Log.i(TAG, "Transcription saved for ${rec.title}: ${text.length} chars")
+            }.onFailure { e ->
+                tvStatus.text = getString(R.string.transcription_failed)
+                Toast.makeText(this@MainActivity, "Transcription failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun promptModelDownload(rec: Recording) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.model_settings)
+            .setMessage("The $DEFAULT_MODEL model needs to be downloaded (~${modelManager.getAvailableModels().find { it.name == DEFAULT_MODEL }?.sizeBytes?.let { it / 1_000_000 } ?: "?"}MB). Download now?")
+            .setPositiveButton("Download") { _, _ -> downloadAndTranscribe(rec) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun downloadAndTranscribe(rec: Recording) {
+        lifecycleScope.launch {
+            tvStatus.text = getString(R.string.model_downloading, 0)
+
+            val result = modelManager.downloadModel(DEFAULT_MODEL) { downloaded, total ->
+                if (total > 0) {
+                    val pct = (downloaded * 100 / total).toInt()
+                    handler.post {
+                        tvStatus.text = getString(R.string.model_downloading, pct)
+                    }
+                }
+            }
+
+            result.onSuccess {
+                transcribeRecording(rec)
+            }.onFailure { e ->
+                tvStatus.text = getString(R.string.model_download_failed)
+                Toast.makeText(this@MainActivity, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     private fun togglePlayback(rec: Recording) {
         if (currentlyPlayingId == rec.id) {
             player.stop()
@@ -237,10 +310,14 @@ class MainActivity : AppCompatActivity() {
         PopupMenu(this, anchor).apply {
             menu.add(0, 1, 0, R.string.rename)
             menu.add(0, 2, 1, R.string.delete)
+            if (rec.transcript != null) {
+                menu.add(0, 3, 2, R.string.transcribe)
+            }
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     1 -> { showRenameDialog(rec); true }
                     2 -> { showDeleteDialog(rec); true }
+                    3 -> { transcribeRecording(rec); true }
                     else -> false
                 }
             }

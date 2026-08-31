@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
 import com.greyspear.recorder.data.Recording
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -15,7 +16,8 @@ import java.util.Locale
 
 class RecordingAdapter(
     private val onPlay: (Recording) -> Unit,
-    private val onMore: (View, Recording) -> Unit
+    private val onMore: (View, Recording) -> Unit,
+    private val onTranscribe: (Recording) -> Unit
 ) : ListAdapter<Recording, RecordingAdapter.ViewHolder>(DIFF) {
 
     companion object {
@@ -30,6 +32,8 @@ class RecordingAdapter(
         val tvMeta: TextView = view.findViewById(R.id.tvMeta)
         val btnPlay: ImageButton = view.findViewById(R.id.btnPlay)
         val btnMore: ImageButton = view.findViewById(R.id.btnMore)
+        val tvTranscript: TextView = view.findViewById(R.id.tvTranscript)
+        val btnTranscribe: MaterialButton = view.findViewById(R.id.btnTranscribe)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -42,6 +46,16 @@ class RecordingAdapter(
         holder.tvMeta.text = formatMeta(rec)
         holder.btnPlay.setOnClickListener { onPlay(rec) }
         holder.btnMore.setOnClickListener { onMore(it, rec) }
+
+        if (rec.transcript != null) {
+            holder.tvTranscript.text = rec.transcript
+            holder.tvTranscript.visibility = View.VISIBLE
+            holder.btnTranscribe.visibility = View.GONE
+        } else {
+            holder.tvTranscript.visibility = View.GONE
+            holder.btnTranscribe.visibility = View.VISIBLE
+            holder.btnTranscribe.setOnClickListener { onTranscribe(rec) }
+        }
     }
 
     private fun formatMeta(rec: Recording): String {

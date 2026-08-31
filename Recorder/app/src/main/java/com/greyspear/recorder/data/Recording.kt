@@ -10,5 +10,7 @@ data class Recording(
     val filePath: String,
     val createdAt: Long,
     val durationMs: Long,
-    val sizeBytes: Long
+    val sizeBytes: Long,
+    val transcript: String? = null,
+    val transcribedAt: Long? = null
 )

@@ -17,4 +17,12 @@
     <string name="delete_confirm_title">Delete recording?</string>
     <string name="delete_confirm_message">This will permanently delete \"%1$s\" and its audio file.</string>
     <string name="rename_title">Rename recording</string>
+    <string name="transcribe">Transcribe</string>
+    <string name="transcribing">Transcribing…</string>
+    <string name="model_downloading">Downloading model… %1$d%%</string>
+    <string name="model_loading">Loading model…</string>
+    <string name="model_not_available">Download a Whisper model first</string>
+    <string name="transcription_failed">Transcription failed</string>
+    <string name="model_download_failed">Model download failed</string>
+    <string name="model_settings">Whisper Model</string>
 </resources>
