@@ -3,6 +3,10 @@
     <string name="app_name">Recorder</string>
     <string name="record">Record</string>
     <string name="stop">Stop</string>
+    <string name="play">Play</string>
+    <string name="stop_play">Stop Playback</string>
     <string name="status_idle">Ready to record</string>
     <string name="status_recording">Recording…</string>
+    <string name="status_playing">Playing…</string>
+    <string name="status_done">Recording saved</string>
 </resources>

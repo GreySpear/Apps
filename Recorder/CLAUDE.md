@@ -2,11 +2,13 @@
 
 ## Current Status (update this each session)
 
-- **Phase:** Not started — project scaffolding.
-- **Next task:** Step 1 — audio capture MVP (record 16kHz mono PCM to file, play back, verify format empirically).
+- **Phase:** Step 1 complete — audio capture MVP.
+- **Next task:** Step 2 — foreground service + Doze survival (record with screen off 30+ min).
 - **Blocked on:** —
 - **Recent decisions / notes:**
-  - (log changes here as you go, most recent first)
+  - Step 1 done: AudioRecorder (16kHz mono PCM → WAV), AudioPlayer (MediaPlayer), UI with record/play/timer, WAV header verification logging.
+  - Package: `com.greyspear.recorder`, minSdk 26, targetSdk 34.
+  - Format verification reads WAV header back and logs + toasts on mismatch.
 
 > Update this block at the end of each session so the next one starts with accurate context. Keep it short — it's a pointer, not a changelog.
 
