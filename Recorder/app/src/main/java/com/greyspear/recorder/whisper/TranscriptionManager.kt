@@ -1,6 +1,7 @@
 package com.greyspear.recorder.whisper
 
 import android.util.Log
+import com.greyspear.recorder.crypto.CryptoManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -15,6 +16,7 @@ class TranscriptionManager {
     }
 
     private val whisperLib = WhisperLib()
+    private val crypto = CryptoManager()
     private var contextPtr: Long = 0
 
     val isLoaded: Boolean get() = contextPtr != 0L
@@ -30,12 +32,22 @@ class TranscriptionManager {
         ok
     }
 
-    suspend fun transcribe(wavFile: File): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun transcribe(wavFile: File, cacheDir: File): Result<String> = withContext(Dispatchers.IO) {
         if (contextPtr == 0L) {
             return@withContext Result.failure(IllegalStateException("Model not loaded"))
         }
+        var decryptedTmp: File? = null
         try {
-            val samples = readWavSamples(wavFile)
+            val playFile = try {
+                val tmp = crypto.decryptToTempFile(wavFile, cacheDir)
+                decryptedTmp = tmp
+                tmp
+            } catch (e: Exception) {
+                Log.w(TAG, "Decrypt failed, trying as plaintext", e)
+                wavFile
+            }
+
+            val samples = readWavSamples(playFile)
             Log.i(TAG, "Read ${samples.size} samples from ${wavFile.name}")
 
             val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
@@ -44,6 +56,8 @@ class TranscriptionManager {
         } catch (e: Exception) {
             Log.e(TAG, "Transcription failed", e)
             Result.failure(e)
+        } finally {
+            decryptedTmp?.delete()
         }
     }
 

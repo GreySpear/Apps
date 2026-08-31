@@ -245,7 +245,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             tvStatus.text = getString(R.string.transcribing)
-            val result = transcriptionManager.transcribe(File(rec.filePath))
+            val result = transcriptionManager.transcribe(File(rec.filePath), cacheDir)
 
             result.onSuccess { text ->
                 dao.setTranscript(rec.id, text, System.currentTimeMillis())
@@ -300,7 +300,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Audio file not found", Toast.LENGTH_SHORT).show()
                 return
             }
-            player.play(file)
+            player.play(file, cacheDir)
             currentlyPlayingId = rec.id
             tvStatus.text = getString(R.string.status_playing)
         }

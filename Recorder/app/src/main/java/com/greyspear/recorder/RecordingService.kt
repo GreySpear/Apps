@@ -10,6 +10,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.greyspear.recorder.crypto.CryptoManager
 import java.io.File
 
 class RecordingService : Service() {
@@ -36,8 +37,10 @@ class RecordingService : Service() {
 
     private val binder = LocalBinder()
     private val recorder = AudioRecorder()
+    private val crypto = CryptoManager()
     private var wakeLock: PowerManager.WakeLock? = null
     private var outputFile: File? = null
+    private var tempFile: File? = null
     var recordingStartMs = 0L
         private set
 
@@ -63,12 +66,13 @@ class RecordingService : Service() {
         if (recorder.recording) return
 
         outputFile = file
+        tempFile = File(cacheDir, "rec_tmp_${System.currentTimeMillis()}.wav")
         recordingStartMs = System.currentTimeMillis()
 
         startForeground(NOTIFICATION_ID, buildNotification())
         acquireWakeLock()
 
-        recorder.start(file)
+        recorder.start(tempFile!!)
         Log.i(TAG, "Recording started: ${file.name}")
     }
 
@@ -76,6 +80,20 @@ class RecordingService : Service() {
         if (!recorder.recording) return outputFile
 
         recorder.stop()
+
+        val tmp = tempFile
+        val out = outputFile
+        if (tmp != null && out != null && tmp.exists()) {
+            try {
+                crypto.encryptFile(tmp, out)
+                tmp.delete()
+                Log.i(TAG, "Encrypted recording: ${out.name}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Encryption failed, keeping plaintext", e)
+                tmp.renameTo(out)
+            }
+        }
+
         releaseWakeLock()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -88,6 +106,7 @@ class RecordingService : Service() {
         if (recorder.recording) {
             recorder.stop()
         }
+        tempFile?.delete()
         releaseWakeLock()
     }
 
@@ -126,7 +145,7 @@ class RecordingService : Service() {
             PowerManager.PARTIAL_WAKE_LOCK,
             "Recorder::RecordingWakeLock"
         ).apply {
-            acquire(4 * 60 * 60 * 1000L) // 4 hour max
+            acquire(4 * 60 * 60 * 1000L)
         }
         Log.i(TAG, "Wake lock acquired")
     }
