@@ -2,10 +2,11 @@
 
 ## Current Status (update this each session)
 
-- **Phase:** Step 1 complete — audio capture MVP.
-- **Next task:** Step 2 — foreground service + Doze survival (record with screen off 30+ min).
+- **Phase:** Step 2 complete — foreground service + Doze survival.
+- **Next task:** Step 3 — storage + list UI (Room metadata, list/rename/delete/playback).
 - **Blocked on:** —
 - **Recent decisions / notes:**
+  - Step 2 done: RecordingService (foreground service, microphone type, partial wake lock 4h max), RecorderApp (notification channel), notification with stop action, service binding with reconnect-while-recording support. Activity delegates to service; singleTop launch mode.
   - Step 1 done: AudioRecorder (16kHz mono PCM → WAV), AudioPlayer (MediaPlayer), UI with record/play/timer, WAV header verification logging.
   - Package: `com.greyspear.recorder`, minSdk 26, targetSdk 34.
   - Format verification reads WAV header back and logs + toasts on mismatch.

@@ -1,10 +1,15 @@
 package com.greyspear.recorder
 
 import android.Manifest
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.view.View
@@ -31,17 +36,36 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnRecord: MaterialButton
     private lateinit var btnPlay: MaterialButton
 
-    private val recorder = AudioRecorder()
     private val player = AudioPlayer()
     private val handler = Handler(Looper.getMainLooper())
-    private var recordingStartMs = 0L
     private var lastRecordingFile: File? = null
+
+    private var service: RecordingService? = null
+    private var bound = false
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+            service = (binder as RecordingService.LocalBinder).service
+            bound = true
+            if (service?.isRecording == true) {
+                onReconnectedWhileRecording()
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            service = null
+            bound = false
+        }
+    }
 
     private val timerTick = object : Runnable {
         override fun run() {
-            if (recorder.recording) {
-                val elapsed = (System.currentTimeMillis() - recordingStartMs) / 1000
-                tvTimer.text = formatSeconds(elapsed)
+            val svc = service ?: return
+            if (svc.isRecording) {
+                val elapsed = (System.currentTimeMillis() - svc.recordingStartMs) / 1000
+                val text = formatSeconds(elapsed)
+                tvTimer.text = text
+                svc.updateNotificationTimer(text)
                 handler.postDelayed(this, 500)
             }
         }
@@ -67,23 +91,41 @@ class MainActivity : AppCompatActivity() {
         requestRequiredPermissions()
     }
 
+    override fun onStart() {
+        super.onStart()
+        Intent(this, RecordingService::class.java).also {
+            bindService(it, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
     override fun onStop() {
         super.onStop()
-        if (player.isPlaying) {
-            player.stop()
+        handler.removeCallbacks(timerTick)
+        if (player.isPlaying) player.stop()
+        if (bound) {
+            unbindService(connection)
+            bound = false
+            service = null
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacks(timerTick)
-        if (recorder.recording) recorder.stop()
         player.stop()
     }
 
+    private fun onReconnectedWhileRecording() {
+        tvStatus.text = getString(R.string.status_recording)
+        btnRecord.text = getString(R.string.stop)
+        btnPlay.visibility = View.GONE
+        tvFormat.visibility = View.GONE
+        handler.post(timerTick)
+    }
+
     private fun toggleRecording() {
-        if (recorder.recording) {
-            stopRecording()
+        val svc = service
+        if (svc != null && svc.isRecording) {
+            stopRecording(svc)
         } else {
             startRecording()
         }
@@ -98,8 +140,8 @@ class MainActivity : AppCompatActivity() {
         val file = File(filesDir, "recording_${System.currentTimeMillis()}.wav")
         lastRecordingFile = file
 
-        recorder.start(file)
-        recordingStartMs = System.currentTimeMillis()
+        val intent = RecordingService.startIntent(this, file.absolutePath)
+        ContextCompat.startForegroundService(this, intent)
 
         tvStatus.text = getString(R.string.status_recording)
         tvTimer.text = formatSeconds(0)
@@ -107,21 +149,22 @@ class MainActivity : AppCompatActivity() {
         btnRecord.text = getString(R.string.stop)
         btnPlay.visibility = View.GONE
 
-        handler.post(timerTick)
+        handler.postDelayed(timerTick, 500)
     }
 
-    private fun stopRecording() {
+    private fun stopRecording(svc: RecordingService) {
         handler.removeCallbacks(timerTick)
-        recorder.stop()
+        val file = svc.stopRecording()
+        lastRecordingFile = file
 
         tvStatus.text = getString(R.string.status_done)
         btnRecord.text = getString(R.string.record)
 
-        lastRecordingFile?.let { file ->
-            if (file.exists()) {
+        file?.let {
+            if (it.exists()) {
                 btnPlay.visibility = View.VISIBLE
-                showFormatInfo(file)
-                verifyWavFormat(file)
+                showFormatInfo(it)
+                verifyWavFormat(it)
             }
         }
     }
