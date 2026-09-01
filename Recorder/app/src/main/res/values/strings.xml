@@ -27,4 +27,8 @@
     <string name="model_settings">Whisper Model</string>
     <string name="model_current">Current model: %1$s</string>
     <string name="model_delete_confirm">Delete the %1$s model (%2$dMB)?</string>
+    <string name="share_transcript">Share transcript</string>
+    <string name="copy_transcript">Copy transcript</string>
+    <string name="transcript_copied">Transcript copied to clipboard</string>
+    <string name="re_transcribe">Re-transcribe</string>
 </resources>

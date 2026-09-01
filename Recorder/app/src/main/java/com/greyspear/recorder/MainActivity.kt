@@ -5,6 +5,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
@@ -324,18 +326,39 @@ class MainActivity : AppCompatActivity() {
             menu.add(0, 1, 0, R.string.rename)
             menu.add(0, 2, 1, R.string.delete)
             if (rec.transcript != null) {
-                menu.add(0, 3, 2, R.string.transcribe)
+                menu.add(0, 3, 2, R.string.share_transcript)
+                menu.add(0, 4, 3, R.string.copy_transcript)
+                menu.add(0, 5, 4, R.string.re_transcribe)
             }
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
                     1 -> { showRenameDialog(rec); true }
                     2 -> { showDeleteDialog(rec); true }
-                    3 -> { transcribeRecording(rec); true }
+                    3 -> { shareTranscript(rec); true }
+                    4 -> { copyTranscript(rec); true }
+                    5 -> { transcribeRecording(rec); true }
                     else -> false
                 }
             }
             show()
         }
+    }
+
+    private fun shareTranscript(rec: Recording) {
+        val text = rec.transcript ?: return
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, rec.title)
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        startActivity(Intent.createChooser(intent, getString(R.string.share_transcript)))
+    }
+
+    private fun copyTranscript(rec: Recording) {
+        val text = rec.transcript ?: return
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText(rec.title, text))
+        Toast.makeText(this, R.string.transcript_copied, Toast.LENGTH_SHORT).show()
     }
 
     private fun showRenameDialog(rec: Recording) {
