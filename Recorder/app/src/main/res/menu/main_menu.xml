@@ -3,6 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menu_batch_transcribe"
+        android:title="@string/batch_transcribe"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_auto_transcribe"
+        android:title="@string/auto_transcribe"
+        android:checkable="true"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_model"
         android:title="@string/model_settings"
         app:showAsAction="never" />

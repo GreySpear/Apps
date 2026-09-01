@@ -1,12 +1,12 @@
 package com.greyspear.recorder
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
@@ -14,6 +14,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -26,15 +28,20 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
+import com.greyspear.recorder.crypto.CryptoManager
 import com.greyspear.recorder.data.AppDatabase
 import com.greyspear.recorder.data.Recording
 import com.greyspear.recorder.data.RecordingDao
 import com.greyspear.recorder.whisper.ModelManager
 import com.greyspear.recorder.whisper.TranscriptionManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -48,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         private const val REQUEST_PERMISSIONS = 1
         private const val PREFS_NAME = "recorder_prefs"
         private const val PREF_MODEL = "whisper_model"
+        private const val PREF_AUTO_TRANSCRIBE = "auto_transcribe"
         private const val DEFAULT_MODEL = "base"
     }
 
@@ -56,6 +64,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnRecord: MaterialButton
     private lateinit var rvRecordings: RecyclerView
     private lateinit var tvEmpty: TextView
+    private lateinit var etSearch: TextInputEditText
 
     private lateinit var dao: RecordingDao
     private lateinit var adapter: RecordingAdapter
@@ -63,8 +72,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
     private val transcriptionManager = TranscriptionManager()
     private val player = AudioPlayer()
+    private val crypto = CryptoManager()
     private val handler = Handler(Looper.getMainLooper())
     private var currentlyPlayingId: Long? = null
+    private var observeJob: Job? = null
+    private var searchQuery: String = ""
 
     private var service: RecordingService? = null
     private var bound = false
@@ -97,6 +109,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val playbackTick = object : Runnable {
+        override fun run() {
+            val id = currentlyPlayingId ?: return
+            val mp = player.mediaPlayer ?: return
+            if (mp.isPlaying && mp.duration > 0) {
+                val progress = (mp.currentPosition * 100) / mp.duration
+                adapter.updateProgress(id, progress)
+                handler.postDelayed(this, 250)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -111,6 +135,7 @@ class MainActivity : AppCompatActivity() {
         btnRecord = findViewById(R.id.btnRecord)
         rvRecordings = findViewById(R.id.rvRecordings)
         tvEmpty = findViewById(R.id.tvEmpty)
+        etSearch = findViewById(R.id.etSearch)
 
         adapter = RecordingAdapter(
             onPlay = { rec -> togglePlayback(rec) },
@@ -124,10 +149,22 @@ class MainActivity : AppCompatActivity() {
 
         player.onCompletion = {
             runOnUiThread {
+                handler.removeCallbacks(playbackTick)
+                val oldId = currentlyPlayingId
                 currentlyPlayingId = null
+                adapter.playingId = null
                 tvStatus.text = getString(R.string.status_idle)
             }
         }
+
+        etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                searchQuery = s?.toString()?.trim() ?: ""
+                observeRecordings()
+            }
+        })
 
         observeRecordings()
         requestRequiredPermissions()
@@ -143,9 +180,11 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         handler.removeCallbacks(timerTick)
+        handler.removeCallbacks(playbackTick)
         if (player.isPlaying) {
             player.stop()
             currentlyPlayingId = null
+            adapter.playingId = null
         }
         if (bound) {
             unbindService(connection)
@@ -161,8 +200,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeRecordings() {
-        lifecycleScope.launch {
-            dao.getAll().collect { recordings ->
+        observeJob?.cancel()
+        observeJob = lifecycleScope.launch {
+            val flow = if (searchQuery.isEmpty()) dao.getAll() else dao.search(searchQuery)
+            flow.collectLatest { recordings ->
                 adapter.submitList(recordings)
                 tvEmpty.visibility = if (recordings.isEmpty()) View.VISIBLE else View.GONE
             }
@@ -192,7 +233,9 @@ class MainActivity : AppCompatActivity() {
 
         if (player.isPlaying) {
             player.stop()
+            handler.removeCallbacks(playbackTick)
             currentlyPlayingId = null
+            adapter.playingId = null
         }
 
         val file = File(filesDir, "recording_${System.currentTimeMillis()}.wav")
@@ -220,7 +263,7 @@ class MainActivity : AppCompatActivity() {
                 .format(Date(startMs))
 
             lifecycleScope.launch {
-                dao.insert(
+                val id = dao.insert(
                     Recording(
                         title = title,
                         filePath = file.absolutePath,
@@ -230,6 +273,11 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
                 Log.i(TAG, "Saved recording: $title (${file.length()} bytes, ${durationMs}ms)")
+
+                if (prefs.getBoolean(PREF_AUTO_TRANSCRIBE, false)) {
+                    val rec = dao.getById(id)
+                    if (rec != null) transcribeRecording(rec)
+                }
             }
         }
     }
@@ -307,7 +355,9 @@ class MainActivity : AppCompatActivity() {
     private fun togglePlayback(rec: Recording) {
         if (currentlyPlayingId == rec.id) {
             player.stop()
+            handler.removeCallbacks(playbackTick)
             currentlyPlayingId = null
+            adapter.playingId = null
             tvStatus.text = getString(R.string.status_idle)
         } else {
             val file = File(rec.filePath)
@@ -317,7 +367,9 @@ class MainActivity : AppCompatActivity() {
             }
             player.play(file, cacheDir)
             currentlyPlayingId = rec.id
+            adapter.playingId = rec.id
             tvStatus.text = getString(R.string.status_playing)
+            handler.postDelayed(playbackTick, 250)
         }
     }
 
@@ -325,10 +377,11 @@ class MainActivity : AppCompatActivity() {
         PopupMenu(this, anchor).apply {
             menu.add(0, 1, 0, R.string.rename)
             menu.add(0, 2, 1, R.string.delete)
+            menu.add(0, 6, 2, R.string.export_audio)
             if (rec.transcript != null) {
-                menu.add(0, 3, 2, R.string.share_transcript)
-                menu.add(0, 4, 3, R.string.copy_transcript)
-                menu.add(0, 5, 4, R.string.re_transcribe)
+                menu.add(0, 3, 3, R.string.share_transcript)
+                menu.add(0, 4, 4, R.string.copy_transcript)
+                menu.add(0, 5, 5, R.string.re_transcribe)
             }
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
@@ -337,6 +390,7 @@ class MainActivity : AppCompatActivity() {
                     3 -> { shareTranscript(rec); true }
                     4 -> { copyTranscript(rec); true }
                     5 -> { transcribeRecording(rec); true }
+                    6 -> { exportAudio(rec); true }
                     else -> false
                 }
             }
@@ -359,6 +413,89 @@ class MainActivity : AppCompatActivity() {
         val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText(rec.title, text))
         Toast.makeText(this, R.string.transcript_copied, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun exportAudio(rec: Recording) {
+        tvStatus.text = getString(R.string.exporting_audio)
+        lifecycleScope.launch {
+            val srcFile = File(rec.filePath)
+            if (!srcFile.exists()) {
+                tvStatus.text = getString(R.string.status_idle)
+                Toast.makeText(this@MainActivity, "Audio file not found", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val shareFile = try {
+                val tmp = crypto.decryptToTempFile(srcFile, cacheDir)
+                val named = File(cacheDir, "${rec.title.replace(Regex("[^a-zA-Z0-9 _-]"), "")}.wav")
+                tmp.renameTo(named)
+                named
+            } catch (e: Exception) {
+                val named = File(cacheDir, "${rec.title.replace(Regex("[^a-zA-Z0-9 _-]"), "")}.wav")
+                srcFile.copyTo(named, overwrite = true)
+                named
+            }
+
+            val uri = FileProvider.getUriForFile(
+                this@MainActivity,
+                "$packageName.fileprovider",
+                shareFile
+            )
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "audio/wav"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            tvStatus.text = getString(R.string.status_idle)
+            startActivity(Intent.createChooser(intent, getString(R.string.export_audio)))
+        }
+    }
+
+    private fun batchTranscribe() {
+        val model = selectedModel()
+        if (!modelManager.isModelDownloaded(model)) {
+            Toast.makeText(this, getString(R.string.model_not_available), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        lifecycleScope.launch {
+            val untranscribed = dao.getUntranscribed()
+            if (untranscribed.isEmpty()) {
+                Toast.makeText(this@MainActivity, R.string.batch_transcribe_none, Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val modelFile = modelManager.getModelFile(model)
+            if (!transcriptionManager.isLoaded) {
+                tvStatus.text = getString(R.string.model_loading)
+                val loaded = transcriptionManager.loadModel(modelFile)
+                if (!loaded) {
+                    tvStatus.text = getString(R.string.transcription_failed)
+                    return@launch
+                }
+            }
+
+            var completed = 0
+            for (rec in untranscribed) {
+                completed++
+                tvStatus.text = getString(R.string.batch_transcribe_progress, completed, untranscribed.size)
+
+                val result = transcriptionManager.transcribe(File(rec.filePath), cacheDir)
+                result.onSuccess { text ->
+                    dao.setTranscript(rec.id, text, System.currentTimeMillis())
+                    Log.i(TAG, "Batch transcribed ${rec.title}")
+                }.onFailure { e ->
+                    Log.e(TAG, "Batch transcription failed for ${rec.title}", e)
+                }
+            }
+
+            tvStatus.text = getString(R.string.status_idle)
+            Toast.makeText(
+                this@MainActivity,
+                getString(R.string.batch_transcribe_done, completed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     private fun showRenameDialog(rec: Recording) {
@@ -387,7 +524,9 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton(R.string.delete) { _, _ ->
                 if (currentlyPlayingId == rec.id) {
                     player.stop()
+                    handler.removeCallbacks(playbackTick)
                     currentlyPlayingId = null
+                    adapter.playingId = null
                 }
                 lifecycleScope.launch {
                     dao.delete(rec.id)
@@ -422,12 +561,26 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
+        menu.findItem(R.id.menu_auto_transcribe)?.isChecked =
+            prefs.getBoolean(PREF_AUTO_TRANSCRIBE, false)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_model -> { showModelPicker(); true }
+            R.id.menu_batch_transcribe -> { batchTranscribe(); true }
+            R.id.menu_auto_transcribe -> {
+                val newVal = !item.isChecked
+                item.isChecked = newVal
+                prefs.edit().putBoolean(PREF_AUTO_TRANSCRIBE, newVal).apply()
+                Toast.makeText(
+                    this,
+                    "Auto-transcribe ${if (newVal) "enabled" else "disabled"}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

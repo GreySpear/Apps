@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.greyspear.recorder.data.Recording
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -27,6 +28,22 @@ class RecordingAdapter(
         }
     }
 
+    var playingId: Long? = null
+        set(value) {
+            val oldId = field
+            field = value
+            if (oldId != null) notifyItemChanged(currentList.indexOfFirst { it.id == oldId })
+            if (value != null) notifyItemChanged(currentList.indexOfFirst { it.id == value })
+        }
+
+    var playbackProgress: Int = 0
+
+    fun updateProgress(id: Long, progress: Int) {
+        playbackProgress = progress
+        val idx = currentList.indexOfFirst { it.id == id }
+        if (idx >= 0) notifyItemChanged(idx, "progress")
+    }
+
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle: TextView = view.findViewById(R.id.tvTitle)
         val tvMeta: TextView = view.findViewById(R.id.tvMeta)
@@ -34,6 +51,7 @@ class RecordingAdapter(
         val btnMore: ImageButton = view.findViewById(R.id.btnMore)
         val tvTranscript: TextView = view.findViewById(R.id.tvTranscript)
         val btnTranscribe: MaterialButton = view.findViewById(R.id.btnTranscribe)
+        val progressBar: LinearProgressIndicator = view.findViewById(R.id.playbackProgress)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -41,11 +59,24 @@ class RecordingAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val rec = getItem(position)
+        val isPlaying = rec.id == playingId
 
         holder.tvTitle.text = rec.title
         holder.tvMeta.text = formatMeta(rec)
         holder.btnPlay.setOnClickListener { onPlay(rec) }
         holder.btnMore.setOnClickListener { onMore(it, rec) }
+
+        holder.btnPlay.setImageResource(
+            if (isPlaying) android.R.drawable.ic_media_pause
+            else android.R.drawable.ic_media_play
+        )
+
+        if (isPlaying) {
+            holder.progressBar.visibility = View.VISIBLE
+            holder.progressBar.progress = playbackProgress
+        } else {
+            holder.progressBar.visibility = View.GONE
+        }
 
         if (rec.transcript != null) {
             holder.tvTranscript.text = rec.transcript
@@ -55,6 +86,14 @@ class RecordingAdapter(
             holder.tvTranscript.visibility = View.GONE
             holder.btnTranscribe.visibility = View.VISIBLE
             holder.btnTranscribe.setOnClickListener { onTranscribe(rec) }
+        }
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.contains("progress")) {
+            holder.progressBar.progress = playbackProgress
+        } else {
+            super.onBindViewHolder(holder, position, payloads)
         }
     }
 

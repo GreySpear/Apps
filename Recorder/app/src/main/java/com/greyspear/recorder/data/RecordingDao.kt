@@ -12,6 +12,12 @@ interface RecordingDao {
     @Query("SELECT * FROM recordings ORDER BY createdAt DESC")
     fun getAll(): Flow<List<Recording>>
 
+    @Query("SELECT * FROM recordings WHERE title LIKE '%' || :query || '%' OR transcript LIKE '%' || :query || '%' ORDER BY createdAt DESC")
+    fun search(query: String): Flow<List<Recording>>
+
+    @Query("SELECT * FROM recordings WHERE transcript IS NULL ORDER BY createdAt DESC")
+    suspend fun getUntranscribed(): List<Recording>
+
     @Query("SELECT * FROM recordings WHERE id = :id")
     suspend fun getById(id: Long): Recording?
 

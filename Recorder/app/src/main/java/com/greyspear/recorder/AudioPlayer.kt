@@ -11,7 +11,8 @@ class AudioPlayer {
         private const val TAG = "AudioPlayer"
     }
 
-    private var mediaPlayer: MediaPlayer? = null
+    var mediaPlayer: MediaPlayer? = null
+        private set
     private var decryptedTmp: File? = null
     private val crypto = CryptoManager()
 
