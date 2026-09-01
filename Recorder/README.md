@@ -69,6 +69,7 @@ If you see a "Gradle JVM version" error on sync:
 - **Auto-transcribe** — enable in the overflow menu to transcribe automatically after every recording
 - **Batch transcribe** — select "Transcribe all" from the overflow menu to transcribe all un-transcribed recordings at once
 - **Re-transcribe** — re-run transcription from a recording's overflow menu (useful after switching models)
+- **Stop transcription** — a Stop button appears while transcribing (single or batch); cancels the in-progress job immediately
 
 ### Playback
 - Tap the play button on any recording
@@ -82,6 +83,8 @@ If you see a "Gradle JVM version" error on sync:
 - **Share transcript** — send transcript text via Android share sheet (email, messages, notes, etc.)
 - **Copy transcript** — copy transcript to clipboard
 - **Share audio** — export the decrypted WAV file via Android share sheet
+- **Save transcript to…** — save the transcript as a `.txt` file to any location you choose (Downloads, Documents, Drive, etc.) via the Android file picker
+- **Save audio to…** — save the decrypted WAV recording to any location you choose via the Android file picker
 
 ### Model Management
 - Select **Whisper Model** from the overflow menu to switch between:
@@ -151,3 +154,5 @@ If you see a "Gradle JVM version" error on sync:
 - Share audio (decrypted WAV export via FileProvider + share sheet)
 - Playback progress bar with play/pause icon toggle
 - Batch transcribe all un-transcribed recordings
+- Stop/cancel in-progress transcription (whisper.cpp abort callback wired through JNI)
+- Save transcript (.txt) and audio (.wav) to a user-chosen location via the Storage Access Framework

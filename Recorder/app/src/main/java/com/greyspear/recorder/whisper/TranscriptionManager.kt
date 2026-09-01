@@ -19,7 +19,19 @@ class TranscriptionManager {
     private val crypto = CryptoManager()
     private var contextPtr: Long = 0
 
+    @Volatile
+    private var cancelled = false
+
     val isLoaded: Boolean get() = contextPtr != 0L
+
+    class CancelledException : Exception("Transcription cancelled")
+
+    /** Requests abort of the in-progress transcription. Safe to call from any thread. */
+    fun cancel() {
+        cancelled = true
+        whisperLib.requestAbort()
+        Log.i(TAG, "Transcription cancel requested")
+    }
 
     suspend fun loadModel(modelFile: File): Boolean = withContext(Dispatchers.IO) {
         if (contextPtr != 0L) {
@@ -36,6 +48,7 @@ class TranscriptionManager {
         if (contextPtr == 0L) {
             return@withContext Result.failure(IllegalStateException("Model not loaded"))
         }
+        cancelled = false
         var decryptedTmp: File? = null
         try {
             val playFile = try {
@@ -47,12 +60,19 @@ class TranscriptionManager {
                 wavFile
             }
 
+            if (cancelled) return@withContext Result.failure(CancelledException())
+
             val samples = readWavSamples(playFile)
             Log.i(TAG, "Read ${samples.size} samples from ${wavFile.name}")
 
             val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 4)
             val text = whisperLib.transcribe(contextPtr, samples, threads)
-            Result.success(text.trim())
+
+            if (cancelled) {
+                Result.failure(CancelledException())
+            } else {
+                Result.success(text.trim())
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Transcription failed", e)
             Result.failure(e)

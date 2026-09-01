@@ -20,4 +20,5 @@ class WhisperLib {
     external fun initContext(modelPath: String): Long
     external fun freeContext(ctxPtr: Long)
     external fun transcribe(ctxPtr: Long, samples: FloatArray, nThreads: Int): String
+    external fun requestAbort()
 }

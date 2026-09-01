@@ -60,6 +60,16 @@
                 android:text="@string/record"
                 app:icon="@android:drawable/ic_btn_speak_now" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelTranscribe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/stop_transcription"
+                android:visibility="gone"
+                style="@style/Widget.Material3.Button.TonalButton"
+                app:icon="@android:drawable/ic_menu_close_clear_cancel" />
+
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

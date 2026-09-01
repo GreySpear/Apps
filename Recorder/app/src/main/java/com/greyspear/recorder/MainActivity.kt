@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -24,6 +25,7 @@ import android.widget.EditText
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -42,6 +44,7 @@ import com.greyspear.recorder.whisper.ModelManager
 import com.greyspear.recorder.whisper.TranscriptionManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -62,6 +65,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvStatus: TextView
     private lateinit var tvTimer: TextView
     private lateinit var btnRecord: MaterialButton
+    private lateinit var btnCancelTranscribe: MaterialButton
     private lateinit var rvRecordings: RecyclerView
     private lateinit var tvEmpty: TextView
     private lateinit var etSearch: TextInputEditText
@@ -76,7 +80,28 @@ class MainActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var currentlyPlayingId: Long? = null
     private var observeJob: Job? = null
+    private var transcribeJob: Job? = null
     private var searchQuery: String = ""
+
+    private var pendingSaveText: String? = null
+    private var pendingSaveAudio: File? = null
+
+    private val saveTranscriptLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        val text = pendingSaveText
+        pendingSaveText = null
+        if (uri != null && text != null) writeTextToUri(uri, text)
+    }
+
+    private val saveAudioLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("audio/x-wav")
+    ) { uri ->
+        val file = pendingSaveAudio
+        if (uri != null && file != null) writeFileToUri(uri, file)
+        pendingSaveAudio?.delete()
+        pendingSaveAudio = null
+    }
 
     private var service: RecordingService? = null
     private var bound = false
@@ -133,6 +158,7 @@ class MainActivity : AppCompatActivity() {
         tvStatus = findViewById(R.id.tvStatus)
         tvTimer = findViewById(R.id.tvTimer)
         btnRecord = findViewById(R.id.btnRecord)
+        btnCancelTranscribe = findViewById(R.id.btnCancelTranscribe)
         rvRecordings = findViewById(R.id.rvRecordings)
         tvEmpty = findViewById(R.id.tvEmpty)
         etSearch = findViewById(R.id.etSearch)
@@ -146,6 +172,7 @@ class MainActivity : AppCompatActivity() {
         rvRecordings.adapter = adapter
 
         btnRecord.setOnClickListener { toggleRecording() }
+        btnCancelTranscribe.setOnClickListener { stopTranscription() }
 
         player.onCompletion = {
             runOnUiThread {
@@ -196,6 +223,8 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         player.stop()
+        transcriptionManager.cancel()
+        transcribeJob?.cancel()
         transcriptionManager.release()
     }
 
@@ -293,28 +322,56 @@ class MainActivity : AppCompatActivity() {
 
         tvStatus.text = getString(R.string.model_loading)
 
-        lifecycleScope.launch {
-            if (!transcriptionManager.isLoaded) {
-                val loaded = transcriptionManager.loadModel(modelFile)
-                if (!loaded) {
-                    tvStatus.text = getString(R.string.transcription_failed)
-                    Toast.makeText(this@MainActivity, "Failed to load model", Toast.LENGTH_SHORT).show()
-                    return@launch
+        transcribeJob = lifecycleScope.launch {
+            try {
+                if (!transcriptionManager.isLoaded) {
+                    val loaded = transcriptionManager.loadModel(modelFile)
+                    if (!loaded) {
+                        tvStatus.text = getString(R.string.transcription_failed)
+                        Toast.makeText(this@MainActivity, "Failed to load model", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
                 }
-            }
 
-            tvStatus.text = getString(R.string.transcribing)
-            val result = transcriptionManager.transcribe(File(rec.filePath), cacheDir)
+                showTranscribeControls()
+                tvStatus.text = getString(R.string.transcribing)
+                val result = transcriptionManager.transcribe(File(rec.filePath), cacheDir)
 
-            result.onSuccess { text ->
-                dao.setTranscript(rec.id, text, System.currentTimeMillis())
-                tvStatus.text = getString(R.string.status_idle)
-                Log.i(TAG, "Transcription saved for ${rec.title}: ${text.length} chars")
-            }.onFailure { e ->
-                tvStatus.text = getString(R.string.transcription_failed)
-                Toast.makeText(this@MainActivity, "Transcription failed: ${e.message}", Toast.LENGTH_LONG).show()
+                result.onSuccess { text ->
+                    dao.setTranscript(rec.id, text, System.currentTimeMillis())
+                    tvStatus.text = getString(R.string.status_idle)
+                    Log.i(TAG, "Transcription saved for ${rec.title}: ${text.length} chars")
+                }.onFailure { e ->
+                    if (e is TranscriptionManager.CancelledException) {
+                        tvStatus.text = getString(R.string.transcription_cancelled)
+                    } else {
+                        tvStatus.text = getString(R.string.transcription_failed)
+                        Toast.makeText(this@MainActivity, "Transcription failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } finally {
+                hideTranscribeControls()
+                transcribeJob = null
             }
         }
+    }
+
+    private fun stopTranscription() {
+        transcriptionManager.cancel()
+        transcribeJob?.cancel()
+        transcribeJob = null
+        hideTranscribeControls()
+        tvStatus.text = getString(R.string.transcription_cancelled)
+    }
+
+    private fun showTranscribeControls() {
+        btnRecord.isEnabled = false
+        btnCancelTranscribe.visibility = View.VISIBLE
+    }
+
+    private fun hideTranscribeControls() {
+        btnRecord.isEnabled = true
+        btnCancelTranscribe.visibility = View.GONE
     }
 
     private fun promptModelDownload(rec: Recording) {
@@ -378,10 +435,12 @@ class MainActivity : AppCompatActivity() {
             menu.add(0, 1, 0, R.string.rename)
             menu.add(0, 2, 1, R.string.delete)
             menu.add(0, 6, 2, R.string.export_audio)
+            menu.add(0, 7, 3, R.string.save_audio)
             if (rec.transcript != null) {
-                menu.add(0, 3, 3, R.string.share_transcript)
-                menu.add(0, 4, 4, R.string.copy_transcript)
-                menu.add(0, 5, 5, R.string.re_transcribe)
+                menu.add(0, 3, 4, R.string.share_transcript)
+                menu.add(0, 4, 5, R.string.copy_transcript)
+                menu.add(0, 8, 6, R.string.save_transcript)
+                menu.add(0, 5, 7, R.string.re_transcribe)
             }
             setOnMenuItemClickListener { item ->
                 when (item.itemId) {
@@ -391,10 +450,63 @@ class MainActivity : AppCompatActivity() {
                     4 -> { copyTranscript(rec); true }
                     5 -> { transcribeRecording(rec); true }
                     6 -> { exportAudio(rec); true }
+                    7 -> { saveAudioToLocation(rec); true }
+                    8 -> { saveTranscriptToLocation(rec); true }
                     else -> false
                 }
             }
             show()
+        }
+    }
+
+    private fun sanitizedName(title: String): String =
+        title.replace(Regex("[^a-zA-Z0-9 _-]"), "").ifBlank { "recording" }
+
+    private fun saveTranscriptToLocation(rec: Recording) {
+        val text = rec.transcript ?: return
+        pendingSaveText = text
+        saveTranscriptLauncher.launch("${sanitizedName(rec.title)}.txt")
+    }
+
+    private fun saveAudioToLocation(rec: Recording) {
+        val src = File(rec.filePath)
+        if (!src.exists()) {
+            Toast.makeText(this, "Audio file not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+        tvStatus.text = getString(R.string.exporting_audio)
+        lifecycleScope.launch {
+            val tmp = try {
+                crypto.decryptToTempFile(src, cacheDir)
+            } catch (e: Exception) {
+                Log.w(TAG, "Decrypt failed, saving as plaintext", e)
+                src.copyTo(File(cacheDir, "save_${System.currentTimeMillis()}.wav"), overwrite = true)
+            }
+            pendingSaveAudio = tmp
+            tvStatus.text = getString(R.string.status_idle)
+            saveAudioLauncher.launch("${sanitizedName(rec.title)}.wav")
+        }
+    }
+
+    private fun writeTextToUri(uri: Uri, text: String) {
+        try {
+            contentResolver.openOutputStream(uri)?.use { it.write(text.toByteArray()) }
+            Toast.makeText(this, R.string.saved_ok, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Save transcript failed", e)
+            Toast.makeText(this, R.string.save_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun writeFileToUri(uri: Uri, file: File) {
+        try {
+            contentResolver.openOutputStream(uri)?.use { out ->
+                file.inputStream().use { it.copyTo(out) }
+            }
+            Toast.makeText(this, R.string.saved_ok, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Save audio failed", e)
+            Toast.makeText(this, R.string.save_failed, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -458,43 +570,60 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        lifecycleScope.launch {
-            val untranscribed = dao.getUntranscribed()
-            if (untranscribed.isEmpty()) {
-                Toast.makeText(this@MainActivity, R.string.batch_transcribe_none, Toast.LENGTH_SHORT).show()
-                return@launch
-            }
-
-            val modelFile = modelManager.getModelFile(model)
-            if (!transcriptionManager.isLoaded) {
-                tvStatus.text = getString(R.string.model_loading)
-                val loaded = transcriptionManager.loadModel(modelFile)
-                if (!loaded) {
-                    tvStatus.text = getString(R.string.transcription_failed)
+        transcribeJob = lifecycleScope.launch {
+            try {
+                val untranscribed = dao.getUntranscribed()
+                if (untranscribed.isEmpty()) {
+                    Toast.makeText(this@MainActivity, R.string.batch_transcribe_none, Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-            }
 
-            var completed = 0
-            for (rec in untranscribed) {
-                completed++
-                tvStatus.text = getString(R.string.batch_transcribe_progress, completed, untranscribed.size)
-
-                val result = transcriptionManager.transcribe(File(rec.filePath), cacheDir)
-                result.onSuccess { text ->
-                    dao.setTranscript(rec.id, text, System.currentTimeMillis())
-                    Log.i(TAG, "Batch transcribed ${rec.title}")
-                }.onFailure { e ->
-                    Log.e(TAG, "Batch transcription failed for ${rec.title}", e)
+                val modelFile = modelManager.getModelFile(model)
+                if (!transcriptionManager.isLoaded) {
+                    tvStatus.text = getString(R.string.model_loading)
+                    val loaded = transcriptionManager.loadModel(modelFile)
+                    if (!loaded) {
+                        tvStatus.text = getString(R.string.transcription_failed)
+                        return@launch
+                    }
                 }
-            }
 
-            tvStatus.text = getString(R.string.status_idle)
-            Toast.makeText(
-                this@MainActivity,
-                getString(R.string.batch_transcribe_done, completed),
-                Toast.LENGTH_SHORT
-            ).show()
+                showTranscribeControls()
+                var completed = 0
+                var cancelledEarly = false
+                for (rec in untranscribed) {
+                    if (!isActive) break
+                    completed++
+                    tvStatus.text = getString(R.string.batch_transcribe_progress, completed, untranscribed.size)
+
+                    val result = transcriptionManager.transcribe(File(rec.filePath), cacheDir)
+                    result.onSuccess { text ->
+                        dao.setTranscript(rec.id, text, System.currentTimeMillis())
+                        Log.i(TAG, "Batch transcribed ${rec.title}")
+                    }.onFailure { e ->
+                        if (e is TranscriptionManager.CancelledException) {
+                            cancelledEarly = true
+                        } else {
+                            Log.e(TAG, "Batch transcription failed for ${rec.title}", e)
+                        }
+                    }
+                    if (cancelledEarly) break
+                }
+
+                if (cancelledEarly) {
+                    tvStatus.text = getString(R.string.transcription_cancelled)
+                } else {
+                    tvStatus.text = getString(R.string.status_idle)
+                    Toast.makeText(
+                        this@MainActivity,
+                        getString(R.string.batch_transcribe_done, completed),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } finally {
+                hideTranscribeControls()
+                transcribeJob = null
+            }
         }
     }
 

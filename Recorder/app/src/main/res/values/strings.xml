@@ -39,4 +39,10 @@
     <string name="batch_transcribe_none">All recordings already transcribed</string>
     <string name="auto_transcribe">Auto-transcribe</string>
     <string name="exporting_audio">Preparing audio…</string>
+    <string name="stop_transcription">Stop</string>
+    <string name="transcription_cancelled">Transcription cancelled</string>
+    <string name="save_transcript">Save transcript to…</string>
+    <string name="save_audio">Save audio to…</string>
+    <string name="saved_ok">Saved</string>
+    <string name="save_failed">Save failed</string>
 </resources>
