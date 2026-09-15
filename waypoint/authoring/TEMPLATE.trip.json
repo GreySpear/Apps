@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "trip": {
+    "id": "destination-2026",
+    "title": "Origin → Destination",
+    "subtitle": "the one-line pitch for the trip",
+    "startDate": "2026-01-01",
+    "endDate": "2026-01-07",
+    "dateLabel": "Early January 2026",
+    "party": "2 adults",
+    "homeBases": [
+      { "city": "First city", "area": "neighborhood", "nights": 3 },
+      { "city": "Second city", "area": "neighborhood", "nights": 3 }
+    ],
+    "notes": "Logistics that don't fit elsewhere — open-jaw flights, rental car, carry-on only, etc."
+  },
+  "days": [
+    {
+      "n": 1,
+      "date": "2026-01-01",
+      "segment": "CITY-A",
+      "label": "Arrive",
+      "title": "The day's headline",
+      "beats": [
+        { "time": "Afternoon", "text": "What you're doing, where, and roughly how long." },
+        { "time": "Evening", "text": "An easy dinner suggestion with 1–2 concrete named options." }
+      ],
+      "fuel": "First morning coffee: a specific named spot."
+    },
+    {
+      "n": 2,
+      "date": "2026-01-02",
+      "segment": "DRIVE",
+      "label": "City A → City B · ~4 hr + stops",
+      "title": "The drive day",
+      "beats": [
+        { "time": "Morning", "text": "Leave early; first worthwhile stop." },
+        { "time": "Lunch", "text": "A named place with a reason to stop." },
+        { "time": "Evening", "text": "Arrive, check in, keep it low-key." }
+      ],
+      "fuel": "A coffee/rest stop along the route."
+    }
+  ],
+  "reservations": [
+    {
+      "id": "flight-out",
+      "type": "flight",
+      "name": "ORIGIN → DEST",
+      "confirmation": "",
+      "datetime": "2026-01-01",
+      "address": "Departure airport",
+      "phone": "",
+      "notes": "Outbound. Cabin/class if relevant."
+    },
+    {
+      "id": "hotel-city-a",
+      "type": "hotel",
+      "name": "City A hotel",
+      "confirmation": "",
+      "datetime": "2026-01-01 to 2026-01-04",
+      "address": "Street, City A",
+      "phone": "",
+      "notes": "3 nights."
+    },
+    {
+      "id": "tour-highlight",
+      "type": "tour",
+      "name": "The must-book attraction",
+      "confirmation": "",
+      "datetime": "2026-01-03",
+      "address": "Venue address",
+      "phone": "",
+      "notes": "Timed entry — book early."
+    }
+  ],
+  "checklists": [
+    {
+      "name": "Book these early",
+      "items": [
+        "Flights",
+        "The attraction that sells out",
+        "Rental car",
+        "Any restaurant that needs a reservation"
+      ]
+    },
+    {
+      "name": "Packing",
+      "items": [
+        "Layers for cool mornings",
+        "Comfortable walking shoes",
+        "Chargers / power bank",
+        "Offline maps downloaded for low-signal stretches"
+      ]
+    }
+  ]
+}

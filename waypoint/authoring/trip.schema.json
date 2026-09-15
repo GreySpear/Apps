@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://greyspear.github.io/Apps/waypoint/authoring/trip.schema.json",
+  "title": "Waypoint trip.json",
+  "description": "The shareable trip plan Waypoint imports. Only trip.id and trip.title are required; everything else is optional and rendered when present.",
+  "type": "object",
+  "required": ["trip"],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": {
+      "description": "Schema version. Use 1. Waypoint rejects files newer than it understands.",
+      "type": "integer",
+      "enum": [1]
+    },
+    "trip": {
+      "type": "object",
+      "required": ["id", "title"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "description": "Stable slug, unique per trip. Used as the storage key — re-importing the same id updates the plan and keeps the user's local edits.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "minLength": 1
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "subtitle": { "type": "string" },
+        "startDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "endDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "dateLabel": { "type": "string", "description": "Human date range, e.g. 'Early–mid October 2026'." },
+        "party": { "type": "string", "description": "e.g. '2 adults'." },
+        "homeBases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "city": { "type": "string" },
+              "area": { "type": "string" },
+              "nights": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "days": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "n": { "description": "Day number, 1-based.", "type": "integer", "minimum": 1 },
+          "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "segment": {
+            "description": "Open string used for color-coding and grouping. LA / DRIVE / SF are seeded to brand colors; any other value is auto-assigned a color. Keep the set small and reuse values across days.",
+            "type": "string"
+          },
+          "label": { "type": "string", "description": "Short tag, e.g. 'Los Angeles' or 'LA → Cambria · ~5 hr'." },
+          "title": { "type": "string", "description": "The day's headline." },
+          "beats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "time": { "type": "string", "description": "Morning | Midday | Afternoon | Dusk | Evening | All day | a clock time — free string." },
+                "text": { "type": "string" }
+              }
+            }
+          },
+          "fuel": { "type": "string", "description": "The mid-day coffee / rest-stop note. May be empty." }
+        }
+      }
+    },
+    "reservations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "description": "Optional stable id. Recommended: the user's typed confirmation number stays attached to this reservation even if you rename it in a later version of the plan.",
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["flight", "hotel", "car", "tour", "restaurant", "other"],
+            "description": "Drives grouping and the card icon. Unknown values fall under 'Other'."
+          },
+          "name": { "type": "string" },
+          "confirmation": { "type": "string", "description": "Usually left empty — the user fills this in on their device." },
+          "datetime": { "type": "string", "description": "Free-form or ISO; may be a range like '2026-10-05 to 2026-10-09'." },
+          "address": { "type": "string", "description": "Full address — powers the Open in Google Maps button." },
+          "phone": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "checklists": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

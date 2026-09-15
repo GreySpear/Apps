@@ -38,6 +38,17 @@
     <div class="lightbox-body" id="lightbox-body"></div>
   </div>
 
+  <!-- generic modal / bottom-sheet (help, import) -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-head">
+        <h2 id="modal-title" class="display"></h2>
+        <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
   <!-- transient toast -->
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 

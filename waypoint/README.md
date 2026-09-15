@@ -19,8 +19,8 @@ Claude generates trip.json
 You import it into Waypoint  ──►  Share (share sheet / save file)  ──►  Spouse imports into their installed app
 ```
 
-- **Author:** Claude writes a `trip.json` (schema below).
-- **Import:** Trips home → **Import trip** → pick the `.json`. It's parsed, validated, and stored in IndexedDB.
+- **Author:** Claude writes a `trip.json` (schema below). See **[Authoring trips with Claude](#authoring-trips-with-claude)** for a reusable Project setup.
+- **Import:** Trips home → **Import trip** → **choose a `.json` file** *or* **paste** the JSON Claude gave you. It's parsed, validated, and stored in IndexedDB. (Paste is the easy path on a phone.)
 - **Share:** a trip's **Share** action exports the **plan only** (`trip.json`) via the native share sheet (`navigator.share` with a file) where supported, or falls back to downloading / copying the file. Your personal docs and typed-in confirmation numbers stay on your device by default — sharing offers to include confirmations, but never docs.
 - **Re-import = merge:** importing a trip you already have refreshes the plan content but **keeps** your checklist ticks, typed confirmation numbers, custom checklist items, and docs (they're keyed to the trip id and stored separately).
 
@@ -71,7 +71,19 @@ Parser notes:
 - `segment` is an open string used for color-coding — colors are assigned by first-seen segment, with `LA`/`DRIVE`/`SF` seeded to the brand palette.
 - **Local edits keying:** typed confirmations and checklist ticks are keyed by an explicit `id` when present, otherwise by a hash of the content (`type|name` for reservations, `list|text` for checklist items). Add `id`s in the plan if you expect to rename items between versions.
 
+## Authoring trips with Claude
+
+Plan every future trip in a Claude **Project** that outputs a file Waypoint imports directly. The one-time setup and paste-in prompt live in **[`authoring/`](authoring/)**:
+
+- **`authoring/PROJECT_INSTRUCTIONS.md`** — paste into your Project's custom instructions.
+- **`authoring/trip.schema.json`** — the formal schema (Claude validates against it).
+- **`authoring/TEMPLATE.trip.json`** — an annotated skeleton.
+
+Then: plan the trip in that Project → say *"make the Waypoint file"* → copy the JSON → **Import trip → paste** in the app. Reuse the same `trip.id` when revising a trip so your local edits survive. Full walkthrough in [`authoring/README.md`](authoring/README.md).
+
 ## Install
+
+Tap the **?** button in the app for platform-aware install steps, or:
 
 - **Android (Chrome):** menu → *Add to Home screen* / *Install app*.
 - **iPhone (Safari only):** Share → *Add to Home Screen*. (Chrome and other iOS browsers can't install PWAs.) The app shows this hint automatically on iOS.
@@ -96,4 +108,5 @@ waypoint/
   icons/          # 192, 512, maskable-512 (+ make_icons.py that generates them)
   trips/
     california-2026.json   # ships as the sample / first trip
+  authoring/      # the Claude Project kit: PROJECT_INSTRUCTIONS, schema, template
 ```

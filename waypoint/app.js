@@ -18,6 +18,8 @@ const app = $('#app');
 const tabbar = $('#tabbar');
 
 function h(tag, attrs = {}, ...kids) {
+  // tolerate h(tag, child) — a string or node in the attrs slot is treated as the first child
+  if (attrs == null || typeof attrs !== 'object' || attrs.nodeType) { kids.unshift(attrs); attrs = {}; }
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
     if (v == null || v === false) continue;
@@ -176,7 +178,10 @@ async function render() {
 }
 
 /* ------------------------------------------------------------------ HOME */
-function isIOS() { return /iP(hone|ad|od)/.test(navigator.platform || navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in document); }
+function isIOS() {
+  const s = (navigator.platform || '') + ' ' + (navigator.userAgent || '');
+  return /iP(hone|ad|od)/.test(s) || (/Mac/.test(s) && 'ontouchend' in document);
+}
 function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
 
 async function renderHome() {
@@ -187,6 +192,7 @@ async function renderHome() {
     (a.trip.startDate || '').localeCompare(b.trip.startDate || '') || (a.trip.title || '').localeCompare(b.trip.title || ''));
 
   $('#topbar-right').replaceChildren(
+    h('button', { class: 'icon-btn', onclick: openHelp, 'aria-label': 'Help and install', title: 'Help & install' }, '?'),
     h('button', { class: 'btn', onclick: pickImport }, '＋ Import trip')
   );
 
@@ -256,24 +262,134 @@ async function confirmDeleteTrip(plan) {
   render();
 }
 
+/* ------------------------------------------------------------------ MODAL */
+let lastFocus = null;
+function openModal(title, bodyNode) {
+  const m = $('#modal');
+  $('#modal-title').textContent = title;
+  $('#modal-body').replaceChildren(bodyNode);
+  lastFocus = document.activeElement;
+  m.hidden = false;
+  const first = m.querySelector('input,textarea,button:not(.modal-close)') || $('#modal-close');
+  if (first) first.focus();
+}
+function closeModal() {
+  $('#modal').hidden = true;
+  $('#modal-body').replaceChildren();
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+$('#modal-close').addEventListener('click', closeModal);
+$('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!$('#modal').hidden) closeModal();
+  else if (!$('#lightbox').hidden) { $('#lightbox').hidden = true; $('#lightbox-body').replaceChildren(); }
+});
+
 /* ------------------------------------------------------------------ IMPORT */
-function pickImport() { $('#import-input').click(); }
+// Shared import: validate text, upsert the plan (personal state/docs untouched → merge).
+async function importPlanText(text, sourceLabel) {
+  const plan = validatePlan(JSON.parse(text));
+  const existing = await getTrip(plan.trip.id);
+  await putTrip(plan);
+  toast(existing ? 'Trip updated — your notes kept' : 'Trip imported');
+  go('#/trip/' + encodeURIComponent(plan.trip.id));
+  return plan;
+}
+
+// Import chooser: pick a .json file, or paste JSON (great for trips Claude gives you in chat).
+function openImportSheet() {
+  const body = h('div', { class: 'modal-body-pad' });
+  body.append(
+    h('p', { class: 'help-block', style: 'margin:0 0 4px' },
+      'Add a trip from a ', h('span', { class: 'kbd' }, 'trip.json'), ' file, or paste the JSON Claude gave you.'));
+
+  const choices = h('div', { class: 'import-choices' });
+  choices.append(h('button', { class: 'btn', onclick: () => $('#import-input').click() }, '📁 Choose a .json file'));
+  choices.append(h('div', { class: 'divider-or' }, 'or paste'));
+  const ta = h('textarea', { class: 'paste-area', placeholder: '{\n  "schemaVersion": 1,\n  "trip": { "id": "...", "title": "..." },\n  ...\n}', spellcheck: 'false' });
+  choices.append(ta);
+  const doPaste = async () => {
+    const text = ta.value.trim();
+    if (!text) { ta.focus(); return; }
+    try { closeModal(); await importPlanText(text, 'paste'); }
+    catch (err) { console.error(err); toast('Import failed: ' + err.message); openImportSheet(); }
+  };
+  choices.append(h('button', { class: 'btn', onclick: doPaste }, '＋ Import pasted trip'));
+  // convenience: pull straight from the clipboard where allowed
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    choices.append(h('button', { class: 'btn ghost small', onclick: async () => {
+      try { ta.value = await navigator.clipboard.readText(); ta.focus(); }
+      catch { toast('Paste manually — clipboard access was blocked'); }
+    } }, '📋 Paste from clipboard'));
+  }
+  body.append(choices);
+  openModal('Add a trip', body);
+}
+function pickImport() { openImportSheet(); }
+
 $('#import-input').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
-  try {
-    const text = await file.text();
-    const plan = validatePlan(JSON.parse(text));
-    const existing = await getTrip(plan.trip.id);
-    await putTrip(plan); // plan-only upsert; personal state/docs untouched → merge
-    toast(existing ? 'Trip updated — your notes kept' : 'Trip imported');
-    go('#/trip/' + encodeURIComponent(plan.trip.id));
-  } catch (err) {
-    console.error(err);
-    toast('Import failed: ' + err.message);
-  }
+  try { closeModal(); await importPlanText(await file.text(), 'file'); }
+  catch (err) { console.error(err); toast('Import failed: ' + err.message); }
 });
+
+/* ------------------------------------------------------------------ HELP / INSTALL */
+function platform() {
+  const ua = navigator.userAgent || '';
+  if (isIOS()) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'desktop';
+}
+function helpSheet() {
+  const body = h('div', { class: 'modal-body-pad' });
+  const plat = platform();
+
+  const install = h('div', { class: 'help-block' }, h('h3', {}, '📲 Install Waypoint'));
+  if (isStandalone()) {
+    install.append(h('p', {}, 'You\'re running the installed app — nice. It works offline from here.'));
+  } else if (plat === 'ios') {
+    install.append(h('span', { class: 'help-plat' }, 'iPhone · Safari'));
+    install.append(h('ol', {},
+      h('li', { html: 'Open this page in <b>Safari</b> (other iOS browsers can\'t install web apps).' }),
+      h('li', { html: 'Tap the <b>Share</b> button (the square with an ↑ arrow).' }),
+      h('li', { html: 'Scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.' }),
+      h('li', 'Open Waypoint from your Home Screen. After one online launch it works in airplane mode.')));
+  } else if (plat === 'android') {
+    install.append(h('span', { class: 'help-plat' }, 'Android · Chrome'));
+    install.append(h('ol', {},
+      h('li', { html: 'Tap the <b>⋮</b> menu (top-right in Chrome).' }),
+      h('li', { html: 'Tap <b>Install app</b> (or <b>Add to Home screen</b>).' }),
+      h('li', 'Open Waypoint from your home screen. After one online launch it works offline.')));
+  } else {
+    install.append(h('span', { class: 'help-plat' }, 'Desktop'));
+    install.append(h('ol', {},
+      h('li', { html: 'Look for the <b>install icon</b> in the address bar, or the browser menu → <b>Install Waypoint</b>.' }),
+      h('li', 'On your phone, open this same URL and install from there — that\'s where offline matters most.')));
+  }
+  body.append(install);
+
+  body.append(h('div', { class: 'help-block' }, h('h3', {}, '🧳 Add a trip'),
+    h('ul', {},
+      h('li', { html: 'Tap <b>Import trip</b> and choose a <span class="kbd">trip.json</span> file, <b>or paste</b> the JSON Claude gave you.' }),
+      h('li', 'Everything then works with no signal — landing at the airport, driving with no bars.'))));
+
+  body.append(h('div', { class: 'help-block' }, h('h3', {}, '📤 Share a trip'),
+    h('ul', {},
+      h('li', { html: 'A trip\'s <b>Share</b> button sends the plan via your share sheet (AirDrop, Messages, Mail) or saves the file.' }),
+      h('li', 'The other person imports that file into their own installed Waypoint — they get the whole trip.'),
+      h('li', { html: 'Your <b>photos and typed-in confirmation numbers stay on your device</b> and are never shared unless you opt in.' }))));
+
+  body.append(h('div', { class: 'help-block' }, h('h3', {}, '🔒 Good to know'),
+    h('ul', {},
+      h('li', 'Confirmation numbers and checklist ticks are saved on this device and survive re-importing an updated plan.'),
+      h('li', 'Rarely, iOS clears an unused app\'s storage after weeks — nothing is lost for good: re-import the plan, re-add docs. Keep original boarding passes elsewhere too.'))));
+
+  return body;
+}
+function openHelp() { openModal('Help & install', helpSheet()); }
 
 /* ------------------------------------------------------------------ TRIP shell */
 const TABS = [
@@ -292,6 +408,7 @@ async function renderTrip(id, tab) {
 
   $('#topbar-right').replaceChildren(
     h('button', { class: 'btn ghost small', onclick: () => go('#/') }, '‹ Trips'),
+    h('button', { class: 'icon-btn', onclick: openHelp, 'aria-label': 'Help and install', title: 'Help & install' }, '?'),
     h('button', { class: 'btn small', onclick: () => shareTrip(id) }, 'Share'));
 
   const wide = window.matchMedia('(min-width:800px)').matches;
