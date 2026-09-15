@@ -150,6 +150,61 @@ function validatePlan(obj) {
   };
 }
 
+/* Strict, field-level validation against trip.schema.json (mirrored in code so
+ * it runs with zero dependencies and works offline).
+ *   errors   → block the import; the file is wrong or would break the app.
+ *   warnings → allow the import but flag soft issues (bad dates, odd types).
+ * The app renders permissively, so most soft problems are warnings, not errors. */
+class ValidationError extends Error {
+  constructor(errors) { super('Validation failed'); this.name = 'ValidationError'; this.errors = errors; }
+}
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const RES_ENUM = ['flight', 'hotel', 'car', 'tour', 'restaurant', 'other'];
+function validateTripStrict(obj) {
+  const errors = [], warnings = [];
+  const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+  if (!isObj(obj)) { errors.push('The file must be a JSON object.'); return { errors, warnings }; }
+
+  if (obj.schemaVersion == null) warnings.push('schemaVersion: missing — assuming 1.');
+  else if (!Number.isFinite(Number(obj.schemaVersion))) warnings.push('schemaVersion: should be the number 1.');
+  else if (Number(obj.schemaVersion) > 1) errors.push(`schemaVersion ${obj.schemaVersion}: this trip needs a newer version of Waypoint.`);
+
+  if (!isObj(obj.trip)) {
+    errors.push('trip: the "trip" object is missing.');
+  } else {
+    const t = obj.trip;
+    if (!t.id || typeof t.id !== 'string') errors.push('trip.id: required — a stable text slug like "california-2026".');
+    else if (!SLUG.test(t.id)) warnings.push(`trip.id "${t.id}": should be a lowercase slug (letters, numbers, hyphens), e.g. "california-2026".`);
+    if (!t.title || typeof t.title !== 'string') errors.push('trip.title: required.');
+    for (const k of ['startDate', 'endDate']) if (t[k] != null && !ISO_DATE.test(String(t[k]))) warnings.push(`trip.${k} "${t[k]}": should be YYYY-MM-DD.`);
+    if (t.homeBases != null && !Array.isArray(t.homeBases)) errors.push('trip.homeBases: must be a list.');
+  }
+
+  const arr = (k) => { if (obj[k] != null && !Array.isArray(obj[k])) { errors.push(`${k}: must be a list.`); return []; } return Array.isArray(obj[k]) ? obj[k] : []; };
+  const days = arr('days'), reservations = arr('reservations'), checklists = arr('checklists');
+
+  days.forEach((d, i) => {
+    const p = isObj(d) && d.n != null ? `day #${d.n}` : `days[${i}]`;
+    if (!isObj(d)) { errors.push(`${p}: must be an object.`); return; }
+    if (d.date != null && !ISO_DATE.test(String(d.date))) warnings.push(`${p} date "${d.date}": should be YYYY-MM-DD.`);
+    if (!d.title) warnings.push(`${p}: missing a title.`);
+    if (d.beats != null && !Array.isArray(d.beats)) errors.push(`${p} beats: must be a list.`);
+  });
+  reservations.forEach((r, i) => {
+    if (!isObj(r)) { errors.push(`reservations[${i}]: must be an object.`); return; }
+    const nm = r.name ? `"${r.name}"` : `reservations[${i}]`;
+    if (r.type != null && !RES_ENUM.includes(r.type)) warnings.push(`reservation ${nm}: type "${r.type}" isn't one of ${RES_ENUM.join(', ')} — it'll show under Other.`);
+    if (r.confirmation) warnings.push(`reservation ${nm}: has a confirmation number filled in — the shared plan usually leaves that blank for each person.`);
+  });
+  checklists.forEach((c, i) => {
+    if (!isObj(c)) { errors.push(`checklists[${i}]: must be an object.`); return; }
+    if (!c.name) warnings.push(`checklists[${i}]: missing a name.`);
+    if (c.items != null && !Array.isArray(c.items)) errors.push(`checklist ${c.name ? `"${c.name}"` : i} items: must be a list.`);
+  });
+  return { errors, warnings };
+}
+
 /* ------------------------------------------------------------------ router */
 function parseHash() {
   const raw = (location.hash || '#/').replace(/^#/, '');
@@ -287,19 +342,40 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ------------------------------------------------------------------ IMPORT */
-// Shared import: validate text, upsert the plan (personal state/docs untouched → merge).
-async function importPlanText(text, sourceLabel) {
-  const plan = validatePlan(JSON.parse(text));
+// Shared import: parse → strict-validate → upsert the plan (personal state/docs
+// untouched → merge). Throws ValidationError (field-level messages) on bad input.
+async function importPlanText(text) {
+  let obj;
+  try { obj = JSON.parse(text); }
+  catch (e) { throw new ValidationError(["That isn't valid JSON — " + e.message + '. If you pasted from a chat, copy the whole block including the outer { }.']); }
+  const { errors, warnings } = validateTripStrict(obj);
+  if (errors.length) throw new ValidationError(errors);
+  const plan = validatePlan(obj);
   const existing = await getTrip(plan.trip.id);
   await putTrip(plan);
+  return { plan, existing, warnings };
+}
+
+function afterImport({ plan, existing, warnings }) {
   toast(existing ? 'Trip updated — your notes kept' : 'Trip imported');
   go('#/trip/' + encodeURIComponent(plan.trip.id));
-  return plan;
+  if (warnings && warnings.length) openImportNotes(plan, warnings);
+}
+function handleImportError(err, prefill) {
+  if (err instanceof ValidationError) openImportSheet(prefill, err.errors);
+  else { console.error(err); openImportSheet(prefill, ['Import failed: ' + err.message]); }
+}
+
+function msgBox(kind, title, items) {
+  return h('div', { class: 'msg-box ' + kind },
+    h('div', { class: 'msg-box-title' }, title),
+    h('ul', {}, items.map((m) => h('li', {}, m))));
 }
 
 // Import chooser: pick a .json file, or paste JSON (great for trips Claude gives you in chat).
-function openImportSheet() {
+function openImportSheet(prefill = '', errors = null) {
   const body = h('div', { class: 'modal-body-pad' });
+  if (errors && errors.length) body.append(msgBox('error', errors.length + (errors.length === 1 ? ' problem to fix' : ' problems to fix'), errors));
   body.append(
     h('p', { class: 'help-block', style: 'margin:0 0 4px' },
       'Add a trip from a ', h('span', { class: 'kbd' }, 'trip.json'), ' file, or paste the JSON Claude gave you.'));
@@ -308,15 +384,15 @@ function openImportSheet() {
   choices.append(h('button', { class: 'btn', onclick: () => $('#import-input').click() }, '📁 Choose a .json file'));
   choices.append(h('div', { class: 'divider-or' }, 'or paste'));
   const ta = h('textarea', { class: 'paste-area', placeholder: '{\n  "schemaVersion": 1,\n  "trip": { "id": "...", "title": "..." },\n  ...\n}', spellcheck: 'false' });
+  ta.value = prefill || '';
   choices.append(ta);
   const doPaste = async () => {
     const text = ta.value.trim();
     if (!text) { ta.focus(); return; }
-    try { closeModal(); await importPlanText(text, 'paste'); }
-    catch (err) { console.error(err); toast('Import failed: ' + err.message); openImportSheet(); }
+    try { const r = await importPlanText(text); closeModal(); afterImport(r); }
+    catch (err) { handleImportError(err, text); }
   };
   choices.append(h('button', { class: 'btn', onclick: doPaste }, '＋ Import pasted trip'));
-  // convenience: pull straight from the clipboard where allowed
   if (navigator.clipboard && navigator.clipboard.readText) {
     choices.append(h('button', { class: 'btn ghost small', onclick: async () => {
       try { ta.value = await navigator.clipboard.readText(); ta.focus(); }
@@ -325,15 +401,27 @@ function openImportSheet() {
   }
   body.append(choices);
   openModal('Add a trip', body);
+  if (prefill) ta.focus();
 }
 function pickImport() { openImportSheet(); }
+
+// Non-blocking "imported, but check these" notes after a successful import with warnings.
+function openImportNotes(plan, warnings) {
+  const body = h('div', { class: 'modal-body-pad' });
+  body.append(h('p', { class: 'help-block', style: 'margin:0 0 4px' },
+    h('b', {}, plan.trip.title), ' imported. A few things you may want to check:'));
+  body.append(msgBox('warn', warnings.length + (warnings.length === 1 ? ' note' : ' notes'), warnings));
+  body.append(h('div', { style: 'margin-top:14px' },
+    h('button', { class: 'btn', onclick: closeModal }, 'Got it')));
+  openModal('Imported — a couple of notes', body);
+}
 
 $('#import-input').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
-  try { closeModal(); await importPlanText(await file.text(), 'file'); }
-  catch (err) { console.error(err); toast('Import failed: ' + err.message); }
+  try { const r = await importPlanText(await file.text()); closeModal(); afterImport(r); }
+  catch (err) { handleImportError(err, ''); }
 });
 
 /* ------------------------------------------------------------------ HELP / INSTALL */

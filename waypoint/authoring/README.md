@@ -27,5 +27,6 @@ Set this up once, then plan every future trip in a Claude **Project** that outpu
 
 ## Notes
 
+- **The app double-checks on import.** Waypoint validates every file against the schema as you import it: it blocks a genuinely broken file with field-level messages (e.g. "trip.id: required"), and imports a mostly-fine file while flagging soft issues (bad dates, an odd reservation type) as dismissible notes. So a small slip in a pasted file is caught, not silently carried.
 - Claude leaves `confirmation` fields empty on purpose — you fill those in on your device, and they stay there across revisions.
 - The plan is the only thing shared. Your confirmations and photos live only on your phone.
