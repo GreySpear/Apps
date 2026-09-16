@@ -1,0 +1,49 @@
+# Deploys the repo to GitHub Pages so the static apps (kitchen, waypoint, …) are
+# served over https.
+#
+# Why this exists: the classic "deploy from a branch" Pages builder checks out
+# submodules recursively, and this repo has a submodule pointer at
+# Recorder/app/src/main/cpp/whisper.cpp with no .gitmodules entry, which makes
+# that checkout fail ("No url found for submodule path"). This workflow checks
+# out WITHOUT submodules, so the static site deploys regardless of the Recorder
+# app's submodule state.
+#
+# One-time setup: repo Settings → Pages → Build and deployment → Source →
+# "GitHub Actions". After that, every push to main publishes the site.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; newer pushes supersede in-flight ones.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (no submodules — avoids the broken whisper.cpp pointer)
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
