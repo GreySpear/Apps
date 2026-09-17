@@ -79,7 +79,9 @@ speaks, the rest is effort, not risk. If it fights, I learned that in a weekend,
 a month. **Don't build the reader around an engine I haven't heard speak yet.**
 
 Step-by-step integration notes for the spike — dependency, voice model, minimal
-Kotlin, and known failure modes — are in [SPIKE.md](SPIKE.md).
+Kotlin, and known failure modes — are in [SPIKE.md](SPIKE.md). A ready-to-run
+scaffold of the spike app lives in [spike/](spike/) (see its
+[README](spike/README.md)): open in Android Studio, drop in a voice, run.
 
 ## 6. Milestones
 
