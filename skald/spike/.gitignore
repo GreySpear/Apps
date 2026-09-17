@@ -1,0 +1,15 @@
+# Android / Gradle build outputs
+.gradle/
+build/
+/local.properties
+*.iml
+.idea/
+
+# Large voice model assets — download locally, never commit (see SPIKE.md §2)
+app/src/main/assets/**/*.onnx
+app/src/main/assets/**/*.onnx.json
+app/src/main/assets/**/espeak-ng-data/
+app/src/main/assets/**/tokens.txt
+
+# Prebuilt AAR fallback, if used
+app/libs/
