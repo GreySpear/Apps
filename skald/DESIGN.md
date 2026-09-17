@@ -78,6 +78,9 @@ unknown is whether native TTS integration works smoothly on my device. If the sp
 speaks, the rest is effort, not risk. If it fights, I learned that in a weekend, not
 a month. **Don't build the reader around an engine I haven't heard speak yet.**
 
+Step-by-step integration notes for the spike — dependency, voice model, minimal
+Kotlin, and known failure modes — are in [SPIKE.md](SPIKE.md).
+
 ## 6. Milestones
 
 | Milestone | Deliverable |
