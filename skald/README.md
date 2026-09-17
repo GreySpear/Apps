@@ -5,7 +5,8 @@ aloud — built to be fully owned end to end, with no cloud, accounts, or tracki
 
 **Status:** Design phase. No code yet.
 
-See [DESIGN.md](DESIGN.md) for the full spec, decisions, and roadmap.
+See [DESIGN.md](DESIGN.md) for the full spec, decisions, and roadmap, and
+[DEVELOPING.md](DEVELOPING.md) for the local setup (Android Studio + Claude Code).
 
 ## In one line
 
