@@ -111,7 +111,9 @@ const putState = (st) => tx('state', 'readwrite', (s) => s.put(st));
 // docs
 const addDoc = (doc) => tx('docs', 'readwrite', (s) => req2p(s.add(doc)));
 const docsForTrip = (id) => tx('docs', 'readonly', (s) => req2p(s.index('tripId').getAll(id)));
+const putDoc = (doc) => tx('docs', 'readwrite', (s) => s.put(doc));
 const deleteDoc = (docId) => tx('docs', 'readwrite', (s) => s.delete(docId));
+const isImage = (doc) => (doc.type || '').startsWith('image/');
 
 /* ------------------------------------------------------------------ schema / normalize */
 const SEG_SEED = { LA: ['--coral', '--coral-ink'], DRIVE: ['--gold', '--gold-ink'], SF: ['--teal', '--teal-ink'] };
@@ -221,6 +223,7 @@ window.addEventListener('hashchange', render);
 /* ------------------------------------------------------------------ render root */
 async function render() {
   revokeURLs();
+  if (dayObserver) { dayObserver.disconnect(); dayObserver = null; }
   const route = parseHash();
   try {
     if (route.view === 'trip') await renderTrip(route.id, route.tab);
@@ -240,6 +243,7 @@ function isIOS() {
 function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
 
 async function renderHome() {
+  lastView = '';
   tabbar.hidden = true;
   app.className = '';
   document.title = 'Waypoint';
@@ -291,6 +295,9 @@ function tripCard(plan) {
   (order.length ? order : ['LA']).forEach((s) =>
     strip.append(h('i', { style: `background:var(${segs[s] ? segs[s][0] : '--teal'})` })));
   const meta = h('div', { class: 'tc-meta' });
+  const st = tripStatus(plan);
+  if (st && st.phase === 'during') meta.append(h('span', { class: 'chip hot' }, `Day ${st.dayOfTrip} of ${st.total}`));
+  else if (st && st.phase === 'before') meta.append(h('span', { class: 'chip hot' }, st.daysUntil === 1 ? 'Tomorrow' : `In ${st.daysUntil} days`));
   if (t.dateLabel || t.startDate) meta.append(h('span', { class: 'chip' }, t.dateLabel || t.startDate));
   if (t.party) meta.append(h('span', { class: 'chip' }, t.party));
   const nights = (t.homeBases || []).reduce((a, b) => a + (Number(b.nights) || 0), 0);
@@ -338,7 +345,7 @@ $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') clos
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (!$('#modal').hidden) closeModal();
-  else if (!$('#lightbox').hidden) { $('#lightbox').hidden = true; $('#lightbox-body').replaceChildren(); }
+  else if (!$('#lightbox').hidden) closeLightbox();
 });
 
 /* ------------------------------------------------------------------ IMPORT */
@@ -487,10 +494,14 @@ const TABS = [
   { id: 'docs', icon: '📎', label: 'Docs' },
 ];
 
+let lastView = '';
 async function renderTrip(id, tab) {
   const plan = await getTrip(id);
   if (!plan) { go('#/'); return; }
   lsSet('wp_last', id); lsSet('wp_tab', tab);
+  // new trip/tab → start at the top (the itinerary then scrolls itself to the right day);
+  // a re-render of the same view (e.g. ticking a checklist) keeps the scroll position
+  if (id + '/' + tab !== lastView) { window.scrollTo(0, 0); lastView = id + '/' + tab; }
   document.title = plan.trip.title + ' · Waypoint';
   const state = await getState(id);
 
@@ -538,7 +549,7 @@ function tripHeader(plan) {
   const t = plan.trip;
   const bases = h('div', { class: 'bases' });
   (t.homeBases || []).forEach((b) => bases.append(
-    h('span', { class: 'base' }, h('b', {}, b.city || ''), (b.area ? '· ' + b.area : ''), (b.nights ? h('span', { class: 'soft' }, ' · ' + b.nights + 'n') : null))));
+    h('span', { class: 'base' }, h('b', {}, b.city || ''), (b.area ? ' · ' + b.area : ''), (b.nights ? h('span', { class: 'soft' }, ' · ' + b.nights + 'n') : null))));
   return h('div', { class: 'trip-header' },
     h('div', { class: 'eyebrow' }, [t.dateLabel || '', t.party ? '· ' + t.party : ''].join(' ').trim() || 'Trip'),
     h('h1', { class: 'page' }, t.title),
@@ -547,18 +558,22 @@ function tripHeader(plan) {
     t.notes ? h('div', { class: 'notes' }, t.notes) : null);
 }
 
-function dayCard(day, segs, { compact = false } = {}) {
-  const seg = (day.segment || '').trim() || '—';
-  const col = segs[seg] || ['--teal', '--teal-ink'];
+const segVars = (day, segs) => {
+  const col = segs[(day.segment || '').trim() || '—'] || ['--teal', '--teal-ink'];
+  return `--seg:var(${col[0]});--seg-ink:var(${col[1]})`;
+};
+
+function dayCard(day, segs, { isToday = false } = {}) {
   const card = h('div', {
-    class: 'day-card',
-    style: `--seg:var(${col[0]});--seg-ink:var(${col[1]})`,
+    class: 'day-card' + (isToday ? ' today' : ''),
+    style: segVars(day, segs),
     dataset: { n: String(day.n) },
   });
+  const todayTag = isToday ? h('span', { class: 'today-tag' }, 'Today') : null;
   card.append(h('div', { class: 'day-top' },
     h('div', { class: 'day-num' }, String(day.n ?? '·')),
     h('div', { class: 'day-head-txt' },
-      day.label ? h('div', { class: 'day-label' }, day.label) : null,
+      day.label || isToday ? h('div', { class: 'day-label' }, day.label || '', day.label && todayTag ? h('span', { class: 'sep' }) : null, todayTag) : null,
       h('div', { class: 'day-title' }, day.title || ''),
       day.date ? h('div', { class: 'day-date' }, fmtDate(day.date)) : null)));
   const beats = h('div', { class: 'beats' });
@@ -577,32 +592,145 @@ function fmtDate(iso) {
   return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-let selDay = 0;
+/* "Today": where the clock falls relative to a trip. ?today=YYYY-MM-DD in the
+ * URL overrides the clock, handy for previewing a trip's in-progress view. */
+function todayISO() {
+  const o = new URLSearchParams(location.search).get('today');
+  if (o && ISO_DATE.test(o)) return o;
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+const dayDiff = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 86400000);
+const isoOrNull = (v) => (ISO_DATE.test(String(v || '')) ? v : null);
+
+// → null (no dates) | { phase:'before', daysUntil, start } | { phase:'after' }
+//   | { phase:'during', dayOfTrip, total, dayIdx, isExact }
+// dayIdx is the day dated today, else the latest day dated before today.
+function tripStatus(plan, today = todayISO()) {
+  const days = plan.days || [];
+  const dated = days.map((d, i) => ({ i, date: isoOrNull(d.date) })).filter((d) => d.date);
+  const start = isoOrNull(plan.trip.startDate) || (dated[0] && dated[0].date);
+  const end = isoOrNull(plan.trip.endDate) || (dated.length && dated[dated.length - 1].date);
+  if (!start || !end) return null;
+  if (today < start) return { phase: 'before', daysUntil: dayDiff(today, start), start };
+  if (today > end) return { phase: 'after' };
+  let dayIdx = null;
+  for (const d of dated) if (d.date <= today) dayIdx = d.i;
+  return {
+    phase: 'during', dayOfTrip: dayDiff(start, today) + 1, total: dayDiff(start, end) + 1,
+    dayIdx, isExact: dayIdx != null && days[dayIdx].date === today,
+  };
+}
+
+function todayBanner(st, days, onJump) {
+  if (!st) return null;
+  if (st.phase === 'before') {
+    return h('div', { class: 'today-banner before' },
+      h('span', { class: 'tb-ic', 'aria-hidden': 'true' }, '🗓️'),
+      h('span', {}, h('b', {}, st.daysUntil === 1 ? 'Starts tomorrow' : `Starts in ${st.daysUntil} days`),
+        ' · ' + fmtDate(st.start)));
+  }
+  if (st.phase !== 'during') return null;
+  const today = st.isExact ? days[st.dayIdx] : null;
+  const next = st.dayIdx != null ? days[st.dayIdx + 1] : days[0];
+  return h('div', { class: 'today-banner' },
+    h('div', { class: 'tb-top' },
+      h('span', { class: 'eyebrow' }, 'Today · ' + fmtDate(todayISO())),
+      h('span', { class: 'tb-count' }, `Day ${st.dayOfTrip} of ${st.total}`)),
+    h('div', { class: 'tb-progress', 'aria-hidden': 'true' },
+      h('i', { style: `width:${Math.round((st.dayOfTrip / st.total) * 100)}%` })),
+    today ? h('div', { class: 'tb-title' }, today.title || today.label || '') : null,
+    next ? h('div', { class: 'tb-next' }, h('b', {}, 'Next · '), next.title || next.label || 'Day ' + next.n) : null,
+    st.dayIdx != null ? h('button', { class: 'btn small', onclick: onJump }, st.isExact ? 'Jump to today' : 'Jump to latest day') : null);
+}
+
+const selDayByTrip = {}; // per-trip selected / visible day (this session only)
+let dayObserver = null;
+
 function viewItinerary(root, plan) {
   root.append(tripHeader(plan));
+  const id = plan.trip.id;
   const segs = segColors(plan.days);
   const days = plan.days || [];
   if (!days.length) { root.append(h('div', { class: 'section-empty' }, 'No days in this trip yet.')); return; }
-  selDay = Math.min(selDay, days.length - 1);
+
+  const st = tripStatus(plan);
+  const live = st && st.phase === 'during' && st.dayIdx != null;
+  const todayIdx = live && st.isExact ? st.dayIdx : null;
+  let sel = selDayByTrip[id] ?? (live ? st.dayIdx : 0);
+  sel = Math.min(sel, days.length - 1);
+  const wide = window.matchMedia('(min-width:800px)').matches;
+  const smooth = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  let quietUntil = 0; // ignore scroll-spy while a programmatic scroll settles
+
+  const banner = todayBanner(st, days, () => select(st.dayIdx, true));
+  if (banner) root.append(banner);
+
+  // phone: sticky strip of day chips to jump around (hidden on the wide two-pane layout)
+  const strip = h('nav', { class: 'day-strip', 'aria-label': 'Jump to day' });
+  const chips = days.map((day, i) => {
+    const c = h('button', {
+      class: 'dchip' + (i === todayIdx ? ' today' : ''), style: segVars(day, segs),
+      'aria-label': `Day ${day.n ?? i + 1}${day.date ? ', ' + fmtDate(day.date) : ''}${i === todayIdx ? ' (today)' : ''}`,
+      onclick: () => select(i, true),
+    }, h('span', { class: 'dn' }, String(day.n ?? i + 1)),
+      h('span', { class: 'dd' }, isoOrNull(day.date)
+        ? new Date(day.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        : (day.segment || '')));
+    strip.append(c);
+    return c;
+  });
+  if (!wide) root.append(strip);
 
   const wrap = h('div', { class: 'two-pane' });
   const list = h('div', { class: 'day-list' });
   const detail = h('div', { class: 'detail-pane' });
-  const paintDetail = () => { detail.replaceChildren(dayCard(days[selDay], segs)); };
-
-  days.forEach((day, i) => {
-    const c = dayCard(day, segs);
-    if (i === selDay) c.classList.add('sel');
-    c.addEventListener('click', () => {
-      selDay = i;
-      list.querySelectorAll('.day-card').forEach((n, j) => n.classList.toggle('sel', j === i));
-      paintDetail();
-    });
+  const cards = days.map((day, i) => {
+    const c = dayCard(day, segs, { isToday: i === todayIdx });
+    c.addEventListener('click', () => select(i, false));
     list.append(c);
+    return c;
   });
-  paintDetail();
+
+  function centerChip(i, behavior) {
+    const c = chips[i];
+    strip.scrollTo({ left: c.offsetLeft - (strip.clientWidth - c.offsetWidth) / 2, behavior });
+  }
+  function select(i, scroll) {
+    sel = i; selDayByTrip[id] = i;
+    cards.forEach((c, j) => c.classList.toggle('sel', j === i));
+    chips.forEach((c, j) => { c.classList.toggle('active', j === i); c.setAttribute('aria-current', j === i ? 'true' : 'false'); });
+    if (wide) {
+      detail.setAttribute('style', segVars(days[i], segs));
+      detail.replaceChildren(dayCard(days[i], segs, { isToday: i === todayIdx }));
+      if (scroll) cards[i].scrollIntoView({ block: 'nearest', behavior: smooth });
+    } else {
+      centerChip(i, smooth);
+      if (scroll) { quietUntil = Date.now() + 900; cards[i].scrollIntoView({ block: 'start', behavior: smooth }); }
+    }
+  }
+
+  select(sel, false);
   wrap.append(list, detail);
   root.append(wrap);
+  if (wide) return;
+
+  // once mounted: restore the remembered/today day, then keep the strip in sync while scrolling
+  requestAnimationFrame(() => {
+    if (!cards[0].isConnected) return;
+    centerChip(sel, 'auto');
+    if (sel > 0) { quietUntil = Date.now() + 300; cards[sel].scrollIntoView({ block: 'start' }); }
+    if (!('IntersectionObserver' in window)) return;
+    const top = $('#topbar').offsetHeight + strip.offsetHeight;
+    dayObserver = new IntersectionObserver((entries) => {
+      if (Date.now() < quietUntil) return;
+      for (const e of entries) {
+        const i = cards.indexOf(e.target);
+        if (e.isIntersecting && i !== sel) select(i, false);
+      }
+    }, { rootMargin: `-${top}px 0px -55% 0px` });
+    cards.forEach((c) => dayObserver.observe(c));
+  });
 }
 
 /* ------------------------------------------------------------------ RESERVATIONS */
@@ -622,6 +750,8 @@ async function viewReservations(root, plan, state) {
     h('h1', { class: 'page' }, 'Reservations')));
   const list = plan.reservations || [];
   if (!list.length) { root.append(h('div', { class: 'section-empty' }, 'No reservations in this trip.')); return; }
+  const docsByRes = {};
+  for (const d of await docsForTrip(plan.trip.id)) if (d.resId) (docsByRes[d.resId] = docsByRes[d.resId] || []).push(d);
 
   const groups = {};
   list.forEach((r, i) => { const k = typeMeta(r.type).key; (groups[k] = groups[k] || []).push({ r, i }); });
@@ -632,13 +762,13 @@ async function viewReservations(root, plan, state) {
     const meta = typeMeta(k);
     const sec = h('div', { class: 'res-group' }, h('h2', {}, h('span', { class: 'ic' }, meta.ic), meta.label));
     const grid = h('div', { class: 'res-grid' });
-    for (const { r, i } of groups[k]) grid.append(resCard(r, i, plan, state));
+    for (const { r, i } of groups[k]) grid.append(resCard(r, i, plan, state, docsByRes[resKey(r, i)] || []));
     sec.append(grid);
     root.append(sec);
   }
 }
 
-function resCard(r, i, plan, state) {
+function resCard(r, i, plan, state, docs) {
   const key = resKey(r, i);
   const edit = state.resEdits[key] || {};
   const conf = edit.confirmation != null ? edit.confirmation : (r.confirmation || '');
@@ -670,6 +800,12 @@ function resCard(r, i, plan, state) {
       h('span', {}, r.address)));
   }
   if (notes) card.append(h('div', { class: 'res-note' }, notes));
+  // attached docs (boarding pass, voucher…) — one tap to open, offline
+  if (docs.length) card.append(h('div', { class: 'res-docs' }, docs.map((d) =>
+    h('button', { class: 'res-doc', onclick: () => openLightbox(d, plan) },
+      isImage(d) ? h('img', { src: objURL(d.blob), alt: '' }) : h('span', { class: 'rd-ic', 'aria-hidden': 'true' }, '📄'),
+      h('span', { class: 'rd-name' }, d.name || 'document'),
+      h('span', { class: 'rd-go', 'aria-hidden': 'true' }, '›')))));
 
   const actions = h('div', { class: 'res-actions' });
   if (r.address) actions.append(h('a', {
@@ -678,6 +814,7 @@ function resCard(r, i, plan, state) {
   }, '📍 Open in Maps'));
   if (r.phone) actions.append(h('a', { href: 'tel:' + String(r.phone).replace(/[^\d+]/g, '') }, '📞 Call'));
   actions.append(h('button', { onclick: () => startEdit('confirmation') }, '✎ Edit'));
+  actions.append(h('button', { onclick: () => openDocPicker(plan.trip.id, key) }, '📎 Attach'));
   card.append(actions);
 
   // inline editor for confirmation + notes
@@ -798,7 +935,7 @@ async function viewDocs(root, plan) {
   (plan.reservations || []).forEach((r, i) => { resByKey[resKey(r, i)] = r; });
   for (const doc of docs) {
     const tile = h('div', { class: 'doc-tile' });
-    if ((doc.type || '').startsWith('image/')) {
+    if (isImage(doc)) {
       tile.append(h('img', { src: objURL(doc.blob), alt: doc.name, loading: 'lazy' }));
     } else {
       tile.append(h('span', { class: 'pdf-ic' }, '📄'));
@@ -810,34 +947,66 @@ async function viewDocs(root, plan) {
       if (!confirm('Delete this document?')) return;
       await deleteDoc(doc.docId); toast('Deleted'); render();
     } }, '🗑'));
-    tile.addEventListener('click', () => openLightbox(doc));
+    tile.addEventListener('click', () => openLightbox(doc, plan));
     grid.append(tile);
   }
   root.append(grid);
 }
 
-let pendingTripForDoc = null;
-function openDocPicker(tripId) { pendingTripForDoc = tripId; $('#doc-input').click(); }
+let pendingTripForDoc = null, pendingResForDoc = null;
+function openDocPicker(tripId, resId = null) { pendingTripForDoc = tripId; pendingResForDoc = resId; $('#doc-input').click(); }
 $('#doc-input').addEventListener('change', async (e) => {
   const files = [...e.target.files]; e.target.value = '';
   if (!files.length || !pendingTripForDoc) return;
   for (const f of files) {
-    await addDoc({ tripId: pendingTripForDoc, resId: null, name: f.name, type: f.type || 'application/octet-stream', blob: f, added: Date.now() });
+    await addDoc({ tripId: pendingTripForDoc, resId: pendingResForDoc, name: f.name, type: f.type || 'application/octet-stream', blob: f, added: Date.now() });
   }
-  toast(files.length > 1 ? files.length + ' documents added' : 'Document added');
+  const verb = pendingResForDoc ? 'attached' : 'added';
+  toast(files.length > 1 ? `${files.length} documents ${verb}` : 'Document ' + verb);
   render();
 });
 
-function openLightbox(doc) {
-  const box = $('#lightbox'), body = $('#lightbox-body');
-  body.replaceChildren();
-  const url = objURL(doc.blob);
-  if ((doc.type || '').startsWith('image/')) body.append(h('img', { src: url, alt: doc.name }));
-  else body.append(h('iframe', { src: url, title: doc.name }));
-  box.hidden = false;
+// The lightbox's object URL is kept out of liveURLs so a background render()
+// (e.g. after re-linking) doesn't revoke what's on screen.
+let lightboxURL = null;
+function closeLightbox() {
+  $('#lightbox').hidden = true;
+  $('#lightbox-body').replaceChildren();
+  $('#lightbox-bar').replaceChildren();
+  if (lightboxURL) { URL.revokeObjectURL(lightboxURL); lightboxURL = null; }
 }
-$('#lightbox-close').addEventListener('click', () => { $('#lightbox').hidden = true; $('#lightbox-body').replaceChildren(); });
-$('#lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox') { $('#lightbox').hidden = true; $('#lightbox-body').replaceChildren(); } });
+function openLightbox(doc, plan) {
+  closeLightbox();
+  const body = $('#lightbox-body'), bar = $('#lightbox-bar');
+  lightboxURL = URL.createObjectURL(doc.blob);
+  if (isImage(doc)) body.append(h('img', { src: lightboxURL, alt: doc.name }));
+  else body.append(h('iframe', { src: lightboxURL, title: doc.name }));
+
+  bar.append(h('div', { class: 'lb-name' }, doc.name || 'document'));
+  const resList = (plan && plan.reservations) || [];
+  if (resList.length) {
+    const pick = h('select', { class: 'lb-select', 'aria-label': 'Linked reservation' },
+      h('option', { value: '' }, 'Not linked to a reservation'),
+      resList.map((r, i) => {
+        const k = resKey(r, i);
+        return h('option', { value: k, selected: doc.resId === k ? 'selected' : null }, typeMeta(r.type).ic + ' ' + (r.name || '(untitled)'));
+      }));
+    pick.addEventListener('change', async () => {
+      doc.resId = pick.value || null;
+      await putDoc(doc);
+      toast(doc.resId ? 'Linked to ' + pick.selectedOptions[0].textContent : 'Unlinked');
+      render();
+    });
+    bar.append(pick);
+  }
+  bar.append(h('button', { class: 'lb-btn danger', onclick: async () => {
+    if (!confirm('Delete this document?')) return;
+    await deleteDoc(doc.docId); closeLightbox(); toast('Deleted'); render();
+  } }, '🗑 Delete'));
+  $('#lightbox').hidden = false;
+}
+$('#lightbox-close').addEventListener('click', closeLightbox);
+$('#lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox' || e.target.id === 'lightbox-body') closeLightbox(); });
 
 /* ------------------------------------------------------------------ SHARE / EXPORT */
 async function shareTrip(id) {
@@ -891,6 +1060,12 @@ window.matchMedia('(min-width:800px)').addEventListener('change', (e) => { wasWi
         const res = await fetch('trips/california-2026.json');
         if (res.ok) { const plan = validatePlan(await res.json()); await putTrip(plan); }
       } catch { /* offline first load with no sample — fine */ }
+    }
+    // a fresh launch mid-trip opens that trip (→ today's day) instead of the trips list
+    if (!location.hash) {
+      const live = (await allTrips()).filter((p) => { const st = tripStatus(p); return st && st.phase === 'during'; });
+      const pick = live.find((p) => p.trip.id === lsGet('wp_last', '')) || live[0];
+      if (pick) history.replaceState(null, '', '#/trip/' + encodeURIComponent(pick.trip.id));
     }
   } catch (e) { console.error(e); }
   render();

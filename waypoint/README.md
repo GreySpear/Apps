@@ -26,10 +26,11 @@ You import it into Waypoint  ──►  Share (share sheet / save file)  ──�
 
 ## Screens
 
-- **Itinerary** — day-by-day: big day number, label, title, the timed beats, and the `fuel` coffee/rest note. Color-coded by `segment`. Two-pane (day list + detail) on a wide/unfolded screen (≥ ~800px); single column on a phone.
-- **Reservations** (the offline vault) — grouped by type. Each card shows name, date/time, a large **tap-to-copy** confirmation number, address with **Open in Google Maps**, and tap-to-call. Confirmation and notes are **editable inline** and persist locally (survive re-import).
+- **Itinerary** — day-by-day: big day number, label, title, the timed beats, and the `fuel` coffee/rest note. Color-coded by `segment`. Two-pane (day list + detail) on a wide/unfolded screen (≥ ~800px); single column on a phone, with a sticky row of day chips to jump between days.
+- **Today** — during a trip the itinerary opens on today's day, with a "Day 3 of 9" banner, progress bar, and what's next. Before a trip it shows a countdown, which also appears on the trip card. Opening the app with no link mid-trip goes straight to that trip. Add `?today=YYYY-MM-DD` to the URL to preview any date.
+- **Reservations** (the offline vault) — grouped by type. Each card shows name, date/time, a large **tap-to-copy** confirmation number, address with **Open in Google Maps**, tap-to-call, and any **attached docs** (📎 Attach adds a boarding pass or voucher straight to the card). Confirmation and notes are **editable inline** and persist locally (survive re-import).
 - **Checklists** — tick items (state saved locally); add/remove your own items.
-- **Docs** — add photos/PDFs (boarding passes, confirmations) from the phone. Stored as blobs in IndexedDB, viewable **fully offline**. On-device only; never shared.
+- **Docs** — add photos/PDFs (boarding passes, confirmations) from the phone. Stored as blobs in IndexedDB, viewable **fully offline**. The viewer can link a doc to a reservation or delete it. On-device only; never shared.
 
 ## Data model
 
@@ -92,7 +93,7 @@ Once installed, open it once online; after that it works in airplane mode.
 
 ## Offline
 
-- The app shell (HTML/CSS/JS, icons, fonts, and the sample trip) is precached by `sw.js` (cache-first, versioned `waypoint-v1`). Bump `VERSION` in `sw.js` to roll caches on a new release.
+- The app shell (HTML/CSS/JS, icons, fonts, and the sample trip) is precached by `sw.js` (cache-first, versioned, currently `v2`). Bump `VERSION` in `sw.js` to roll caches on a new release.
 - Trip data, docs, and your local edits live in IndexedDB — no network needed to read a trip.
 - **Storage note (iOS):** Safari may evict an unused PWA's storage after a few weeks. Nothing is irreplaceable — re-import the plan, re-add docs. Keep original boarding passes elsewhere too.
 

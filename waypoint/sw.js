@@ -16,7 +16,7 @@
  *
  * Updating: bump VERSION to roll all caches (old ones deleted on activate).
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = 'waypoint-shell-' + VERSION;
 const RUNTIME_CACHE = 'waypoint-runtime-' + VERSION;
 const SHELL = [

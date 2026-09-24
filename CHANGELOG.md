@@ -1,7 +1,35 @@
 # Changelog
 
 A running history of changes to the apps in this repo (Kitchen + Recipes +
-Groceries + Home Maintenance Log). Newest first.
+Groceries + Home Maintenance Log + Waypoint). Newest first.
+
+## 2026-09-24
+
+### Waypoint — Today view, day jumper, docs on reservations, touch fixes
+- **Today view.** During a trip, the itinerary opens on today's day with a
+  banner ("Today · Day 3 of 9", a progress bar, today's title, what's next and
+  a *Jump to today* button). Today's card and chip carry a **Today** marker.
+  Before a trip, the banner and the trip card show a countdown ("In 11 days").
+  Launching the app with no link while a trip is in progress opens that trip
+  directly. Add `?today=YYYY-MM-DD` to the URL to preview any date.
+- **Day jumper (phone).** A sticky row of day chips (number + date, colored by
+  segment) sits under the top bar. Tap one to jump to that day. The row
+  follows along as you scroll. The app remembers the day you were on when you
+  switch tabs. Changing trip or tab now starts at the top instead of keeping
+  the previous scroll position.
+- **Docs on reservations.** Each reservation card has a **📎 Attach** button.
+  Attached docs appear on the card as full-width buttons that open the doc
+  offline. The doc viewer can now link or unlink a doc to a reservation and
+  **delete** it.
+- **Touch fixes.** Delete buttons on doc tiles and custom checklist items were
+  only visible on hover, so phones couldn't reach them. They're now always
+  shown on touch screens.
+- **Layout fixes.** Home-base pills in the trip header now wrap as text
+  instead of splitting into narrow columns. Cards in the wide-layout day list
+  no longer get squashed (titles were clipped). The detail pane's top accent
+  now uses the day's segment color (it was always grey). The selected day is
+  remembered per trip instead of carrying over from the last trip.
+- **Service worker:** bumped `sw.js` `VERSION` `v1` → `v2` to roll caches.
 
 ## 2026-08-30
 
