@@ -176,8 +176,8 @@ function validateTripStrict(obj) {
     errors.push('trip: the "trip" object is missing.');
   } else {
     const t = obj.trip;
-    if (!t.id || typeof t.id !== 'string') errors.push('trip.id: required — a stable text slug like "california-2026".');
-    else if (!SLUG.test(t.id)) warnings.push(`trip.id "${t.id}": should be a lowercase slug (letters, numbers, hyphens), e.g. "california-2026".`);
+    if (!t.id || typeof t.id !== 'string') errors.push('trip.id: required — a stable text slug like "portland-maine-2026".');
+    else if (!SLUG.test(t.id)) warnings.push(`trip.id "${t.id}": should be a lowercase slug (letters, numbers, hyphens), e.g. "portland-maine-2026".`);
     if (!t.title || typeof t.title !== 'string') errors.push('trip.title: required.');
     for (const k of ['startDate', 'endDate']) if (t[k] != null && !ISO_DATE.test(String(t[k]))) warnings.push(`trip.${k} "${t[k]}": should be YYYY-MM-DD.`);
     if (t.homeBases != null && !Array.isArray(t.homeBases)) errors.push('trip.homeBases: must be a list.');
@@ -1050,17 +1050,38 @@ if ('serviceWorker' in navigator) {
 let wasWide = window.matchMedia('(min-width:800px)').matches;
 window.matchMedia('(min-width:800px)').addEventListener('change', (e) => { wasWide = e.matches; render(); });
 
-// seed the sample trip on very first run so the app isn't empty out of the box
+/* Bundled trips: trips/index.json lists the trips that ship with the app.
+ * Each one is imported once per device, the first time the app sees it, so a
+ * trip added to the repo shows up on phones after the next update. Ids are
+ * remembered even if you delete the trip, so a deleted trip stays deleted, and
+ * a trip that's already on the device (e.g. pasted in) is never overwritten. */
+async function syncBundledTrips() {
+  let seen;
+  try { seen = JSON.parse(lsGet('wp_bundled', '[]')); } catch { seen = []; }
+  if (!Array.isArray(seen)) seen = [];
+  let index;
+  try { const res = await fetch('trips/index.json'); if (!res.ok) return []; index = await res.json(); }
+  catch { return []; } // offline and not cached yet — try again next launch
+  const added = [];
+  for (const entry of (index && index.trips) || []) {
+    if (!entry || !entry.id || !entry.file || seen.includes(entry.id)) continue;
+    try {
+      if (!(await getTrip(entry.id))) {
+        const res = await fetch('trips/' + entry.file);
+        if (!res.ok) continue;
+        const plan = validatePlan(await res.json());
+        await putTrip(plan);
+        added.push(plan.trip.title);
+      }
+      seen.push(entry.id);
+      lsSet('wp_bundled', JSON.stringify(seen));
+    } catch (e) { console.error('bundled trip', entry.file, e); }
+  }
+  return added;
+}
+
 (async function boot() {
   try {
-    const trips = await allTrips();
-    if (!trips.length && !lsGet('wp_seeded', '')) {
-      lsSet('wp_seeded', '1');
-      try {
-        const res = await fetch('trips/california-2026.json');
-        if (res.ok) { const plan = validatePlan(await res.json()); await putTrip(plan); }
-      } catch { /* offline first load with no sample — fine */ }
-    }
     // a fresh launch mid-trip opens that trip (→ today's day) instead of the trips list
     if (!location.hash) {
       const live = (await allTrips()).filter((p) => { const st = tripStatus(p); return st && st.phase === 'during'; });
@@ -1068,5 +1089,11 @@ window.matchMedia('(min-width:800px)').addEventListener('change', (e) => { wasWi
       if (pick) history.replaceState(null, '', '#/trip/' + encodeURIComponent(pick.trip.id));
     }
   } catch (e) { console.error(e); }
-  render();
+  await render();
+  // then pick up any newly bundled trips without holding up the first paint
+  const added = await syncBundledTrips();
+  if (added.length) {
+    toast(added.length === 1 ? 'New trip added: ' + added[0] : added.length + ' new trips added');
+    if (parseHash().view === 'home') render();
+  }
 })();

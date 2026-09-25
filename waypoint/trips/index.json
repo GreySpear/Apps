@@ -1,0 +1,7 @@
+{
+  "trips": [
+    { "id": "portland-maine-2026", "file": "portland-maine-2026.json" },
+    { "id": "philadelphia-2026", "file": "philadelphia-2026.json" },
+    { "id": "california-2027", "file": "california-2027.json" }
+  ]
+}

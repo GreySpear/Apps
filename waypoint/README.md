@@ -34,7 +34,7 @@ You import it into Waypoint  ──►  Share (share sheet / save file)  ──�
 
 ## Data model
 
-The shared file is `trip.json`. A complete example ships as [`trips/california-2026.json`](trips/california-2026.json).
+The shared file is `trip.json`. A complete example ships as [`trips/california-2027.json`](trips/california-2027.json).
 
 ```jsonc
 {
@@ -82,6 +82,13 @@ Plan every future trip in a Claude **Project** that outputs a file Waypoint impo
 
 Then: plan the trip in that Project → say *"make the Waypoint file"* → copy the JSON → **Import trip → paste** in the app. Reuse the same `trip.id` when revising a trip so your local edits survive. Full walkthrough in [`authoring/README.md`](authoring/README.md).
 
+## Bundled trips
+
+Trips can also ship with the app: drop the file in `trips/`, add `{ "id", "file" }` to `trips/index.json`, and add it to `SHELL` in `sw.js` (so it's cached offline). On launch the app imports any listed trip it hasn't seen before on that device. That's how a trip committed to the repo reaches phones without a manual import (it may take one extra launch while the service worker updates).
+
+- Each id is imported **once per device**. Delete it in the app and it stays deleted.
+- A trip that's already on the device (e.g. you pasted a newer version) is **never overwritten**. To push a revision to a trip that's already on a phone, share or import the file as usual.
+
 ## Install
 
 Tap the **?** button in the app for platform-aware install steps, or:
@@ -93,7 +100,7 @@ Once installed, open it once online; after that it works in airplane mode.
 
 ## Offline
 
-- The app shell (HTML/CSS/JS, icons, fonts, and the sample trip) is precached by `sw.js` (cache-first, versioned, currently `v2`). Bump `VERSION` in `sw.js` to roll caches on a new release.
+- The app shell (HTML/CSS/JS, icons, fonts, and the bundled trips) is precached by `sw.js` (cache-first, versioned, currently `v2`). Bump `VERSION` in `sw.js` to roll caches on a new release.
 - Trip data, docs, and your local edits live in IndexedDB — no network needed to read a trip.
 - **Storage note (iOS):** Safari may evict an unused PWA's storage after a few weeks. Nothing is irreplaceable — re-import the plan, re-add docs. Keep original boarding passes elsewhere too.
 
@@ -108,6 +115,9 @@ waypoint/
   manifest.json   # PWA manifest (standalone, maskable icons)
   icons/          # 192, 512, maskable-512 (+ make_icons.py that generates them)
   trips/
-    california-2026.json   # ships as the sample / first trip
+    index.json                # which trips ship with the app (see "Bundled trips")
+    portland-maine-2026.json
+    philadelphia-2026.json
+    california-2027.json
   authoring/      # the Claude Project kit: PROJECT_INSTRUCTIONS, schema, template
 ```

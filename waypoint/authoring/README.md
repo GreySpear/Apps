@@ -7,13 +7,13 @@ Set this up once, then plan every future trip in a Claude **Project** that outpu
 - **`PROJECT_INSTRUCTIONS.md`** — paste into your Project's custom instructions.
 - **`trip.schema.json`** — the formal schema. Attach as Project knowledge so Claude validates against it (and Waypoint can validate imports too).
 - **`TEMPLATE.trip.json`** — an annotated skeleton to eyeball the shape.
-- The sample [`../trips/california-2026.json`](../trips/california-2026.json) — a full worked example; attach it as knowledge so Claude matches the house style.
+- The sample [`../trips/california-2027.json`](../trips/california-2027.json) — a full worked example; attach it as knowledge so Claude matches the house style.
 
 ## One-time setup (Claude Projects)
 
 1. In claude.ai, create a **Project** — call it "Waypoint trips".
 2. Open **Custom instructions** and paste the body of `PROJECT_INSTRUCTIONS.md`.
-3. Add **Project knowledge**: upload `trip.schema.json` and `california-2026.json`.
+3. Add **Project knowledge**: upload `trip.schema.json` and `california-2027.json`.
 4. Done.
 
 ## Using it

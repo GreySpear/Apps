@@ -31,6 +31,16 @@ Groceries + Home Maintenance Log + Waypoint). Newest first.
   remembered per trip instead of carrying over from the last trip.
 - **Service worker:** bumped `sw.js` `VERSION` `v1` → `v2` to roll caches.
 
+### Waypoint — Portland, Philadelphia and California 2027 trips
+- Added `portland-maine-2026` (Nov 7–11), `philadelphia-2026` (Dec 12–13) and
+  `california-2027` (Oct 2–10, 2027) to `waypoint/trips/`. Removed
+  `california-2026` (the California trip moved to next year).
+- **Bundled trips:** `trips/index.json` lists the trips that ship with the
+  app. On launch, any listed trip the device hasn't seen before is imported
+  (once per device; deleted trips stay deleted; trips already on the device
+  are never overwritten). This replaces the old one-time seeding of the
+  sample trip, which only ran on an empty first launch.
+
 ## 2026-08-30
 
 ### Kitchen — Read Threads post links on recipe import

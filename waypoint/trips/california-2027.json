@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "trip": {
+    "id": "california-2027",
+    "title": "Baltimore → California",
+    "subtitle": "LA, the Pacific Coast Highway, redwoods & San Francisco",
+    "startDate": "2027-10-02",
+    "endDate": "2027-10-10",
+    "dateLabel": "Early October 2027 · 8 nights",
+    "party": "2 adults",
+    "homeBases": [
+      { "city": "Los Angeles", "area": "Mid-Wilshire / West Hollywood", "nights": 4 },
+      { "city": "Central Coast", "area": "Cambria", "nights": 1 },
+      { "city": "San Francisco", "area": "Nob Hill", "nights": 3 }
+    ],
+    "notes": "Open-jaw: fly into LAX, home from SFO. Carry-on only. Gas/hybrid crossover, not an EV. Eating leans healthier and veg-forward, with the odd treat — veg picks noted per day. In SF, park the car at the hotel and walk / cable-car / rideshare; you only really need it for the Muir Woods morning. This plan is a menu, not a schedule — hit the anchors and pivot as the day feels. Dates are placeholders aligned to a Saturday arrival so markets and closures line up; shift the whole thing in one block if you pick another week."
+  },
+  "days": [
+    {
+      "n": 1,
+      "date": "2027-10-02",
+      "segment": "LA",
+      "label": "Arrive · Saturday",
+      "title": "Land, grab the car, ease in",
+      "beats": [
+        { "time": "Afternoon", "text": "Land at LAX, pick up the rental, drive to the Mid-Wilshire / WeHo base — 30–45 min, but the LAX exit plus weekend traffic can double it. No tight plans tonight." },
+        { "time": "Evening", "text": "Easy first dinner near the base, no reservation: veg-friendly bowls at Kismet (Los Feliz), or tacos at Sonoratown if you're craving them." }
+      ],
+      "fuel": "If you land early: Maru Coffee (Los Feliz) or Go Get Em Tiger (Larchmont)."
+    },
+    {
+      "n": 2,
+      "date": "2027-10-03",
+      "segment": "LA",
+      "label": "Los Angeles · Sunday",
+      "title": "The Getty by day, Griffith at dusk",
+      "beats": [
+        { "time": "Morning", "text": "The Getty — reserve the parking slot ahead (that's effectively the ticket; entry's free), then tram up. Wander the Central Garden, pavilions, and the terrace view at your own pace. Half-day, no rush." },
+        { "time": "Midday", "text": "Lunch veg-friendly: the Getty restaurant does proper salads and veg plates; or drop to Sawtelle for veg ramen / a grain bowl." },
+        { "time": "Dusk", "text": "Griffith Observatory near sunset. Parking fills and the road clogs — easiest to rideshare up or take the DASH Observatory shuttle from the Vermont/Sunset Metro. Lawn for the Hollywood-sign view, then the exhibits." }
+      ],
+      "fuel": "Coffee on the way up: Maru Coffee (Los Feliz). Backup: Dinosaur Coffee on Sunset."
+    },
+    {
+      "n": 3,
+      "date": "2027-10-04",
+      "segment": "LA",
+      "label": "Los Angeles · Monday",
+      "title": "Universal Studios",
+      "beats": [
+        { "time": "Early morning", "text": "Rope-drop it — leave by ~8:00, since the 101 to Universal City clogs later. Prepay parking to skip a bottleneck at the gate." },
+        { "time": "All day", "text": "Studio Tour first, then the headliners before crowds build. Veg options are fine in-park (Springfield / CityWalk) — nothing precious, but you won't go hungry. An Express Pass earns its keep on a busy day." },
+        { "time": "Evening", "text": "Back over the hill for a low-key dinner near the base." }
+      ],
+      "fuel": "Caffeinate before you go — park coffee is mediocre. Cafe Dulce or Maru. Bring a water bottle."
+    },
+    {
+      "n": 4,
+      "date": "2027-10-05",
+      "segment": "LA",
+      "label": "Los Angeles · Tuesday",
+      "title": "A beach walk and a proper eating day",
+      "beats": [
+        { "time": "Morning", "text": "El Matador State Beach, Malibu (~45 min on PCH, lighter before 10). Small paid lot up top, then stairs down to the coves — go early for a spot. Backup: Point Dume up the road." },
+        { "time": "Midday", "text": "The one 'treat' lunch: Langer's #19 pastrami downtown (Tue, lunch only). Want it lighter/veg instead? Grand Central Market a block over — veg bowls and great produce. Park in a lot, not the meters." },
+        { "time": "Evening", "text": "Nice LA dinner: Bestia (Arts District, book 3–4 wks out — valet or a lot; street parking's rough there). Veg-forward alt: Kismet; splurge: the n/naka tasting menu." }
+      ],
+      "fuel": "Afternoon coffee: Verve on Melrose; west side → Great White or Gjusta in Venice."
+    },
+    {
+      "n": 5,
+      "date": "2027-10-06",
+      "segment": "DRIVE",
+      "label": "LA → Cambria · Wed · ~4.5–5 hr + stops",
+      "title": "Up the coast to Cambria",
+      "beats": [
+        { "time": "Morning", "text": "Leave by ~8:00 to clear LA. Santa Barbara ~1.5 hr up — stretch, coffee, an early lunch, a block of State St. (La Super-Rica's closed Wed; the Santa Barbara Public Market has good veg options instead.)" },
+        { "time": "Afternoon", "text": "North ~2.5 hr. Optional Hearst Castle tour (pre-book a time). Piedras Blancas elephant seals — free boardwalk right off Hwy 1, quick and always worth it." },
+        { "time": "Evening", "text": "Into Cambria: Moonstone Beach boardwalk at golden hour, dinner in the village, olallieberry pie at Linn's." }
+      ],
+      "fuel": "Santa Barbara: Handlebar Coffee or Helena Avenue Bakery. Cambria: Cambria Coffee Roasting Co."
+    },
+    {
+      "n": 6,
+      "date": "2027-10-07",
+      "segment": "DRIVE",
+      "label": "Cambria → SF · Thu · ~6 hr + stops",
+      "title": "Big Sur, the redwoods, into the city",
+      "beats": [
+        { "time": "Early morning", "text": "Gas up in Cambria (sparse services ahead) and start by ~8:30 to beat the fog. Long, beautiful driving day — let the drive be the plan." },
+        { "time": "Morning", "text": "Big Sur pull-outs, south → north: Ragged Point, the McWay Falls overlook, Bixby Creek Bridge. Stop whenever it's pretty; don't clock-watch." },
+        { "time": "Lunch", "text": "Nepenthe — cliffside terrace, veg-friendly (good sandwiches and salads), the classic Big Sur view. Backup: Big Sur Bakery further north." },
+        { "time": "Afternoon", "text": "REDWOODS #1 if you've got energy: the flat Henry Cowell Redwood Grove loop near Santa Cruz (~45 min) — otherwise roll on, Muir Woods is tomorrow. Into SF, park at the hotel, easy dinner." }
+      ],
+      "fuel": "Café Kevah at Nepenthe for the view; the Verve Coffee flagship in Santa Cruz for the last push."
+    },
+    {
+      "n": 7,
+      "date": "2027-10-08",
+      "segment": "SF",
+      "label": "San Francisco · Friday",
+      "title": "The bridge and the big trees",
+      "beats": [
+        { "time": "Early morning", "text": "Muir Woods over the Golden Gate (~40 min). Timed parking/shuttle reservation is mandatory — book it. Flat creek loop under the big trees, ~1 hr. This is the one day you actually need the car." },
+        { "time": "Midday", "text": "Golden Gate Bridge on the way back — Battery Spencer on the Marin side for the classic head-on shot." },
+        { "time": "Afternoon", "text": "Lands End cliff walk (Legion of Honor → Sutro Baths), or ease off at the Palace of Fine Arts + Chestnut St. Park the car back at the hotel afterward — you won't need it again until SFO." },
+        { "time": "Evening", "text": "Nice SF dinner: Zuni Café (roast chicken for two; strong veg too). Veg-forward alt: Greens at Fort Mason — iconic vegetarian with a bridge view — or Shizen for vegan sushi." }
+      ],
+      "fuel": "Coffee before Muir: Saint Frank (Russian Hill) or Réveille."
+    },
+    {
+      "n": 8,
+      "date": "2027-10-09",
+      "segment": "SF",
+      "label": "San Francisco · Saturday",
+      "title": "Waterfront, the Rock, and eating around town",
+      "beats": [
+        { "time": "Morning", "text": "Ferry Building — Saturday farmers' market out front (~8am–2pm): Hog Island oysters, produce, Blue Bottle, veg everywhere. All walkable / cable-car — leave the car parked." },
+        { "time": "Midday", "text": "Alcatraz (pre-booked; ferry from Pier 33). Half a day with the boat; the cellhouse audio tour is the good part." },
+        { "time": "Afternoon", "text": "Waterfront to the Wharf + Pier 39 sea lions, up into North Beach & Chinatown, cable car back up Nob Hill. Snack: Swan Oyster Depot (Sat open, counter, lunch) or veg dim sum at Good Mong Kok." },
+        { "time": "Evening", "text": "Casual close-out: a veggie Mission burrito at La Taqueria, or North Beach Italian. Pastry nightcap: Tartine." }
+      ],
+      "fuel": "Ferry Building coffee (Blue Bottle / Sightglass); later a cortado at Caffe Trieste in North Beach."
+    },
+    {
+      "n": 9,
+      "date": "2027-10-10",
+      "segment": "SF",
+      "label": "Depart · Sunday",
+      "title": "One last coffee, then home",
+      "beats": [
+        { "time": "Morning", "text": "By flight time: a croissant at b. Patisserie or Arsicault, or the Painted Ladies at Alamo Square. Then SFO — leave a buffer to refuel and return the car." },
+        { "time": "Midday", "text": "SFO → BWI. Carry-on only means a straight walk out, no baggage claim." }
+      ],
+      "fuel": "Last coffee: b. Patisserie or Mr. Holmes Bakehouse."
+    }
+  ],
+  "reservations": [
+    { "id": "flight-out", "type": "flight", "name": "BWI → LAX", "confirmation": "", "datetime": "2027-10-02", "address": "Baltimore/Washington Intl (BWI)", "phone": "", "notes": "Premium economy. Outbound." },
+    { "id": "car-rental", "type": "car", "name": "Rental car — LAX pickup, SFO drop", "confirmation": "", "datetime": "2027-10-02 to 2027-10-10", "address": "LAX Rental Car Center", "phone": "", "notes": "Gas or hybrid crossover/sedan (not an EV). One-way drop at SFO — expect a modest one-way fee." },
+    { "id": "hotel-la", "type": "hotel", "name": "LA hotel (Mid-Wilshire / WeHo)", "confirmation": "", "datetime": "2027-10-02 to 2027-10-06", "address": "", "phone": "", "notes": "4 nights. 3★+. Check nightly parking cost." },
+    { "id": "getty", "type": "tour", "name": "Getty Center parking reservation", "confirmation": "", "datetime": "2027-10-03", "address": "1200 Getty Center Dr, Los Angeles", "phone": "", "notes": "Entry is free; reserve the parking slot ahead." },
+    { "id": "universal", "type": "tour", "name": "Universal Studios Hollywood", "confirmation": "", "datetime": "2027-10-04", "address": "100 Universal City Plaza, Universal City", "phone": "", "notes": "Dated ticket. Consider Express Pass + prepaid parking on a busy day." },
+    { "id": "bestia", "type": "restaurant", "name": "Bestia (nice LA dinner)", "confirmation": "", "datetime": "2027-10-05", "address": "2121 E 7th Pl, Los Angeles", "phone": "", "notes": "Book ~3–4 wks out. Valet/lot. Veg alt: Kismet. Splurge: n/naka." },
+    { "id": "hearst-castle", "type": "tour", "name": "Hearst Castle tour (optional)", "confirmation": "", "datetime": "2027-10-06", "address": "750 Hearst Castle Rd, San Simeon", "phone": "", "notes": "Optional en-route stop. Pre-book a tour time if doing it." },
+    { "id": "hotel-cambria", "type": "hotel", "name": "Cambria hotel", "confirmation": "", "datetime": "2027-10-06 to 2027-10-07", "address": "Moonstone Beach Dr, Cambria", "phone": "", "notes": "1 night. Small town, limited rooms — book once dates are set. Ask for a Moonstone Beach-side room." },
+    { "id": "muir-woods", "type": "tour", "name": "Muir Woods parking / shuttle", "confirmation": "", "datetime": "2027-10-08", "address": "1 Muir Woods Rd, Mill Valley", "phone": "", "notes": "Timed reservation is MANDATORY — no reservation, no entry." },
+    { "id": "sf-dinner", "type": "restaurant", "name": "Zuni Café (nice SF dinner)", "confirmation": "", "datetime": "2027-10-08", "address": "1658 Market St, San Francisco", "phone": "", "notes": "Roast chicken for two. Veg alt: Greens (Fort Mason) or Shizen. Book ahead." },
+    { "id": "alcatraz", "type": "tour", "name": "Alcatraz ferry + tour", "confirmation": "", "datetime": "2027-10-09", "address": "Pier 33, Alcatraz Landing, San Francisco", "phone": "", "notes": "Sells out weeks ahead — book first. Day or night tour." },
+    { "id": "hotel-sf", "type": "hotel", "name": "SF hotel (Nob Hill)", "confirmation": "", "datetime": "2027-10-07 to 2027-10-10", "address": "", "phone": "", "notes": "3 nights. 3★+. Confirm on-site parking (~$60–70/night) since the car sits idle here." },
+    { "id": "flight-home", "type": "flight", "name": "SFO → BWI", "confirmation": "", "datetime": "2027-10-10", "address": "San Francisco Intl (SFO)", "phone": "", "notes": "Premium economy. Return." }
+  ],
+  "checklists": [
+    {
+      "name": "Book these early",
+      "items": [
+        "Flights — open-jaw BWI→LAX / SFO→BWI, premium economy (2–3 mo out)",
+        "Alcatraz tickets (4–8 wk out — the true sellout)",
+        "Universal Studios dated tickets (+ Express Pass?)",
+        "Muir Woods timed parking/shuttle reservation",
+        "Bestia (LA) + Zuni or Greens (SF); n/naka if splurging",
+        "Getty parking reservation; Hearst Castle tour if adding",
+        "Cambria hotel (limited inventory — book once dates are set)",
+        "Rental car — one-way LAX pickup, SFO drop",
+        "Re-check Big Sur / Hwy 1 road status closer to the date"
+      ]
+    },
+    {
+      "name": "Packing (carry-on only)",
+      "items": [
+        "Layers — SF mornings & Big Sur run cool and foggy",
+        "Comfortable walking shoes (lots of miles)",
+        "Light rain shell, just in case",
+        "Sunglasses + sunscreen",
+        "Phone car mount + charging cable for the drive",
+        "Reusable water bottles",
+        "Chargers / power bank",
+        "Download the Google Maps offline area for Big Sur"
+      ]
+    }
+  ]
+}
