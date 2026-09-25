@@ -4,7 +4,7 @@
  * Goal: after the first online load, the whole app opens and runs with NO
  * network — landing at an airport, driving Big Sur with no signal. Trip data
  * lives in IndexedDB (inherently offline); this SW only makes the *shell*
- * (HTML/CSS/JS/icons/fonts + the sample trip) available offline.
+ * (HTML/CSS/JS/icons/fonts + the bundled trips) available offline.
  *
  * Strategy:
  *   - App shell (same-origin): cache-first, so it opens instantly and offline.
@@ -16,13 +16,14 @@
  *
  * Updating: bump VERSION to roll all caches (old ones deleted on activate).
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = 'waypoint-shell-' + VERSION;
 const RUNTIME_CACHE = 'waypoint-runtime-' + VERSION;
 const SHELL = [
   './', './index.html', './styles.css', './app.js', './manifest.json',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
-  './trips/california-2026.json',
+  './trips/index.json',
+  './trips/portland-maine-2026.json', './trips/philadelphia-2026.json', './trips/california-2027.json',
 ];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 

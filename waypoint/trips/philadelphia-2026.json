@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "trip": {
+    "id": "philadelphia-2026",
+    "title": "Baltimore → Philadelphia",
+    "subtitle": "Niece's birthday weekend — Christmas market, a great lunch, and a Fishtown dinner",
+    "startDate": "2026-12-12",
+    "endDate": "2026-12-13",
+    "dateLabel": "December 12–13, 2026 · overnight (Sat–Sun)",
+    "party": "3 adults (birthday trip)",
+    "homeBases": [
+      { "city": "Philadelphia", "area": "Center City (Windsor Suites, Ben Franklin Pkwy)", "nights": 1 }
+    ],
+    "notes": "Amtrak Baltimore → Philadelphia 30th St (~1 hr), then walk / SEPTA / Uber — no car. Center City base with the Christmas market on foot; Fishtown dinner is a ~15 min Uber. Weekend timing so Kalaya's brunch/lunch is available. Two options per meal — pick by mood; ⭐ = needs a reservation. It's the niece's birthday, so the Fishtown dinner is the centerpiece."
+  },
+  "days": [
+    {
+      "n": 1,
+      "date": "2026-12-12",
+      "segment": "PHILLY",
+      "label": "Arrive · Saturday",
+      "title": "Market lights and a birthday dinner",
+      "beats": [
+        { "time": "Late morning", "text": "Amtrak from Baltimore to Philadelphia 30th St (~1 hr), Uber/SEPTA to the Windsor Suites (Ben Franklin Pkwy), drop bags." },
+        { "time": "Midday", "text": "Central lunch, pick by mood: ⭐ Vernick Fish (upscale seafood, ~5 min from the hotel — Resy) or Middle Child (cult sandwiches, walk-in). Fallbacks: Parc or Reading Terminal." },
+        { "time": "Afternoon", "text": "Christmas Village at LOVE Park + City Hall (~5 min walk). Go mid-afternoon and stay as it lights up ~4:30 — mulled wine, German stalls, the Dilworth Park ice rink. Detour to the free Macy's Christmas Light Show + Dickens Village (old Wanamaker building, on the hour)." },
+        { "time": "Evening", "text": "Birthday dinner in Fishtown (~15 min Uber; pick one, all ⭐ book-ahead): Kalaya (Southern Thai, Michelin), Suraya (Lebanese, stunning room), or Laser Wolf (Solomonov skewer grill, set-price, festive)." }
+      ],
+      "fuel": "Coffee near the market: Elixr or Vernick Coffee Bar. In Fishtown before dinner: the La Colombe flagship."
+    },
+    {
+      "n": 2,
+      "date": "2026-12-13",
+      "segment": "PHILLY",
+      "label": "Depart · Sunday",
+      "title": "Brunch, one last thing, home",
+      "beats": [
+        { "time": "Morning", "text": "Brunch before the train, pick one: Reading Terminal Market (DiNic's roast pork, Beiler's donuts) or K'Far (Solomonov's Israeli café — best if dinner wasn't Israeli). Fallback: Parc." },
+        { "time": "Midday", "text": "One easy thing if there's time: a Rittenhouse Square stroll or the Barnes Foundation (indoor, near the hotel). Then Amtrak home from 30th St." }
+      ],
+      "fuel": "Last coffee: K'Far, or Old City Coffee inside Reading Terminal."
+    }
+  ],
+  "reservations": [
+    { "id": "train-out", "type": "other", "name": "Amtrak — Baltimore → Philadelphia", "confirmation": "", "datetime": "2026-12-12", "address": "Baltimore Penn Station, 1515 N Charles St, Baltimore, MD 21201", "phone": "", "notes": "~1 hr to 30th St. Book early for the good fare; 3 seats together." },
+    { "id": "train-home", "type": "other", "name": "Amtrak — Philadelphia → Baltimore", "confirmation": "", "datetime": "2026-12-13", "address": "William H. Gray III 30th St Station, 2955 Market St, Philadelphia, PA 19104", "phone": "", "notes": "Return. Pick an afternoon departure after brunch." },
+    { "id": "hotel-windsor", "type": "hotel", "name": "The Windsor Suites", "confirmation": "", "datetime": "2026-12-12 to 2026-12-13", "address": "1700 Benjamin Franklin Pkwy, Philadelphia, PA 19103", "phone": "", "notes": "1 night. 1-BR suite for 3 (separate bedroom + sofa bed + kitchenette). ~5 min walk to the Christmas Village." },
+    { "id": "lunch-vernick", "type": "restaurant", "name": "Vernick Fish — Sat lunch (option A)", "confirmation": "", "datetime": "2026-12-12", "address": "1 N 19th St, Philadelphia, PA 19103", "phone": "", "notes": "Resy recommended for Sat lunch. Walk-in alt: Middle Child. Fallbacks: Parc, Reading Terminal." },
+    { "id": "dinner-kalaya", "type": "restaurant", "name": "Kalaya — birthday dinner (option A)", "confirmation": "", "datetime": "2026-12-12", "address": "4 W Palmer St, Philadelphia, PA 19125", "phone": "", "notes": "Resy. Southern Thai, Michelin. Fishtown. Pick ONE of the three dinners." },
+    { "id": "dinner-suraya", "type": "restaurant", "name": "Suraya — birthday dinner (option B)", "confirmation": "", "datetime": "2026-12-12", "address": "1528 Frankford Ave, Philadelphia, PA 19125", "phone": "", "notes": "Resy. Lebanese, gorgeous room, celebratory. Fishtown." },
+    { "id": "dinner-laser-wolf", "type": "restaurant", "name": "Laser Wolf — birthday dinner (option C)", "confirmation": "", "datetime": "2026-12-12", "address": "1301 N Howard St, Philadelphia, PA 19122", "phone": "", "notes": "Resy. Solomonov set-price skewer grill, festive for a group. Book ~2–4 wks out." },
+    { "id": "market", "type": "tour", "name": "Christmas Village at LOVE Park + City Hall", "confirmation": "", "datetime": "2026-12-12", "address": "LOVE Park, Arch St & N 15th St, Philadelphia, PA 19102", "phone": "", "notes": "Free. Runs Nov 21–Dec 27, 2026. Best after dark (~4:30). Ice rink + market at Dilworth Park next door." },
+    { "id": "macys-light-show", "type": "tour", "name": "Macy's Christmas Light Show + Dickens Village", "confirmation": "", "datetime": "2026-12-12", "address": "1300 Market St, Philadelphia, PA 19107", "phone": "", "notes": "Free; light show on the hour. ~5 min from the market." },
+    { "id": "barnes", "type": "tour", "name": "Barnes Foundation (optional Sun)", "confirmation": "", "datetime": "2026-12-13", "address": "2025 Benjamin Franklin Pkwy, Philadelphia, PA 19130", "phone": "", "notes": "Optional indoor hour near the hotel; timed tickets." }
+  ],
+  "checklists": [
+    {
+      "name": "Book these early",
+      "items": [
+        "Amtrak both ways (3 seats together) — book early for fare",
+        "Windsor Suites — 1-BR suite for 3, Dec 12–13",
+        "Birthday dinner — Kalaya / Suraya / Laser Wolf (Resy, pick one, ~2–4 wks out)",
+        "Vernick Fish — Sat lunch (Resy)",
+        "Confirm Kalaya weekend hours if using it",
+        "Barnes Foundation timed tickets (only if doing it)"
+      ]
+    },
+    {
+      "name": "Packing (overnight)",
+      "items": [
+        "Warm coat + layers, hat & gloves — December market is cold",
+        "Comfortable walking shoes",
+        "Birthday card / gift for the birthday girl",
+        "Chargers / power bank",
+        "Rideshare + SEPTA app; Amtrak tickets on phone"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "trip": {
+    "id": "portland-maine-2026",
+    "title": "Baltimore → Portland, Maine",
+    "subtitle": "A long-weekend eating tour of the Old Port — oysters, lighthouses, cozy cafés",
+    "startDate": "2026-11-07",
+    "endDate": "2026-11-11",
+    "dateLabel": "Early November 2026 · 4 nights (tentative)",
+    "party": "2 adults",
+    "homeBases": [
+      { "city": "Portland, Maine", "area": "Old Port (Portland Regency)", "nights": 4 }
+    ],
+    "notes": "Roundtrip BWI⇄PWM, nonstop (out Sat 10:55a–12:25p, back Wed 12:45p–2:25p). Carry-on only. CAR-FREE: walk the Old Port, rideshare only for the airport and the Cape Elizabeth lighthouse. Short daylight — sunset ~4:30 — so outdoor things go in the morning. Each meal has two options: pick by mood. Most lunches are walk-in; only the ⭐ dinners need booking (Fore Street/Twelve, Scales, Izakaya Minato). Eat the cold-water stuff the DMV can't give you: oysters, day-boat scallops, whole-belly fried clams. This plan is a menu, not a schedule — hit the anchors and pivot."
+  },
+  "days": [
+    {
+      "n": 1,
+      "date": "2026-11-07",
+      "segment": "TRAVEL",
+      "label": "Arrive · Saturday",
+      "title": "Fly in, drop bags, first oysters",
+      "beats": [
+        { "time": "Afternoon", "text": "Land 12:25, Uber to the Portland Regency (~15 min), drop bags. Arrival lunch nearby, both walk-in ~5 min away: Duckfat (duck-fat fries + panini) or Eventide (oysters + brown-butter lobster roll)." },
+        { "time": "Afternoon", "text": "Wander the Old Port wharves and a stretch of the Eastern Promenade while it's light (dark by ~4:30)." },
+        { "time": "Evening", "text": "Dinner, both walk-in / no reservation: Eventide (if you didn't lunch there) or Central Provisions (small plates — tuna crudo, fried oysters). Go early to beat the wait." }
+      ],
+      "fuel": "First coffee: Bard Coffee (Old Port) or Tandem."
+    },
+    {
+      "n": 2,
+      "date": "2026-11-08",
+      "segment": "PORTLAND",
+      "label": "Portland · Sunday",
+      "title": "Bakeries, the museum, and the grande dame",
+      "beats": [
+        { "time": "Morning", "text": "Bakery breakfast at Tandem Coffee + Bakery (cardamom bun) or Standard Baking Co. (croissants). Walk the Western Prom for the Victorian mansions." },
+        { "time": "Midday", "text": "Lunch: Gilbert's Chowder House (whole-belly fried clams + chowder, walk-in) or ⭐ Chaval (West End, Spanish-French, veg-friendly — Resy) for a sit-down." },
+        { "time": "Afternoon", "text": "Portland Museum of Art (open Sun; closed Mon) — the Homer & Wyeth rooms. ~2 hrs." },
+        { "time": "Evening", "text": "Nice dinner — ⭐ Fore Street (rustic wood-fire; roasted mussels, turnspit roast; book forestreet.biz) or ⭐ Twelve (refined, modern; Resy). Walk-in fallback: Central Provisions." }
+      ],
+      "fuel": "Afternoon coffee: Speckled Ax (wood-roasted) on Congress St."
+    },
+    {
+      "n": 3,
+      "date": "2026-11-09",
+      "segment": "COAST",
+      "label": "Cape Elizabeth · Monday",
+      "title": "Lighthouse morning, harbor afternoon",
+      "beats": [
+        { "time": "Morning", "text": "Uber to Fort Williams Park / Portland Head Light (~15 min) for the morning light — cliff path and the Cape Elizabeth shoreline." },
+        { "time": "Midday", "text": "Lunch back in town (Monday-open, walk-in): Highroller Lobster (lobster grilled cheese, Exchange St) or Becky's Diner (waterfront classic)." },
+        { "time": "Afternoon", "text": "Casco Bay Lines ferry round-trip toward Peaks Island for harbor views (runs year-round), or warm up café-hopping." },
+        { "time": "Evening", "text": "Dinner — ⭐ Scales (wharf seafood, day-boat scallops; Resy) or walk-in Eventide / Duckfat. (Central Provisions & Twelve are usually closed Mondays.)" }
+      ],
+      "fuel": "Warm up after the lighthouse: coffee + a potato donut at The Holy Donut."
+    },
+    {
+      "n": 4,
+      "date": "2026-11-10",
+      "segment": "PORTLAND",
+      "label": "Portland · Tuesday",
+      "title": "Your slow drift day",
+      "beats": [
+        { "time": "Morning", "text": "The drift day. Late breakfast at Hot Suppa (corned-beef hash) or lighter at a café, then wander the West End and Old Port shops at no pace." },
+        { "time": "Midday", "text": "Lunch if you want it: The Honey Paw (pan-Asian noodles, next to Eventide, walk-in) or Luke's Lobster (Portland Pier). Both easy." },
+        { "time": "Afternoon", "text": "An Allagash tasting (short Uber; Austin Street & Definitive next door) or just café-hop." },
+        { "time": "Evening", "text": "East Bayside Asian night — ⭐ Izakaya Minato (cozy izakaya, 54 Washington Ave; reserve or go early) and/or Cong Tu Bot next door (modern Vietnamese, walk-in). Pasta alt: Leeward (Resy)." }
+      ],
+      "fuel": "Afternoon tea/coffee: Tandem on Congress St, or Coffee By Design."
+    },
+    {
+      "n": 5,
+      "date": "2026-11-11",
+      "segment": "TRAVEL",
+      "label": "Depart · Wednesday",
+      "title": "One last coffee, then home",
+      "beats": [
+        { "time": "Morning", "text": "Grab-and-go before the airport (PWM food is thin): a Standard Baking Co. pastry or a Holy Donut. Maybe a last Old Port loop." },
+        { "time": "Midday", "text": "Leave the hotel ~10:45, Uber to PWM (~15 min), fly PWM → BWI 12:45p. Carry-on only = a straight walk out." }
+      ],
+      "fuel": "Last coffee: Tandem Coffee + Bakery."
+    }
+  ],
+  "reservations": [
+    { "id": "flight-out", "type": "flight", "name": "BWI → PWM", "confirmation": "", "datetime": "2026-11-07 10:55", "address": "Baltimore/Washington Intl (BWI)", "phone": "", "notes": "Nonstop, 10:55a–12:25p. Southwest. Book Choice fare (carry-on boarding + flexibility)." },
+    { "id": "flight-home", "type": "flight", "name": "PWM → BWI", "confirmation": "", "datetime": "2026-11-11 12:45", "address": "Portland Intl Jetport (PWM)", "phone": "", "notes": "Nonstop, 12:45p–2:25p. Southwest." },
+    { "id": "hotel-portland", "type": "hotel", "name": "Portland Regency Hotel & Spa", "confirmation": "", "datetime": "2026-11-07 to 2026-11-11", "address": "20 Milk St, Portland, ME 04101", "phone": "", "notes": "4 nights. Old Port, fully walkable base. No car — skip parking." },
+    { "id": "lunch-chaval", "type": "restaurant", "name": "Chaval — Sun lunch (optional)", "confirmation": "", "datetime": "2026-11-08", "address": "58 Pine St, Portland, ME 04102", "phone": "", "notes": "Resy. Sit-down West End lunch, veg-friendly. Walk-in alt: Gilbert's Chowder House." },
+    { "id": "dinner-fore-street", "type": "restaurant", "name": "Fore Street — Sun dinner (option A)", "confirmation": "", "datetime": "2026-11-08", "address": "288 Fore St, Portland, ME 04101", "phone": "", "notes": "Book via forestreet.biz — releases ~1 month out; holds walk-in tables. Rustic wood-fire. Book this OR Twelve." },
+    { "id": "dinner-twelve", "type": "restaurant", "name": "Twelve — Sun dinner (option B)", "confirmation": "", "datetime": "2026-11-08", "address": "12 Thames St, Portland, ME 04101", "phone": "", "notes": "Resy. Refined/modern. Book this OR Fore Street. Walk-in fallback: Central Provisions." },
+    { "id": "dinner-scales", "type": "restaurant", "name": "Scales — Mon dinner", "confirmation": "", "datetime": "2026-11-09", "address": "68 Commercial St, Portland, ME 04101", "phone": "", "notes": "Resy. Wharf seafood, day-boat scallops. Open Mondays. Walk-in alt: Eventide." },
+    { "id": "dinner-minato", "type": "restaurant", "name": "Izakaya Minato — Tue dinner", "confirmation": "", "datetime": "2026-11-10", "address": "54 Washington Ave, Portland, ME 04101", "phone": "", "notes": "Reserve if offered, else go early — tiny. Cong Tu Bot (57 Washington Ave, walk-in) next door is the alt. Confirm open day." },
+    { "id": "pma", "type": "tour", "name": "Portland Museum of Art", "confirmation": "", "datetime": "2026-11-08", "address": "7 Congress Sq, Portland, ME 04101", "phone": "", "notes": "Closed Mondays — do it Sunday. Homer/Wyeth collection." },
+    { "id": "lighthouse", "type": "tour", "name": "Portland Head Light — Fort Williams Park", "confirmation": "", "datetime": "2026-11-09", "address": "1000 Shore Rd, Cape Elizabeth, ME 04107", "phone": "", "notes": "Free; grounds open year-round. Rideshare ~15 min. Go in the morning (early sunset)." },
+    { "id": "ferry", "type": "tour", "name": "Casco Bay Lines — Peaks Island ferry (optional)", "confirmation": "", "datetime": "2026-11-09", "address": "56 Commercial St, Portland, ME 04101", "phone": "", "notes": "Optional year-round harbor loop; ~$12–25/person round trip." }
+  ],
+  "checklists": [
+    {
+      "name": "Book these early",
+      "items": [
+        "Flights — roundtrip BWI⇄PWM nonstop, Southwest Choice fare",
+        "Portland Regency — 4 nights, Old Port",
+        "Sun dinner — Fore Street (forestreet.biz, ~1 mo out) OR Twelve (Resy)",
+        "Mon dinner — Scales (Resy)",
+        "Tue dinner — Izakaya Minato (reserve or go early)",
+        "Optional: Chaval Sun lunch (Resy)",
+        "Confirm day-of-week hours (several close Sun/Mon: Central Provisions, Twelve, Leeward, Minato, Cong Tu Bot)"
+      ]
+    },
+    {
+      "name": "Packing (carry-on only)",
+      "items": [
+        "Warm layers + a real coat — Maine November runs 30s–50s°F",
+        "Hat + gloves",
+        "Waterproof shoes; light rain shell or umbrella",
+        "Comfortable walking shoes (Old Port cobblestones)",
+        "Chargers / power bank",
+        "Reusable water bottle"
+      ]
+    }
+  ]
+}
