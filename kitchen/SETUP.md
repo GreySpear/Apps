@@ -101,8 +101,8 @@ If you previously ran the separate **Recipes** and **Grocery List** apps:
   sheet and paste that single URL into Kitchen's Settings. On first connect the
   app pushes your current recipes, items, and staples up to the new sheet's
   three tabs.
-- The old `recipes/` and `groceries/` apps still work unchanged if you're not
-  ready to switch — Kitchen is additive.
+- The old `recipes/` and `groceries/` apps are **retired**: they still load
+  (with a notice pointing here) but get no fixes. Use Kitchen.
 
 ## Troubleshooting
 

@@ -1,5 +1,10 @@
 # Recipes App — Plan
 
+> **Retired.** This app was folded into [Kitchen](../kitchen/) (recipes, meal
+> plan and groceries in one app, one Sheet). It's kept only so old
+> bookmarks and backends keep working; it gets no fixes. Set up Kitchen
+> instead: see [`kitchen/SETUP.md`](../kitchen/SETUP.md).
+
 A phone-first recipe box. Paste a recipe from anywhere (webpage URL or Instagram
 caption text), it gets parsed, auto-categorized, and saved — synced to a Google
 Sheet in your Drive.
