@@ -1270,6 +1270,7 @@ let favOnly=false;
 let recipeSyncTimer=null;
 let grocerySyncTimer=null;
 let planSyncTimer=null;
+let pushing=0;       // pushes in flight; polling waits so it can't undo a fresh edit
 let editingId=null;      // recipe being edited (null = new)
 let editCat='others';
 let detailId=null;       // recipe open in detail
@@ -1308,13 +1309,16 @@ function rowToRecipe(row){
     sourceUrl:String(row[3]||''),imageUrl:String(row[4]||''),
     ingredients:j(row[5],[]),steps:j(row[6],[]),
     servings:String(row[7]||''),prepTime:String(row[8]||''),cookTime:String(row[9]||''),
-    notes:String(row[10]||''),favorite:row[11]==='1'||row[11]===true,
+    notes:String(row[10]||''),favorite:flag(row[11]),
     cookedDates:j(row[12],[]),createdAt:String(row[13]||''),updatedAt:String(row[14]||'')
   };
 }
+/* Sheets auto-converts the '1'/'0' strings we write into numbers, so a read
+   can hand back 1, '1' or true for the same flag. */
+const flag=v=>v===true||v===1||v==='1'||String(v).toUpperCase()==='TRUE';
 function itemToRow(i){return [i.id,i.name,i.qty,i.unit,i.checked?'1':'0',i.count||1,i.from||''];}
 function stapleToRow(s){return [s.id,s.name,s.qty,s.unit];}
-function itemFromRow(r){return {id:String(r[0]),name:String(r[1]),qty:Number(r[2])||1,unit:String(r[3]||''),checked:r[4]==='1'||r[4]===true,count:Number(r[5])||1,from:String(r[6]||'')};}
+function itemFromRow(r){return {id:String(r[0]),name:String(r[1]),qty:Number(r[2])||1,unit:String(r[3]||''),checked:flag(r[4]),count:Number(r[5])||1,from:String(r[6]||'')};}
 function stapleFromRow(r){return {id:String(r[0]),name:String(r[1]),qty:Number(r[2])||1,unit:String(r[3]||'')};}
 function planToRow(p){return [p.id,p.date,p.recipeId,p.servings||'',p.createdAt||''];}
 function planFromRow(r){return {id:String(r[0]),date:String(r[1]||''),recipeId:String(r[2]||''),servings:String(r[3]||''),createdAt:String(r[4]||'')};}
@@ -1327,31 +1331,38 @@ function setSyncStatus(s){
   lbl.textContent={none:'Local',ok:'Synced',error:'Sync error',syncing:'Syncing…'}[s];
 }
 async function pushRecipes(){
+  recipeSyncTimer=null;
   if(!sheetUrl)return;
-  setSyncStatus('syncing');
+  setSyncStatus('syncing');pushing++;
   try{
     const res=await fetch(sheetUrl,{method:'POST',body:JSON.stringify({action:'save',rows:recipes.map(recipeToRow)})});
     await res.text();
     setSyncStatus('ok');
   }catch(e){setSyncStatus('error');}
+  finally{pushing--;}
 }
 async function pushGroceries(){
+  grocerySyncTimer=null;
   if(!sheetUrl)return;
-  setSyncStatus('syncing');
+  setSyncStatus('syncing');pushing++;
   try{
     await fetch(sheetUrl,{method:'POST',body:JSON.stringify({sheet:'items',rows:items.map(itemToRow)})});
     await fetch(sheetUrl,{method:'POST',body:JSON.stringify({sheet:'staples',rows:staples.map(stapleToRow)})});
     setSyncStatus('ok');
   }catch(e){setSyncStatus('error');}
+  finally{pushing--;}
 }
 async function pushPlan(){
+  planSyncTimer=null;
   if(!sheetUrl)return;
-  setSyncStatus('syncing');
+  setSyncStatus('syncing');pushing++;
   try{
     await fetch(sheetUrl,{method:'POST',body:JSON.stringify({sheet:'plan',rows:plan.map(planToRow)})});
     setSyncStatus('ok');
   }catch(e){setSyncStatus('error');}
+  finally{pushing--;}
 }
+function pushPending(){return pushing>0||!!(recipeSyncTimer||grocerySyncTimer||planSyncTimer);}
 async function pull(){
   if(!sheetUrl){render();renderGroceries();renderPlan();return;}
   setSyncStatus('syncing');
@@ -2352,7 +2363,7 @@ function saveSettings(){
 let polling=false;
 function startPolling(){
   if(polling||!sheetUrl)return;polling=true;
-  setInterval(()=>{if(!document.hidden&&sheetUrl&&!isBusy())pull();},20000);
+  setInterval(()=>{if(!document.hidden&&sheetUrl&&!isBusy()&&!pushPending())pull();},20000);
 }
 function isBusy(){
   return ['import-screen','edit-screen','pick-screen'].some(id=>$(id).classList.contains('open'))
