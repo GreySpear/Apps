@@ -3,6 +3,20 @@
 A running history of changes to the apps in this repo (Kitchen + Recipes +
 Groceries + Home Maintenance Log + Waypoint). Newest first.
 
+## 2026-09-25
+
+### Kitchen — Checked grocery items no longer un-check themselves
+With sync on, checking off an item in Groceries worked for a moment, then the
+item jumped back to *To get*. The app saves the checked flag to the Sheet as
+the text `'1'`. Google Sheets turns that into the number `1`, and on the next
+read (the 20-second background refresh, or opening the app) the app only
+accepted the text `'1'`. So every item came back un-checked, and that state
+was then saved back to the Sheet. Recipe favorites had the same bug.
+- Checked and favorite flags now read `1`, `'1'`, `true` and `TRUE` as on.
+- The background refresh now waits while a change is still waiting to be
+  saved or being saved, so a refresh can't undo an edit you just made.
+- **Service worker:** bumped `sw.js` `VERSION` `v3` → `v4` to roll caches.
+
 ## 2026-09-24
 
 ### Waypoint — Today view, day jumper, docs on reservations, touch fixes
