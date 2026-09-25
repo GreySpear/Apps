@@ -1,5 +1,10 @@
 # Recipes — Sync Setup
 
+> **Retired.** This app was folded into [Kitchen](../kitchen/) (recipes, meal
+> plan and groceries in one app, one Sheet). It's kept only so old
+> bookmarks and backends keep working; it gets no fixes. Set up Kitchen
+> instead: see [`kitchen/SETUP.md`](../kitchen/SETUP.md).
+
 This connects the Recipes app to your own private Google Sheet, so your
 recipes are backed up and sync across your devices. Nobody but you (and
 anyone you deliberately share the sheet with) can see it. Takes about 5

@@ -1,5 +1,10 @@
 # Grocery List — Sync Setup & Linking to Recipes
 
+> **Retired.** This app was folded into [Kitchen](../kitchen/) (recipes, meal
+> plan and groceries in one app, one Sheet). It's kept only so old
+> bookmarks and backends keep working; it gets no fixes. Set up Kitchen
+> instead: see [`kitchen/SETUP.md`](../kitchen/SETUP.md).
+
 This connects the Grocery List app to its own private Google Sheet (so your
 list syncs across devices), and links it to the Recipes app so you can send a
 recipe's ingredients straight to your shopping list.

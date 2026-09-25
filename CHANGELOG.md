@@ -5,6 +5,18 @@ Groceries + Home Maintenance Log + Waypoint). Newest first.
 
 ## 2026-09-25
 
+### Recipes + Groceries — Marked retired
+Both standalone apps were folded into Kitchen and are now marked **retired**.
+They still load and sync as before (so old bookmarks and Sheets keep working),
+but they get no fixes. For example, they still have the sync bug fixed in
+Kitchen below.
+- A notice at the top of each app links to Kitchen.
+- `SETUP.md` (both) and `recipes/PLAN.md` start with a retired note.
+- `README.md` now lists every app with its status.
+- `kitchen/SETUP.md` no longer says the old apps are an alternative.
+- Kitchen's parser comment pointed at `recipes/test/`; the tests live in
+  `kitchen/test/`.
+
 ### Kitchen — Checked grocery items no longer un-check themselves
 With sync on, checking off an item in Groceries worked for a moment, then the
 item jumped back to *To get*. The app saves the checked flag to the Sheet as
